@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PDC — Wireframe v3 (Nebula, Lucide Icons)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --bg-base: #0A0A0F;
+      --bg-surface: #14141B;
+      --bg-elevated: #1C1C26;
+      --border: #262633;
+      --border-strong: #34344A;
+      --text-primary: #EDEDF0;
+      --text-secondary: #A0A0B0;
+      --text-muted: #6B6B7B;
+      --accent: #6366F1;
+      --accent-hover: #5457E5;
+      --accent-soft: rgba(99,102,241,0.12);
+      --success: #22C55E;
+      --warning: #F59E0B;
+      --danger: #EF4444;
+      --info: #3B82F6;
+      --font-sans: "Inter", system-ui, sans-serif;
+      --font-mono: "JetBrains Mono", ui-monospace, monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-sans); background: var(--bg-base);
+      color: var(--text-primary); font-size: 14px; line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    .lucide { width: 18px; height: 18px; stroke-width: 1.75; }
+    .shell { display: flex; height: 100vh; overflow: hidden; }
+
+    /* Sidebar */
+    .sidebar {
+      width: 232px; flex-shrink: 0; background: var(--bg-surface);
+      border-right: 1px solid var(--border); display: flex; flex-direction: column;
+      padding: 18px 14px;
+    }
+    .brand { display: flex; align-items: center; gap: 11px; padding: 4px 6px 22px; }
+    .brand-logo {
+      width: 34px; height: 34px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), #8B5CF6);
+      display: flex; align-items: center; justify-content: center;
+      color: white; box-shadow: 0 4px 12px rgba(99,102,241,0.35);
+    }
+    .brand-name { font-weight: 600; font-size: 15px; letter-spacing: -0.01em; }
+    .brand-sub { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+    .nav-label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; padding: 0 8px 8px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 11px; padding: 9px 10px;
+      border-radius: 9px; color: var(--text-secondary); font-weight: 500;
+      cursor: pointer; margin-bottom: 2px; transition: all .15s; font-size: 13.5px;
+    }
+    .nav-item:hover { background: var(--bg-elevated); color: var(--text-primary); }
+    .nav-item.active { background: var(--accent-soft); color: var(--accent); }
+    .nav-item .lucide { color: inherit; }
+    .nav-badge { margin-left: auto; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--danger); color: #fff; font-size: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+    .user-box { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 10px 8px; border-top: 1px solid var(--border); }
+    .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--bg-elevated); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+    .user-name { font-size: 13px; font-weight: 500; }
+    .user-status { font-size: 11px; color: var(--success); display: flex; align-items: center; gap: 5px; }
+
+    /* Main */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar {
+      height: 58px; flex-shrink: 0; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 26px; background: rgba(20,20,27,0.85); backdrop-filter: blur(10px);
+    }
+    .search-wrap { position: relative; width: 300px; }
+    .search-wrap .lucide { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 16px; height: 16px; }
+    .search { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 9px; padding: 8px 12px 8px 34px; width: 100%; color: var(--text-secondary); font-size: 13px; font-family: var(--font-sans); }
+    .search:focus { outline: none; border-color: var(--accent); }
+    .topbar-actions { display: flex; align-items: center; gap: 10px; }
+    .icon-btn { width: 36px; height: 36px; border-radius: 9px; background: var(--bg-elevated); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-secondary); transition: all .15s; }
+    .icon-btn:hover { color: var(--text-primary); border-color: var(--border-strong); }
+    .icon-btn .lucide { width: 17px; height: 17px; }
+
+    .content { flex: 1; overflow: auto; display: flex; gap: 24px; padding: 24px 26px; max-width: 1480px; margin: 0 auto; width: 100%; }
+    .col-main { flex: 1; min-width: 0; }
+    .col-side { width: 332px; flex-shrink: 0; }
+
+    /* Stats overview */
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 24px; }
+    .stat { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; display: flex; align-items: center; gap: 13px; }
+    .stat-ico { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .stat-ico .lucide { width: 19px; height: 19px; }
+    .stat-ico.blue { background: rgba(59,130,246,0.12); color: var(--info); }
+    .stat-ico.indigo { background: var(--accent-soft); color: var(--accent); }
+    .stat-ico.green { background: rgba(34,197,94,0.12); color: var(--success); }
+    .stat-val { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+    .stat-lbl { font-size: 11.5px; color: var(--text-muted); font-weight: 500; }
+
+    .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .section-title { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+    .btn-add { display: flex; align-items: center; gap: 6px; background: var(--accent); color: #fff; border: none; border-radius: 9px; padding: 8px 13px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: var(--font-sans); }
+    .btn-add:hover { background: var(--accent-hover); }
+    .btn-add .lucide { width: 15px; height: 15px; }
+
+    /* Project grid */
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 16px; }
+    .card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 16px; padding: 17px 18px; transition: all .15s; }
+    .card:hover { border-color: var(--border-strong); box-shadow: 0 6px 18px rgba(0,0,0,0.4); transform: translateY(-1px); }
+    .card-head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+    .repo { display: flex; align-items: center; gap: 11px; }
+    .repo-ico { width: 34px; height: 34px; border-radius: 9px; background: var(--bg-elevated); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--text-secondary); flex-shrink: 0; }
+    .repo-ico .lucide { width: 17px; height: 17px; }
+    .repo-name { font-weight: 600; font-size: 14px; letter-spacing: -0.01em; }
+    .repo-url { font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); }
+    .status { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 500; padding: 4px 9px; border-radius: 20px; background: var(--bg-elevated); }
+    .status .lucide { width: 12px; height: 12px; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .dot.working { background: var(--info); box-shadow: 0 0 7px var(--info); }
+    .dot.waiting { background: var(--warning); box-shadow: 0 0 7px var(--warning); }
+    .dot.idle { background: var(--text-muted); }
+    .txt-working { color: var(--info); } .txt-waiting { color: var(--warning); } .txt-idle { color: var(--text-muted); }
+
+    .task-label { font-size: 13px; color: var(--text-primary); margin-bottom: 10px; }
+    .task-label span { color: var(--text-secondary); }
+    .progress { height: 4px; background: var(--bg-elevated); border-radius: 4px; overflow: hidden; margin-bottom: 9px; }
+    .progress > div { height: 100%; background: var(--accent); border-radius: 4px; transition: width .3s; }
+    .meta { font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); margin-bottom: 15px; display: flex; align-items: center; gap: 5px; }
+    .meta .lucide { width: 12px; height: 12px; }
+    .card-actions { display: flex; gap: 8px; }
+    .btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 0; border-radius: 9px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all .15s; border: 1px solid transparent; font-family: var(--font-sans); }
+    .btn .lucide { width: 14px; height: 14px; }
+    .btn-secondary { background: transparent; border-color: var(--border); color: var(--text-secondary); }
+    .btn-secondary:hover { background: var(--bg-elevated); color: var(--text-primary); }
+    .btn-accent { background: var(--accent-soft); color: var(--accent); }
+    .btn-accent:hover { background: rgba(99,102,241,0.2); }
+    .btn-danger { background: rgba(239,68,68,0.1); color: var(--danger); }
+    .btn-danger:hover { background: rgba(239,68,68,0.18); }
+    .btn-success { background: rgba(34,197,94,0.1); color: var(--success); }
+    .btn-success:hover { background: rgba(34,197,94,0.18); }
+
+    /* Activity panel */
+    .panel { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 16px; padding: 18px; }
+    .panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .panel-title { font-size: 15px; font-weight: 600; }
+    .feed-item { display: flex; gap: 11px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .feed-item:last-child { border-bottom: none; }
+    .feed-ico { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .feed-ico .lucide { width: 14px; height: 14px; }
+    .feed-ico.working { background: rgba(59,130,246,0.12); color: var(--info); }
+    .feed-ico.waiting { background: rgba(245,158,11,0.12); color: var(--warning); }
+    .feed-ico.success { background: rgba(34,197,94,0.12); color: var(--success); }
+    .feed-ico.idle { background: var(--bg-elevated); color: var(--text-muted); }
+    .feed-body { flex: 1; min-width: 0; }
+    .feed-msg { font-size: 12.5px; line-height: 1.4; }
+    .feed-msg b { font-weight: 600; }
+    .feed-meta { font-size: 10.5px; color: var(--text-muted); font-family: var(--font-mono); margin-top: 3px; }
+
+    /* Modal */
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.62); backdrop-filter: blur(5px); align-items: center; justify-content: center; z-index: 50; }
+    .overlay.show { display: flex; }
+    .modal { background: var(--bg-surface); border: 1px solid var(--border-strong); border-radius: 20px; padding: 24px; width: 100%; max-width: 480px; box-shadow: 0 20px 50px rgba(0,0,0,0.55); }
+    .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-title { font-size: 17px; font-weight: 600; }
+    .close { cursor: pointer; color: var(--text-muted); width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+    .close:hover { background: var(--bg-elevated); color: var(--text-primary); }
+    .field-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 7px; display: block; font-weight: 500; }
+    .select, .textarea { width: 100%; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 9px; padding: 10px 12px; color: var(--text-primary); font-family: var(--font-sans); font-size: 13px; margin-bottom: 15px; }
+    .select:focus, .textarea:focus { outline: none; border-color: var(--accent); }
+    .textarea { resize: none; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-logo"><i data-lucide="hexagon"></i></div>
+        <div>
+          <div class="brand-name">Develop Center</div>
+          <div class="brand-sub">Project</div>
+        </div>
+      </div>
+      <div class="nav-label">Menu</div>
+      <div class="nav-item active"><i data-lucide="layout-dashboard"></i> Dashboard</div>
+      <div class="nav-item"><i data-lucide="folder-git-2"></i> Proyek</div>
+      <div class="nav-item"><i data-lucide="history"></i> Riwayat</div>
+      <div class="nav-item"><i data-lucide="bell"></i> Notifikasi <span class="nav-badge">2</span></div>
+      <div class="nav-item"><i data-lucide="settings"></i> Pengaturan</div>
+      <div class="user-box">
+        <div class="avatar">AD</div>
+        <div>
+          <div class="user-name">@andi_dev</div>
+          <div class="user-status"><span class="dot working"></span> Connected</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+      <header class="topbar">
+        <div class="search-wrap">
+          <i data-lucide="search"></i>
+          <input class="search" placeholder="Cari proyek, tugas, atau log…" />
+        </div>
+        <div class="topbar-actions">
+          <div class="icon-btn"><i data-lucide="bell"></i></div>
+          <div class="icon-btn"><i data-lucide="moon"></i></div>
+          <div class="avatar">AD</div>
+        </div>
+      </header>
+
+      <div class="content">
+        <!-- Main column -->
+        <div class="col-main">
+          <!-- Stats -->
+          <div class="stats">
+            <div class="stat">
+              <div class="stat-ico indigo"><i data-lucide="folder-git-2"></i></div>
+              <div><div class="stat-val">3</div><div class="stat-lbl">Proyek Aktif</div></div>
+            </div>
+            <div class="stat">
+              <div class="stat-ico blue"><i data-lucide="bot"></i></div>
+              <div><div class="stat-val">1</div><div class="stat-lbl">AI Bekerja</div></div>
+            </div>
+            <div class="stat">
+              <div class="stat-ico green"><i data-lucide="check-check"></i></div>
+              <div><div class="stat-val">12</div><div class="stat-lbl">Tugas Selesai</div></div>
+            </div>
+          </div>
+
+          <div class="section-head">
+            <div class="section-title">Proyek Dipantau</div>
+            <button class="btn-add"><i data-lucide="plus"></i> Tambah Proyek</button>
+          </div>
+
+          <div class="grid">
+            <!-- Card 1 -->
+            <div class="card">
+              <div class="card-head">
+                <div class="repo">
+                  <div class="repo-ico"><i data-lucide="github"></i></div>
+                  <div>
+                    <div class="repo-name">my-awesome-project</div>
+                    <div class="repo-url">andi/my-awesome-project</div>
+                  </div>
+                </div>
+                <div class="status"><span class="dot working"></span><span class="txt-working">Working</span></div>
+              </div>
+              <div class="task-label"><span>Tugas:</span> Implementasi login page</div>
+              <div class="progress"><div style="width:45%"></div></div>
+              <div class="meta"><i data-lucide="clock"></i> 2m lalu · feature/login</div>
+              <div class="card-actions">
+                <div class="btn btn-secondary"><i data-lucide="eye"></i> Detail</div>
+                <div class="btn btn-accent" onclick="openModal()"><i data-lucide="terminal"></i> Perintah</div>
+                <div class="btn btn-danger"><i data-lucide="square"></i> Stop</div>
+              </div>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="card">
+              <div class="card-head">
+                <div class="repo">
+                  <div class="repo-ico"><i data-lucide="github"></i></div>
+                  <div>
+                    <div class="repo-name">ecommerce-api</div>
+                    <div class="repo-url">andi/ecommerce-api</div>
+                  </div>
+                </div>
+                <div class="status"><span class="dot waiting"></span><span class="txt-waiting">Waiting</span></div>
+              </div>
+              <div class="task-label"><span>Tugas:</span> Fix bug checkout · PR #14</div>
+              <div class="progress"><div style="width:100%;background:var(--warning)"></div></div>
+              <div class="meta"><i data-lucide="clock"></i> 15m lalu · menunggu merge</div>
+              <div class="card-actions">
+                <div class="btn btn-secondary"><i data-lucide="eye"></i> Detail</div>
+                <div class="btn btn-success"><i data-lucide="git-merge"></i> Merge PR</div>
+              </div>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="card">
+              <div class="card-head">
+                <div class="repo">
+                  <div class="repo-ico"><i data-lucide="github"></i></div>
+                  <div>
+                    <div class="repo-name">portfolio-site</div>
+                    <div class="repo-url">andi/portfolio-site</div>
+                  </div>
+                </div>
+                <div class="status"><span class="dot idle"></span><span class="txt-idle">Idle</span></div>
+              </div>
+              <div class="task-label"><span>Terakhir:</span> Optimasi images</div>
+              <div class="progress"><div style="width:100%;background:var(--success)"></div></div>
+              <div class="meta"><i data-lucide="clock"></i> 3j lalu · selesai</div>
+              <div class="card-actions">
+                <div class="btn btn-secondary"><i data-lucide="eye"></i> Detail</div>
+                <div class="btn btn-accent" onclick="openModal()"><i data-lucide="terminal"></i> Perintah</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Side panel -->
+        <div class="col-side">
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-title">Activity Feed</div>
+              <i data-lucide="rss" style="color:var(--text-muted);width:16px;height:16px;"></i>
+            </div>
+            <div class="feed-item">
+              <div class="feed-ico working"><i data-lucide="refresh-cw"></i></div>
+              <div class="feed-body">
+                <div class="feed-msg"><b>Progress</b> — LoginForm 45% di <b>my-awesome-project</b></div>
+                <div class="feed-meta">2m lalu</div>
+              </div>
+            </div>
+            <div class="feed-item">
+              <div class="feed-ico waiting"><i data-lucide="git-pull-request"></i></div>
+              <div class="feed-body">
+                <div class="feed-msg"><b>PR dibuat</b> — AI buka PR #14 di <b>ecommerce-api</b></div>
+                <div class="feed-meta">15m lalu</div>
+              </div>
+            </div>
+            <div class="feed-item">
+              <div class="feed-ico success"><i data-lucide="check"></i></div>
+              <div class="feed-body">
+                <div class="feed-msg"><b>Selesai</b> — Optimasi images di <b>portfolio-site</b></div>
+                <div class="feed-meta">3j lalu</div>
+              </div>
+            </div>
+            <div class="feed-item">
+              <div class="feed-ico idle"><i data-lucide="git-commit-horizontal"></i></div>
+              <div class="feed-body">
+                <div class="feed-msg"><b>Commit</b> — fix: checkout validation di <b>ecommerce-api</b></div>
+                <div class="feed-meta">3j lalu</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal -->
+  <div class="overlay" id="modal">
+    <div class="modal">
+      <div class="modal-head">
+        <div class="modal-title">Kirim Perintah ke AI</div>
+        <div class="close" onclick="closeModal()"><i data-lucide="x"></i></div>
+      </div>
+      <label class="field-label">Pilih Proyek</label>
+      <select class="select">
+        <option>my-awesome-project</option>
+        <option>ecommerce-api</option>
+        <option>portfolio-site</option>
+      </select>
+      <label class="field-label">Instruksi</label>
+      <textarea class="textarea" rows="4" placeholder="Contoh: Tambahkan fitur lupa password di halaman login"></textarea>
+      <div class="modal-actions">
+        <div class="btn btn-secondary" style="flex:0 0 auto;padding:8px 18px" onclick="closeModal()">Batal</div>
+        <div class="btn btn-accent" style="flex:0 0 auto;padding:8px 18px" onclick="closeModal()"><i data-lucide="send"></i> Kirim</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openModal() { document.getElementById('modal').classList.add('show'); }
+    function closeModal() { document.getElementById('modal').classList.remove('show'); }
+    lucide.createIcons();
+  </script>
+</body>
+</html>
