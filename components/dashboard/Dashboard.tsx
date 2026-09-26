@@ -1,12 +1,18 @@
 import { Plus } from "lucide-react";
-import { projects } from "@/lib/mock";
+import { projects as mockProjects } from "@/lib/mock";
+import type { Project } from "@/lib/types";
 import { ProjectCard } from "./ProjectCard";
 import { Stats } from "./Stats";
 
-export function Dashboard({ onCommand }: { onCommand?: (projectId: string) => void }) {
+interface Props {
+  projects?: Project[];
+  onCommand?: (projectId: string) => void;
+}
+
+export function Dashboard({ projects = mockProjects, onCommand }: Props) {
   return (
     <div>
-      <Stats />
+      <Stats proyekAktif={projects.length} />
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-[17px] font-semibold tracking-tight">Proyek Dipantau</h2>
         <button className="flex items-center gap-1.5 rounded-[9px] bg-primary px-3.5 py-2 text-[13px] font-medium text-white transition-colors hover:bg-[#5457E5]">
