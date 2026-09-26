@@ -2,6 +2,7 @@ import { Clock, Eye, FolderGit2, GitMerge, Square, Terminal } from "lucide-react
 import { cn } from "@/lib/utils";
 import type { Project } from "@/lib/types";
 import { StatusBadge } from "./StatusBadge";
+import { PendingBadge } from "@/components/command/PendingBadge";
 
 const BAR: Record<Project["progressTone"], string> = {
   accent: "bg-primary",
@@ -48,7 +49,10 @@ export function ProjectCard({ project, onCommand }: { project: Project; onComman
 
           </div>
           <div>
-            <div className="text-sm font-semibold tracking-tight">{project.repoName}</div>
+            <div className="flex items-center text-sm font-semibold tracking-tight">
+              {project.repoName}
+              <PendingBadge projectId={project.id} />
+            </div>
             <div className="font-mono text-[11px] text-muted-foreground">{project.repoFull}</div>
           </div>
         </div>

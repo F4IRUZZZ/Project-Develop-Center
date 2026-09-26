@@ -17,9 +17,9 @@
 - [X] C3: activity feed + command modal
 - [X] C4: polish responsif + toggle tema (localStorage)
 
-## D. Backend & integrasi (DITUNDA, setelah dummy disetujui)
+## D. Backend & integrasi (D1 dummy, D2–D4 nyata bertahap)
 
-- [ ] D1: kontrak tipe + mock (Project, ActivityEvent, AIStatus)
+- [X] D1: command queue mock (localStorage, lifecycle simulasi, kontrak PRD §10)
 - [ ] D2: GitHub OAuth + daftar repo (PRD F1)
 - [ ] D3: DB Postgres + API routes + SSE (PRD F2-F5)
 - [ ] D4: MCP bridge `@pdc/mcp-server` + 8 tools (PRD F8 — risiko tertinggi)
@@ -28,6 +28,7 @@
 
 | Tanggal | Perubahan | Uji |
 |---|---|---|
+| 2026-09-27 | D1 queue mock merged (enqueue + panel + badge) | D1-CEK ALL-OK + tsc + build |
 | 2026-09-27 | C4 polish merged (tema + responsif) | C4-CEK ALL-OK + tsc + build |
 | 2026-09-27 | C3 feed + modal merged (4 item + wiring Perintah) | C3-CEK ALL-OK + tsc + build |
 | 2026-09-27 | C2 dashboard grid merged (stats + 3 kartu) | C2-CEK ALL-OK + tsc + build |
