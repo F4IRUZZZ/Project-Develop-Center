@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Send, X } from "lucide-react";
 import { projects } from "@/lib/mock";
+import { enqueue } from "@/lib/tasks";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -92,7 +93,10 @@ export function CommandModal({ open, initialProjectId, onClose }: Props) {
             Batal
           </button>
           <button
-            onClick={onClose}
+            onClick={() => {
+              enqueue(projectId, text);
+              onClose();
+            }}
             disabled={text.trim().length === 0}
             className={cn(
               "flex items-center gap-1.5 rounded-[9px] bg-primary/10 px-[18px] py-2 text-xs font-medium text-primary hover:bg-primary/20",
