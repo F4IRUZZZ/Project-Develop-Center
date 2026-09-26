@@ -15,7 +15,7 @@
 - [X] C1: shell + token Nebula (Sidebar 232px + Topbar 58px, dark default)
 - [X] C2: dashboard grid (stats 3 + 3 kartu proyek sesuai wireframe)
 - [X] C3: activity feed + command modal
-- [ ] C4: polish responsif + toggle tema (localStorage)
+- [X] C4: polish responsif + toggle tema (localStorage)
 
 ## D. Backend & integrasi (DITUNDA, setelah dummy disetujui)
 
@@ -28,6 +28,7 @@
 
 | Tanggal | Perubahan | Uji |
 |---|---|---|
+| 2026-09-27 | C4 polish merged (tema + responsif) | C4-CEK ALL-OK + tsc + build |
 | 2026-09-27 | C3 feed + modal merged (4 item + wiring Perintah) | C3-CEK ALL-OK + tsc + build |
 | 2026-09-27 | C2 dashboard grid merged (stats + 3 kartu) | C2-CEK ALL-OK + tsc + build |
 | 2026-09-27 | C1 shell merged (Sidebar + Topbar) | C1-CEK ALL-OK + tsc + build |

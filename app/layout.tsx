@@ -23,6 +23,13 @@ import { Topbar } from "@/components/shell/Topbar";
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="id" className={`${inter.variable} ${jetbrainsMono.variable} dark antialiased`}>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{if(localStorage.getItem("pdc-tema")==="terang"){document.documentElement.classList.remove("dark");document.documentElement.classList.add("light");}}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body className="min-h-screen bg-background text-foreground">
         <div className="flex h-screen overflow-hidden">
           <Sidebar />
