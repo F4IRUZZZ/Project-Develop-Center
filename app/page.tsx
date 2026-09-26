@@ -15,11 +15,11 @@ export default function Home() {
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-[1480px] gap-6 p-6">
+    <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-6 p-4 sm:p-6 xl:flex-row">
       <div className="min-w-0 flex-1">
         <Dashboard onCommand={openFor} />
       </div>
-      <div className="hidden w-[332px] shrink-0 xl:block">
+      <div className="w-full shrink-0 xl:w-[332px]">
         <ActivityFeed />
       </div>
       <CommandModal open={modalOpen} initialProjectId={selectedId} onClose={() => setModalOpen(false)} />

@@ -53,6 +53,26 @@
   --ring: #6366f1;
 }
 
+/* Light mode (PDC_Design_System.md §8 alternatif ringan) */
+.light {
+  --background: #fafafb;
+  --foreground: #18181b;
+  --card: #ffffff;
+  --card-foreground: #18181b;
+  --popover: #ffffff;
+  --popover-foreground: #18181b;
+  --primary: #6366f1;
+  --primary-foreground: #ffffff;
+  --muted: #f1f1f4;
+  --muted-foreground: #6b6b7b;
+  --accent: #6366f1;
+  --accent-foreground: #ffffff;
+  --destructive: #ef4444;
+  --border: #e4e4e9;
+  --input: #e4e4e9;
+  --ring: #6366f1;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

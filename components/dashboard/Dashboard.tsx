@@ -13,7 +13,7 @@ export function Dashboard({ onCommand }: { onCommand?: (projectId: string) => vo
           <Plus className="h-[15px] w-[15px]" /> Tambah Proyek
         </button>
       </div>
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2 2xl:grid-cols-3">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4">
         {projects.map((p) => (
           <ProjectCard key={p.id} project={p} onCommand={onCommand} />
         ))}
