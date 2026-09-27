@@ -36,7 +36,7 @@ Jalankan manual (debug):
 PDC_API_URL=http://localhost:3000 PDC_API_KEY=pdc_... npm start
 ```
 
-## Tools (working loop)
+## Tools (8)
 
 | Tool                         | Fungsi                                                              |
 | ---------------------------- | ------------------------------------------------------------------- |
@@ -44,7 +44,10 @@ PDC_API_URL=http://localhost:3000 PDC_API_KEY=pdc_... npm start
 | `pdc_report_progress`      | Lapor progress (`command_id`, `message`, `progress_percent?`) |
 | `pdc_report_completion`    | Lapor selesai (`command_id`, `summary`, `git_branch?`)        |
 | `pdc_report_error`         | Lapor gagal (`command_id`, `error_message`)                     |
+| `pdc_get_projects` | Daftar proyek dipantau |
+| `pdc_get_project_status` | Status AI proyek (`project_id`) |
+| `pdc_get_task_history` | Riwayat tugas (`project_id`) |
+| `pdc_get_github_context` | Branch, PR, issue terbuka (`project_id`) |
 
 Setiap report menulis `command_queue` + `tasks` + `activity_log` via API PDC
-(auth Bearer API key). 4 tools baca (`get_projects/status/history/github_context`)
-menyusul di D4b.
+(auth Bearer API key).

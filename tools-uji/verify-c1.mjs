@@ -24,8 +24,8 @@ cek("topbar 58px", topbar.includes("h-[58px]"));
 cek("search placeholder", topbar.includes("Cari proyek"));
 
 const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
-cek("layout pakai Sidebar", layout.includes("Sidebar"));
-cek("layout pakai Topbar", layout.includes("Topbar"));
+cek("layout pakai AppShell+Sidebar", layout.includes("AppShell"));
+cek("shell render Sidebar+Topbar", readFileSync(join(root, "components/shell/AppShell.tsx"), "utf8").includes("Sidebar"));
 
 if (gagal > 0) {
   console.log(`\nC1-CEK: ${gagal} gagal`);

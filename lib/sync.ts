@@ -8,6 +8,7 @@ interface GitHubRepo {
   html_url: string;
   default_branch: string;
   pushed_at: string;
+  private: boolean;
 }
 
 export const MAX_REPO = 10;
@@ -29,12 +30,13 @@ export async function syncProjects(userId: string): Promise<Record<string, unkno
   const sql = db();
   for (const r of top) {
     await sql`
-      INSERT INTO projects (id, user_id, repo_name, repo_full, repo_url, default_branch, updated_at)
-      VALUES (${`gh-${r.id}`}, ${userId}, ${r.name}, ${r.full_name}, ${r.html_url}, ${r.default_branch}, now())
+      INSERT INTO projects (id, user_id, repo_name, repo_full, repo_url, default_branch, is_private, updated_at)
+      VALUES (${`gh-${r.id}`}, ${userId}, ${r.name}, ${r.full_name}, ${r.html_url}, ${r.default_branch}, ${r.private}, now())
       ON CONFLICT (user_id, repo_full) DO UPDATE SET
         repo_name = EXCLUDED.repo_name,
         repo_url = EXCLUDED.repo_url,
         default_branch = EXCLUDED.default_branch,
+        is_private = EXCLUDED.is_private,
         is_active = true,
         updated_at = now()
     `;

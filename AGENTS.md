@@ -19,6 +19,11 @@
 - `node tools-uji/verify-*.mjs` (semua suite) + `npx tsc --noEmit` + `npm run build` hijau.
 - Skrip uji basi (assert teks/kode yang sudah diganti fase lain) = selaraskan skripnya, bukan dianggap regresi.
 
+## 3b. Konfirmasi selalu modal custom
+
+- `window.confirm()` / `alert()` DILARANG di `app/` dan `components/`.
+- Semua konfirmasi/validasi/error aksi lewat `components/ui/ConfirmModal.tsx` (gaya CommandModal).
+
 ## 4. Secret
 
 - Hanya di `.env.local` (gitignored). Template di `.env.example` tanpa nilai asli.

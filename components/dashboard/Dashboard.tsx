@@ -13,6 +13,7 @@ interface Props {
   teksKosong?: string;
   onCommand?: (projectId: string) => void;
   onStop?: (projectId: string) => void;
+  onVisibility?: (projectId: string, saatIniPrivate: boolean) => void;
   aksiHeader?: React.ReactNode;
 }
 
@@ -25,6 +26,7 @@ export function Dashboard({
   teksKosong = "Belum ada proyek.",
   onCommand,
   onStop,
+  onVisibility,
   aksiHeader,
 }: Props) {
   return (
@@ -46,7 +48,7 @@ export function Dashboard({
       ) : (
         <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4">
           {projects.map((p) => (
-            <ProjectCard key={p.id} project={p} readOnly={readOnly} onCommand={onCommand} onStop={onStop} />
+            <ProjectCard key={p.id} project={p} readOnly={readOnly} onCommand={onCommand} onStop={onStop} onVisibility={onVisibility} />
           ))}
         </div>
       )}

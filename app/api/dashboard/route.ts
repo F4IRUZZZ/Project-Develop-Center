@@ -58,6 +58,7 @@ export async function GET(req: NextRequest) {
         ? `${new Date(t.updated_at).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}${t.git_branch ? ` · ${t.git_branch}` : ""}`
         : `push · ${String(p.default_branch ?? "main")}`,
       branch: (t?.git_branch ?? (p.default_branch as string | null) ?? undefined) as string | undefined,
+      isPrivate: (p.is_private as boolean | null) ?? undefined,
       actions: (status === "waiting" ? [] : ["command", "stop"]) as Project["actions"],
     };
   });

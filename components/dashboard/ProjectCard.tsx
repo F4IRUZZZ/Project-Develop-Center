@@ -1,4 +1,4 @@
-import { Clock, FolderGit2, Square, Terminal } from "lucide-react";
+import { Clock, FolderGit2, Lock, LockOpen, Square, Terminal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Project } from "@/lib/types";
 import { StatusBadge } from "./StatusBadge";
@@ -15,9 +15,10 @@ interface CardProps {
   readOnly?: boolean;
   onCommand?: (projectId: string) => void;
   onStop?: (projectId: string) => void;
+  onVisibility?: (projectId: string, saatIniPrivate: boolean) => void;
 }
 
-export function ProjectCard({ project, readOnly, onCommand, onStop }: CardProps) {
+export function ProjectCard({ project, readOnly, onCommand, onStop, onVisibility }: CardProps) {
   const aksi = readOnly ? [] : project.actions;
   return (
     <article className="rounded-2xl border border-border bg-card p-[17px_18px] transition-all hover:-translate-y-px hover:border-[#34344A] hover:shadow-[0_6px_18px_rgba(0,0,0,0.4)]">
@@ -37,9 +38,28 @@ export function ProjectCard({ project, readOnly, onCommand, onStop }: CardProps)
         <StatusBadge status={project.status} label={project.statusLabel} />
       </div>
 
-      <div className="mb-2.5 text-[13px]">
-        <span className="text-muted-foreground">{project.taskPrefix}: </span>
-        {project.taskLabel}
+      <div className="mb-2.5 flex items-center gap-2 text-[13px]">
+        {project.isPrivate !== undefined &&
+          (onVisibility && !readOnly ? (
+            <button
+              onClick={() => onVisibility(project.id, project.isPrivate ?? false)}
+              title={project.isPrivate ? "Jadikan public" : "Jadikan private"}
+              aria-label={project.isPrivate ? "Jadikan public" : "Jadikan private"}
+              className="flex items-center gap-1 rounded-[9px] border border-border px-2 py-1 font-mono text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
+              {project.isPrivate ? <Lock className="h-3 w-3" /> : <LockOpen className="h-3 w-3" />}
+              {project.isPrivate ? "private" : "public"}
+            </button>
+          ) : (
+            <span className="flex items-center gap-1 font-mono text-[10px] text-muted-foreground">
+              {project.isPrivate ? <Lock className="h-3 w-3" /> : <LockOpen className="h-3 w-3" />}
+              {project.isPrivate ? "private" : "public"}
+            </span>
+          ))}
+        <div>
+          <span className="text-muted-foreground">{project.taskPrefix}: </span>
+          {project.taskLabel}
+        </div>
       </div>
       <div className="mb-[9px] h-1 overflow-hidden rounded bg-muted">
         <div className={cn("h-full rounded transition-all", BAR[project.progressTone])} style={{ width: `${project.progress}%` }} />

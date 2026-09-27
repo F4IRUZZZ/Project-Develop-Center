@@ -14,6 +14,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { fetchPenting } from "@/lib/notifikasi";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -52,6 +53,7 @@ function NotifBadge() {
 
 function UserBox() {
   const { data: session, status } = useSession();
+  const [tanyaKeluar, setTanyaKeluar] = useState(false);
 
   if (status === "loading") {
     return (
@@ -96,7 +98,7 @@ function UserBox() {
           </div>
         </div>
         <button
-          onClick={() => signOut()}
+          onClick={() => setTanyaKeluar(true)}
           title="Keluar"
           aria-label="Keluar"
           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -104,6 +106,14 @@ function UserBox() {
           <LogOut className="h-4 w-4" />
         </button>
       </div>
+      <ConfirmModal
+        open={tanyaKeluar}
+        judul="Keluar dari PDC?"
+        pesan="Sesi GitHub-mu di perangkat ini diakhiri. Antrian dan data di database tetap aman."
+        labelKonfirmasi="Ya, keluar"
+        onKonfirmasi={() => void signOut()}
+        onBatal={() => setTanyaKeluar(false)}
+      />
     </div>
   );
 }
