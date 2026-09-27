@@ -60,7 +60,12 @@ export default function Home() {
       <div className="w-full shrink-0 xl:w-[332px]">
         <ActivityFeed />
       </div>
-      <CommandModal open={modalOpen} initialProjectId={selectedId} onClose={() => setModalOpen(false)} />
+      <CommandModal
+        open={modalOpen}
+        initialProjectId={selectedId}
+        projects={live ?? mockProjects}
+        onClose={() => setModalOpen(false)}
+      />
     </div>
   );
 }

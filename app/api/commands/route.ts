@@ -42,11 +42,12 @@ export async function POST(req: NextRequest) {
   const taskId = buatId("task");
   const sql = db();
   await sql`INSERT INTO command_queue (id, user_id, project_id, command_text, status) VALUES (${id}, ${ctx.userId}, ${projectId}, ${text}, 'pending')`;
-  // Task menyertai perintah (status working, progress 0). Project dipastikan ada (sync ringan bila belum).
+  // Task menyertai perintah. Project dipastikan ada by id (bukan by repo_full
+  // placeholder, agar tidak tabrakan PK dengan baris hasil sync).
   await sql`
     INSERT INTO projects (id, user_id, repo_name, repo_full, is_active)
-    VALUES (${projectId}, ${ctx.userId}, ${projectId}, ${projectId}, true)
-    ON CONFLICT (user_id, repo_full) DO NOTHING
+    SELECT ${projectId}, ${ctx.userId}, ${projectId}, ${projectId}, true
+    WHERE NOT EXISTS (SELECT 1 FROM projects WHERE id = ${projectId} AND user_id = ${ctx.userId})
   `;
   await sql`INSERT INTO tasks (id, user_id, project_id, command_id, title, status, progress) VALUES (${taskId}, ${ctx.userId}, ${projectId}, ${id}, ${text}, 'working', 0)`;
   await sql`INSERT INTO activity_log (id, user_id, project_id, type, message) VALUES (${buatId("act")}, ${ctx.userId}, ${projectId}, 'info', ${`Perintah baru: ${text}`})`;
