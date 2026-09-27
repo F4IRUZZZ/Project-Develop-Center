@@ -16,8 +16,8 @@ import { cn } from "@/lib/utils";
 
 const NAV = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/", badge: null },
-  { label: "Proyek", icon: FolderGit2, href: null as string | null, badge: null },
-  { label: "Riwayat", icon: History, href: null as string | null, badge: null },
+  { label: "Proyek", icon: FolderGit2, href: "/proyek", badge: null },
+  { label: "Riwayat", icon: History, href: "/riwayat", badge: null },
   { label: "Notifikasi", icon: Bell, href: null as string | null, badge: "2" },
   { label: "Pengaturan", icon: Settings, href: "/pengaturan", badge: null },
 ];
