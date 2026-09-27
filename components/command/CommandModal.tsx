@@ -3,29 +3,31 @@
 import { useEffect, useState } from "react";
 import { Send, X } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { projects } from "@/lib/mock";
+import { projects as mockProjects } from "@/lib/mock";
+import type { Project } from "@/lib/types";
 import { kirimPerintah, sumberDariStatus } from "@/lib/queue";
 import { cn } from "@/lib/utils";
 
 interface Props {
   open: boolean;
   initialProjectId?: string;
+  projects?: Project[];
   onClose: () => void;
 }
 
-export function CommandModal({ open, initialProjectId, onClose }: Props) {
+export function CommandModal({ open, initialProjectId, projects = mockProjects, onClose }: Props) {
   const { status } = useSession();
-  const [projectId, setProjectId] = useState(initialProjectId ?? projects[0].id);
+  const [projectId, setProjectId] = useState(initialProjectId ?? projects[0]?.id ?? "");
   const [text, setText] = useState("");
   const [gagal, setGagal] = useState(false);
 
   useEffect(() => {
     if (open) {
-      setProjectId(initialProjectId ?? projects[0].id);
+      setProjectId(initialProjectId ?? projects[0]?.id ?? "");
       setText("");
       setGagal(false);
     }
-  }, [open, initialProjectId]);
+  }, [open, initialProjectId, projects]);
 
   useEffect(() => {
     if (!open) return;
@@ -107,10 +109,10 @@ export function CommandModal({ open, initialProjectId, onClose }: Props) {
               if (ok) onClose();
               else setGagal(true);
             }}
-            disabled={text.trim().length === 0}
+            disabled={text.trim().length === 0 || projectId === ""}
             className={cn(
               "flex items-center gap-1.5 rounded-[9px] bg-primary/10 px-[18px] py-2 text-xs font-medium text-primary hover:bg-primary/20",
-              text.trim().length === 0 && "cursor-not-allowed opacity-50 hover:bg-primary/10"
+              (text.trim().length === 0 || projectId === "") && "cursor-not-allowed opacity-50 hover:bg-primary/10"
             )}
           >
             <Send className="h-3.5 w-3.5" /> Kirim

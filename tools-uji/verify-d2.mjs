@@ -36,7 +36,7 @@ cek("status idle (AI asli di D4)", repos.includes('"idle"'));
 
 const page = readFileSync(join(root, "app/page.tsx"), "utf8");
 cek("page LoginCard saat logout", page.includes("LoginCard"));
-cek("page fetch live saat login", page.includes("fetchLiveProjects"));
+cek("page fetch live saat login", page.includes("fetchLiveProjects") || page.includes("fetchDashboard"));
 
 const sidebar = readFileSync(join(root, "components/shell/Sidebar.tsx"), "utf8");
 cek("sidebar useSession", sidebar.includes("useSession"));

@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { db, dbSiap } from "@/lib/db";
-import { enkrip } from "@/lib/crypto";
+import { dekrip, enkrip } from "@/lib/crypto";
 
 export interface Ctx {
   userId: string;
@@ -44,4 +44,16 @@ export async function sesiUser(req: NextRequest): Promise<Ctx | ApiError> {
 
 export function buatId(prefix: string): string {
   return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+// Ambil token GitHub user (dekrip) untuk fetch server-side.
+export async function tokenGitHub(userId: string): Promise<string | null> {
+  const rows = await db()`SELECT access_token_enc FROM users WHERE id = ${userId}`;
+  const enc = (rows[0] as { access_token_enc?: string } | undefined)?.access_token_enc;
+  if (!enc) return null;
+  try {
+    return dekrip(enc);
+  } catch {
+    return null;
+  }
 }

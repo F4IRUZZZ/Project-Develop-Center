@@ -1,5 +1,9 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { Check, GitCommitHorizontal, GitPullRequest, RefreshCw, Rss } from "lucide-react";
-import { activityFeed } from "@/lib/mock";
+import { activityFeed as mockFeed } from "@/lib/mock";
 import type { ActivityEvent } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -10,7 +14,37 @@ const ICO: Record<ActivityEvent["type"], { icon: typeof Check; tone: string }> =
   idle: { icon: GitCommitHorizontal, tone: "bg-muted text-muted-foreground" },
 };
 
+function waktuRelatif(iso: string): string {
+  const dtk = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
+  if (dtk < 60) return `${dtk} dtk lalu`;
+  const mnt = Math.round(dtk / 60);
+  if (mnt < 60) return `${mnt} mnt lalu`;
+  const jam = Math.round(mnt / 60);
+  if (jam < 24) return `${jam} jam lalu`;
+  return new Date(iso).toLocaleDateString("id-ID", { day: "numeric", month: "short" });
+}
+
 export function ActivityFeed() {
+  const { status } = useSession();
+  const [live, setLive] = useState<ActivityEvent[] | null>(null);
+
+  useEffect(() => {
+    if (status !== "authenticated") {
+      setLive(null);
+      return;
+    }
+    const muat = () =>
+      fetch("/api/activity", { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : Promise.reject()))
+        .then((d) => setLive(d as ActivityEvent[]))
+        .catch(() => {});
+    void muat();
+    const t = window.setInterval(muat, 5000);
+    return () => window.clearInterval(t);
+  }, [status]);
+
+  const items = live ?? mockFeed;
+
   return (
     <div className="rounded-2xl border border-border bg-card p-[18px]">
       <div className="mb-4 flex items-center justify-between">
@@ -18,8 +52,12 @@ export function ActivityFeed() {
         <Rss className="h-4 w-4 text-muted-foreground" />
       </div>
       <div>
-        {activityFeed.map((e) => {
+        {items.length === 0 && (
+          <p className="text-[13px] text-muted-foreground">Belum ada aktivitas. Kirim perintah untuk memulai.</p>
+        )}
+        {items.map((e) => {
           const c = ICO[e.type];
+          const parts = e.message.split(" — ");
           return (
             <div
               key={e.id}
@@ -35,11 +73,20 @@ export function ActivityFeed() {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="text-[12.5px] leading-snug">
-                  <b className="font-semibold">{e.message.split(" — ")[0]}</b>
-                  {" — "}
-                  {e.message.split(" — ")[1]} di <b className="font-semibold">{e.projectName}</b>
+                  {parts.length > 1 ? (
+                    <>
+                      <b className="font-semibold">{parts[0]}</b> — {parts[1]} di{" "}
+                      <b className="font-semibold">{e.projectName}</b>
+                    </>
+                  ) : (
+                    <>
+                      {e.message} <b className="font-semibold">{e.projectName}</b>
+                    </>
+                  )}
                 </div>
-                <div className="mt-1 font-mono text-[10.5px] text-muted-foreground">{e.time}</div>
+                <div className="mt-1 font-mono text-[10.5px] text-muted-foreground">
+                  {e.time.includes("T") ? waktuRelatif(e.time) : e.time}
+                </div>
               </div>
             </div>
           );
