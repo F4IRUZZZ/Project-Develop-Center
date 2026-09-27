@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { Send, X } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { projects } from "@/lib/mock";
-import { enqueue } from "@/lib/tasks";
+import { kirimPerintah, sumberDariStatus } from "@/lib/queue";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -13,13 +14,16 @@ interface Props {
 }
 
 export function CommandModal({ open, initialProjectId, onClose }: Props) {
+  const { status } = useSession();
   const [projectId, setProjectId] = useState(initialProjectId ?? projects[0].id);
   const [text, setText] = useState("");
+  const [gagal, setGagal] = useState(false);
 
   useEffect(() => {
     if (open) {
       setProjectId(initialProjectId ?? projects[0].id);
       setText("");
+      setGagal(false);
     }
   }, [open, initialProjectId]);
 
@@ -85,6 +89,11 @@ export function CommandModal({ open, initialProjectId, onClose }: Props) {
           className="mb-4 w-full resize-none rounded-[9px] border border-border bg-muted px-3 py-2.5 font-sans text-[13px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
         />
 
+        {gagal && (
+          <p className="mb-4 rounded-[9px] border border-red-500/30 bg-red-500/10 px-3 py-2 text-[13px] text-red-500">
+            Gagal menyimpan ke database. Coba lagi.
+          </p>
+        )}
         <div className="flex justify-end gap-2.5">
           <button
             onClick={onClose}
@@ -93,9 +102,10 @@ export function CommandModal({ open, initialProjectId, onClose }: Props) {
             Batal
           </button>
           <button
-            onClick={() => {
-              enqueue(projectId, text);
-              onClose();
+            onClick={async () => {
+              const ok = await kirimPerintah(projectId, text, sumberDariStatus(status));
+              if (ok) onClose();
+              else setGagal(true);
             }}
             disabled={text.trim().length === 0}
             className={cn(

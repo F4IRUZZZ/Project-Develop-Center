@@ -28,7 +28,7 @@ cek("fn enqueue", tasks.includes("export function enqueue"));
 cek("fn bersihkanSelesai", tasks.includes("bersihkanSelesai"));
 
 const modal = readFileSync(join(root, "components/command/CommandModal.tsx"), "utf8");
-cek("modal enqueue saat Kirim", modal.includes("enqueue(projectId, text)"));
+cek("modal kirim saat Kirim (enqueue/kirimPerintah)", modal.includes("enqueue(projectId, text)") || modal.includes("kirimPerintah(projectId, text"));
 
 const card = readFileSync(join(root, "components/dashboard/ProjectCard.tsx"), "utf8");
 cek("kartu badge pending", card.includes("PendingBadge"));
