@@ -7,7 +7,13 @@ export async function GET(req: NextRequest) {
   const ctx = await sesiUser(req);
   if (isErr(ctx)) return NextResponse.json({ error: ctx.error }, { status: ctx.status });
 
-  const projectId = new URL(req.url).searchParams.get("project_id");
+  const params = new URL(req.url).searchParams;
+  const projectId = params.get("project_id");
+  const commandId = params.get("command_id");
+  if (commandId) {
+    const rows = await db()`SELECT * FROM tasks WHERE user_id = ${ctx.userId} AND command_id = ${commandId} ORDER BY created_at DESC LIMIT 1`;
+    return NextResponse.json(rows);
+  }
   const rows = projectId
     ? await db()`SELECT * FROM tasks WHERE user_id = ${ctx.userId} AND project_id = ${projectId} ORDER BY created_at DESC LIMIT 20`
     : await db()`
