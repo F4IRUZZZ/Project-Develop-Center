@@ -26,7 +26,7 @@ cek("mock 3 proyek", mock.includes("my-awesome-project") && mock.includes("ecomm
 cek("mock progress 45", mock.includes("progress: 45"));
 
 const card = readFileSync(join(root, "components/dashboard/ProjectCard.tsx"), "utf8");
-cek("kartu aksi Merge PR", card.includes("Merge PR"));
+cek("kartu tanpa Merge PR (dihapus E3)", !card.includes("Merge PR"));
 cek("kartu aksi Stop", card.includes("Stop"));
 cek("kartu aksi Perintah", card.includes("Perintah"));
 

@@ -20,9 +20,12 @@ export async function GET(req: NextRequest) {
   if (isErr(ctx)) return NextResponse.json({ error: ctx.error }, { status: ctx.status });
 
   const projectId = new URL(req.url).searchParams.get("project_id");
+  const mentah = new URL(req.url).searchParams.get("format") === "mentah";
   const rows = (await (projectId
     ? db()`SELECT a.*, p.repo_name FROM activity_log a JOIN projects p ON p.id = a.project_id WHERE a.user_id = ${ctx.userId} AND a.project_id = ${projectId} ORDER BY a.created_at DESC LIMIT 20`
     : db()`SELECT a.*, p.repo_name FROM activity_log a JOIN projects p ON p.id = a.project_id WHERE a.user_id = ${ctx.userId} ORDER BY a.created_at DESC LIMIT 20`)) as Record<string, unknown>[];
+
+  if (mentah) return NextResponse.json(rows);
 
   const out: ActivityEvent[] = rows.map((r, i) => ({
     id: String(r.id ?? i),
