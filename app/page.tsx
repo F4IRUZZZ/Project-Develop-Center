@@ -10,6 +10,7 @@ import { LoginCard } from "@/components/dashboard/LoginCard";
 import { Stats } from "@/components/dashboard/Stats";
 import { fetchDashboard } from "@/lib/github";
 import { projects as mockProjects } from "@/lib/mock";
+import { EVENT_SEARCH } from "@/components/shell/SearchBox";
 import type { Project } from "@/lib/types";
 
 const PERHATIAN = new Set(["working", "waiting", "stuck", "failed"]);
@@ -21,6 +22,7 @@ export default function Home() {
   const [live, setLive] = useState<Project[] | null>(null);
   const [gagalRepo, setGagalRepo] = useState(false);
   const [angka, setAngka] = useState<{ proyekAktif: number; aiBekerja: number; tugasSelesai: number } | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const muatAngka = () => {
     fetch("/api/stats", { cache: "no-store" })
@@ -49,6 +51,15 @@ export default function Home() {
     return () => window.clearInterval(t);
   }, [status]);
 
+  useEffect(() => {
+    const onSearch = (e: Event) => {
+      const custom = e as CustomEvent<string>;
+      setSearchQuery(custom.detail || "");
+    };
+    window.addEventListener(EVENT_SEARCH, onSearch);
+    return () => window.removeEventListener(EVENT_SEARCH, onSearch);
+  }, []);
+
   const muatUlang = () => {
     fetchDashboard()
       .then(setLive)
@@ -56,7 +67,14 @@ export default function Home() {
   };
 
   const semua = live ?? mockProjects;
-  const perhatian = (live ?? []).filter((p) => PERHATIAN.has(p.status));
+  const kataKunci = searchQuery.trim().toLowerCase();
+  const perhatian = (live ?? []).filter(
+    (p) =>
+      PERHATIAN.has(p.status) &&
+      (!kataKunci ||
+        p.repoName.toLowerCase().includes(kataKunci) ||
+        p.repoFull.toLowerCase().includes(kataKunci))
+  );
 
   return (
     <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-6 p-4 sm:p-6 xl:flex-row">

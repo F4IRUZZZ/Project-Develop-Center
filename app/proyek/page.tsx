@@ -8,6 +8,7 @@ import { CommandModal } from "@/components/command/CommandModal";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { PullModal } from "@/components/command/PullModal";
 import { Dashboard } from "@/components/dashboard/Dashboard";
+import { EVENT_SEARCH } from "@/components/shell/SearchBox";
 import { siarNotifikasi } from "@/lib/notifikasi";
 import type { Project } from "@/lib/types";
 
@@ -21,6 +22,7 @@ interface Konfirmasi {
 export default function Proyek() {
   const { data: session, status } = useSession();
   const [daftar, setDaftar] = useState<Project[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [syncing, setSyncing] = useState(true);
   const [angka, setAngka] = useState<{ proyekAktif: number; aiBekerja: number; tugasSelesai: number } | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -68,6 +70,15 @@ export default function Proyek() {
     return () => window.clearInterval(t);
   }, [status, muat]);
 
+  useEffect(() => {
+    const onSearch = (e: Event) => {
+      const custom = e as CustomEvent<string>;
+      setSearchQuery(custom.detail || "");
+    };
+    window.addEventListener(EVENT_SEARCH, onSearch);
+    return () => window.removeEventListener(EVENT_SEARCH, onSearch);
+  }, []);
+
   const jalankanKonfirmasi = useCallback(async () => {
     if (!konfirmasi) return;
     if (konfirmasi.jenis === "stop") {
@@ -98,14 +109,24 @@ export default function Proyek() {
 
   const namaRepo = (id: string) => daftar.find((p) => p.id === id)?.repoName ?? id;
 
+  const kataKunci = searchQuery.trim().toLowerCase();
+  const projectsTampil = kataKunci
+    ? daftar.filter(
+        (p) =>
+          p.repoName.toLowerCase().includes(kataKunci) ||
+          p.repoFull.toLowerCase().includes(kataKunci)
+      )
+    : daftar;
+
   if (status === "loading") return <p className="font-mono text-xs text-muted-foreground">Memuat sesi…</p>;
   if (!session?.user) return <LoginCard />;
 
   return (
     <div className="mx-auto w-full max-w-[1480px] p-4 sm:p-6">
       <Dashboard
-        projects={daftar}
-        judul={`Proyek (${daftar.length})`}
+        projects={projectsTampil}
+        judul={kataKunci ? `Hasil Pencarian (${projectsTampil.length})` : `Proyek (${daftar.length})`}
+        teksKosong={kataKunci ? `Tidak ada proyek yang cocok dengan "${searchQuery}".` : "Belum ada proyek."}
         stats={angka ?? undefined}
         onCommand={(id) => {
           setSelectedId(id);

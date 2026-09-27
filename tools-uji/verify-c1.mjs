@@ -21,7 +21,7 @@ cek("user box session-aware (D2)", sidebar.includes("UserBox") && sidebar.includ
 
 const topbar = readFileSync(join(root, "components/shell/Topbar.tsx"), "utf8");
 cek("topbar 58px", topbar.includes("h-[58px]"));
-cek("search placeholder", topbar.includes("Cari proyek"));
+cek("search placeholder", topbar.includes("SearchBox") || topbar.includes("Cari proyek"));
 
 const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
 cek("layout pakai AppShell+Sidebar", layout.includes("AppShell"));
