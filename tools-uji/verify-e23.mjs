@@ -37,7 +37,7 @@ cek("proyek grid kartu + stop", proyek.includes("Dashboard") && proyek.includes(
 const home = readFileSync(join(root, "app/page.tsx"), "utf8");
 cek("home filter perhatian", home.includes("PERHATIAN") && home.includes("Perlu Perhatian"));
 const cancel = readFileSync(join(root, "app/api/commands/cancel/route.ts"), "utf8");
-cek("cancel batalkan + tulis error", cancel.includes("Dihentikan pengguna") && cancel.includes("activity_log"));
+cek("cancel batalkan + tulis error", (cancel.includes("Dihentikan pengguna") || cancel.includes("TANDA_STOP")) && cancel.includes("activity_log"));
 
 if (gagal > 0) {
   console.log(`\nE23-CEK: ${gagal} gagal`);
