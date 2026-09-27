@@ -20,6 +20,14 @@ export default function Home() {
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
   const [live, setLive] = useState<Project[] | null>(null);
   const [gagalRepo, setGagalRepo] = useState(false);
+  const [angka, setAngka] = useState<{ proyekAktif: number; aiBekerja: number; tugasSelesai: number } | null>(null);
+
+  const muatAngka = () => {
+    fetch("/api/stats", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((d) => setAngka(d as { proyekAktif: number; aiBekerja: number; tugasSelesai: number }))
+      .catch(() => {});
+  };
 
   const openFor = (projectId?: string) => {
     setSelectedId(projectId);
@@ -31,10 +39,12 @@ export default function Home() {
     fetchDashboard()
       .then(setLive)
       .catch(() => setGagalRepo(true));
+    muatAngka();
     const t = window.setInterval(() => {
       fetchDashboard()
         .then(setLive)
         .catch(() => {});
+      muatAngka();
     }, 10000);
     return () => window.clearInterval(t);
   }, [status]);
@@ -57,7 +67,11 @@ export default function Home() {
           <LoginCard />
         ) : live ? (
           <>
-            <Stats proyekAktif={semua.length} />
+            <Stats
+              proyekAktif={angka?.proyekAktif ?? semua.length}
+              aiBekerja={angka?.aiBekerja}
+              tugasSelesai={angka?.tugasSelesai}
+            />
             <Dashboard
               projects={perhatian}
               judul="Perlu Perhatian"

@@ -37,6 +37,14 @@ export async function GET(req: NextRequest) {
   `) as unknown as TaskRow[];
   const perProyek = new Map(tasks.map((t) => [t.project_id, t]));
 
+  // Proyek "jalan": ada command pending/processing ATAU task working/stuck.
+  const jalan = (await sql`
+    SELECT project_id FROM command_queue WHERE user_id = ${ctx.userId} AND status IN ('pending', 'processing')
+    UNION
+    SELECT project_id FROM tasks WHERE user_id = ${ctx.userId} AND status IN ('working', 'stuck')
+  `) as unknown as Array<{ project_id: string }>;
+  const jalanSet = new Set(jalan.map((r) => r.project_id));
+
   const out: Project[] = projects.map((p) => {
     const id = String(p.id);
     const t = perProyek.get(id);
@@ -64,7 +72,7 @@ export async function GET(req: NextRequest) {
         : `push · ${String(p.default_branch ?? "main")}`,
       branch: (t?.git_branch ?? (p.default_branch as string | null) ?? undefined) as string | undefined,
       isPrivate: (p.is_private as boolean | null) ?? undefined,
-      actions: (status === "waiting" ? [] : ["command", "stop"]) as Project["actions"],
+      actions: (status === "waiting" ? [] : jalanSet.has(id) ? (["command", "stop"] as Project["actions"]) : (["command"] as Project["actions"])),
     };
   });
 

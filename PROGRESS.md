@@ -35,13 +35,15 @@
 ## G. Input pengguna (pasca-D0)
 
 - [X] F-batch: visibility repo + login landing + logout confirm + ConfirmModal (mode dicabut total)
-- [X] G: notif dibaca + bersihkan (bug) + scroll + refresh (PR)
+- [X] G: notif dibaca + bersihkan (bug) + scroll + refresh
 - [X] H: approval merge PR dari webapp (tombol PR + PullModal + confirm, merge commit)
+- [X] J: stats asli + stop kondisional + halaman detail proyek (PR)
 
 ## H. Riwayat Perubahan
 
 | Tanggal | Perubahan | Uji |
 |---|---|---|
+| 2026-09-27 | J stats+stop+detail (PR, angka DB + stop jalan + /proyek/[id]) | J-CEK ALL-OK + 14 suite hijau + tsc + build + stats 401-gate |
 | 2026-09-27 | H approval merge merged (tombol PR + tutup task + Stop waiting) | H-CEK ALL-OK + 13 suite hijau + tsc + build + merge live |
 | 2026-09-27 | G notif+refresh (PR, reads + DELETE fix + scroll + refetch) | G-CEK ALL-OK + 13 suite hijau + tsc + build |
 | 2026-09-27 | F-batch merged (visibility + landing + confirm + ConfirmModal) | F-CEK ALL-OK + 12 suite hijau + tsc + build + uji manual |
