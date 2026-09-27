@@ -51,7 +51,10 @@ export async function GET(req: NextRequest) {
     // Stop-cancel tampil idle ("seolah tak terjadi"); failed-asli tetap merah.
     // Riwayat (/api/tasks) tidak tersentuh: tetap catat failed.
     const dibatalkan = t?.status === "failed" && t?.result_summary === TANDA_STOP;
-    const status = (dibatalkan ? "idle" : (t?.status ?? "idle")) as AIStatus;
+    // Stuck display-level (F9): working tanpa update >30 mnt. Tanpa tulis DB.
+    const macet =
+      t?.status === "working" && Date.now() - new Date(t.updated_at).getTime() > 30 * 60 * 1000;
+    const status = (dibatalkan ? "idle" : macet ? "stuck" : (t?.status ?? "idle")) as AIStatus;
     const progress = dibatalkan ? 100 : t ? Number(t.progress) : 100;
     return {
       id,

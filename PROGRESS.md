@@ -38,6 +38,7 @@
 - [X] G: notif dibaca + bersihkan (bug) + scroll + refresh
 - [X] H: approval merge PR dari webapp (tombol PR + PullModal + confirm, merge commit)
 - [X] J: stats asli + stop kondisional + halaman detail proyek
+- [X] F9: webhook GitHub + stuck display (PR)
 - [X] K: Stop di detail hanya bila ada yang jalan
 - [X] L: navigasi HP bottom tab bar (PR)
 
@@ -47,6 +48,7 @@
 |---|---|---|
 | 2026-09-27 | L bottom nav HP (PR, 5 item + badge bersama) | L-CEK ALL-OK + 14 suite hijau + tsc + build |
 | 2026-09-27 | K stop detail kondisional merged | J-CEK ALL-OK + tsc + build |
+| 2026-09-27 | F9 webhook (PR, hook + stuck display) | F9-CEK ALL-OK + 14 suite hijau + tsc + build + 401/pong/abaikan/tulis |
 | 2026-09-27 | J stats+stop+detail (PR, angka DB + stop jalan + /proyek/[id]) | J-CEK ALL-OK + 14 suite hijau + tsc + build + stats 401-gate |
 | 2026-09-27 | H approval merge merged (tombol PR + tutup task + Stop waiting) | H-CEK ALL-OK + 13 suite hijau + tsc + build + merge live |
 | 2026-09-27 | G notif+refresh (PR, reads + DELETE fix + scroll + refetch) | G-CEK ALL-OK + 13 suite hijau + tsc + build |
