@@ -48,5 +48,6 @@ export async function POST(req: NextRequest) {
 
   const sql = db();
   await sql`INSERT INTO activity_log (id, user_id, project_id, type, message) VALUES (${buatId("act")}, ${ctx.userId}, ${projectId}, 'pr', ${`Merge PR #${prNumber} dari webapp.`})`;
+  await sql`UPDATE tasks SET status = 'completed', progress = 100, completed_at = now(), updated_at = now(), result_summary = ${`Merged via webapp PR #${prNumber}.`} WHERE user_id = ${ctx.userId} AND project_id = ${projectId} AND status = 'waiting'`;
   return NextResponse.json({ ok: true, merged: true });
 }

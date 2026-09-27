@@ -73,7 +73,17 @@ export function ProjectCard({ project, readOnly, onCommand, onStop, onVisibility
       {(aksi.length > 0 || tampilPr) && (
         <div className="flex gap-2">
           {tampilPr ? (
-            <PrButton onClick={() => onPulls?.(project.id)} />
+            <>
+              <PrButton onClick={() => onPulls?.(project.id)} />
+              {onStop && !readOnly && (
+                <button
+                  onClick={() => onStop(project.id)}
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-[9px] bg-red-500/10 px-0 py-2 text-xs font-medium text-red-500 transition-colors hover:bg-red-500/20"
+                >
+                  <Square className="h-3.5 w-3.5" /> Stop
+                </button>
+              )}
+            </>
           ) : (
             <>
               {aksi.includes("command" as Project["actions"][number]) && (
