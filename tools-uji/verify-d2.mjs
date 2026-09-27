@@ -1,0 +1,52 @@
+import { existsSync, readFileSync } from "node:fs";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+let gagal = 0;
+function cek(nama, ok, detail = "") {
+  console.log(`${ok ? "OK  " : "GAGAL"} ${nama}${detail ? ` — ${detail}` : ""}`);
+  if (!ok) gagal += 1;
+}
+
+for (const f of [
+  "lib/auth.ts",
+  "app/api/auth/[...nextauth]/route.ts",
+  "app/api/repos/route.ts",
+  "lib/github.ts",
+  "components/shell/Providers.tsx",
+  "components/dashboard/LoginCard.tsx",
+  ".env.example",
+  "app/page.tsx",
+]) {
+  cek(f, existsSync(join(root, f)));
+}
+
+const auth = readFileSync(join(root, "lib/auth.ts"), "utf8");
+cek("provider GitHub", auth.includes("GitHubProvider"));
+cek("scope repo", auth.includes("repo"));
+cek("strategi jwt", auth.includes('"jwt"'));
+cek("token server-side (tanpa session callback)", !auth.includes("session("));
+
+const repos = readFileSync(join(root, "app/api/repos/route.ts"), "utf8");
+cek("getToken JWT", repos.includes("getToken"));
+cek("401 saat belum login", repos.includes("401"));
+cek("max 10 repo", repos.includes("10"));
+cek("status idle (AI asli di D4)", repos.includes('"idle"'));
+
+const page = readFileSync(join(root, "app/page.tsx"), "utf8");
+cek("page LoginCard saat logout", page.includes("LoginCard"));
+cek("page fetch live saat login", page.includes("fetchLiveProjects"));
+
+const sidebar = readFileSync(join(root, "components/shell/Sidebar.tsx"), "utf8");
+cek("sidebar useSession", sidebar.includes("useSession"));
+cek("sidebar logout", sidebar.includes("signOut"));
+
+const env = readFileSync(join(root, ".env.example"), "utf8");
+cek("env contoh tanpa secret asli", env.includes("GITHUB_ID=") && !env.includes("gho_"));
+
+if (gagal > 0) {
+  console.log(`\nD2-CEK: ${gagal} gagal`);
+  process.exit(1);
+}
+console.log("\nD2-CEK: ALL-OK");

@@ -20,7 +20,7 @@
 ## D. Backend & integrasi (D1 dummy, D2–D4 nyata bertahap)
 
 - [X] D1: command queue mock (localStorage, lifecycle simulasi, kontrak PRD §10)
-- [ ] D2: GitHub OAuth + daftar repo (PRD F1)
+- [X] D2: GitHub OAuth + daftar repo live (token JWT server-side, max 10 repo)
 - [ ] D3: DB Postgres + API routes + SSE (PRD F2-F5)
 - [ ] D4: MCP bridge `@pdc/mcp-server` + 8 tools (PRD F8 — risiko tertinggi)
 
@@ -28,6 +28,7 @@
 
 | Tanggal | Perubahan | Uji |
 |---|---|---|
+| 2026-09-27 | D2 OAuth merged (login + repo live, token server-side) | D2-CEK ALL-OK + tsc + build + login manual |
 | 2026-09-27 | D1 queue mock merged (enqueue + panel + badge) | D1-CEK ALL-OK + tsc + build |
 | 2026-09-27 | C4 polish merged (tema + responsif) | C4-CEK ALL-OK + tsc + build |
 | 2026-09-27 | C3 feed + modal merged (4 item + wiring Perintah) | C3-CEK ALL-OK + tsc + build |

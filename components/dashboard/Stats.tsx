@@ -1,13 +1,23 @@
 import { Bot, CheckCheck, FolderGit2 } from "lucide-react";
-import { stats } from "@/lib/mock";
+import { stats as mockStats } from "@/lib/mock";
 
-const ITEMS = [
-  { icon: FolderGit2, value: stats.proyekAktif, label: "Proyek Aktif", tone: "bg-primary/10 text-primary" },
-  { icon: Bot, value: stats.aiBekerja, label: "AI Bekerja", tone: "bg-sky-500/10 text-sky-500" },
-  { icon: CheckCheck, value: stats.tugasSelesai, label: "Tugas Selesai", tone: "bg-emerald-500/10 text-emerald-500" },
-];
+interface Props {
+  proyekAktif?: number;
+  aiBekerja?: number;
+  tugasSelesai?: number;
+}
 
-export function Stats() {
+export function Stats({
+  proyekAktif = mockStats.proyekAktif,
+  aiBekerja = mockStats.aiBekerja,
+  tugasSelesai = mockStats.tugasSelesai,
+}: Props) {
+  const ITEMS = [
+    { icon: FolderGit2, value: proyekAktif, label: "Proyek Aktif", tone: "bg-primary/10 text-primary" },
+    { icon: Bot, value: aiBekerja, label: "AI Bekerja", tone: "bg-sky-500/10 text-sky-500" },
+    { icon: CheckCheck, value: tugasSelesai, label: "Tugas Selesai", tone: "bg-emerald-500/10 text-emerald-500" },
+  ];
+
   return (
     <div className="mb-6 grid grid-cols-1 gap-3.5 sm:grid-cols-3">
       {ITEMS.map((s) => (
