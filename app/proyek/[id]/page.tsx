@@ -87,6 +87,9 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
     );
 
   const aktif = tasks.find((t) => ["working", "waiting", "stuck"].includes(t.status));
+  const adaJalan =
+    tasks.some((t) => ["working", "stuck"].includes(t.status)) ||
+    commands.some((c) => ["pending", "processing"].includes(c.status));
 
   return (
     <div className="mx-auto w-full max-w-3xl p-4 sm:p-6">
@@ -138,12 +141,14 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
               PR
             </button>
           )}
-          <button
-            onClick={() => setTanyaStop(true)}
-            className="rounded-[9px] bg-red-500/10 px-4 py-2 text-xs font-medium text-red-500 hover:bg-red-500/20"
-          >
-            Stop
-          </button>
+          {adaJalan && (
+            <button
+              onClick={() => setTanyaStop(true)}
+              className="rounded-[9px] bg-red-500/10 px-4 py-2 text-xs font-medium text-red-500 hover:bg-red-500/20"
+            >
+              Stop
+            </button>
+          )}
         </div>
       </div>
 
