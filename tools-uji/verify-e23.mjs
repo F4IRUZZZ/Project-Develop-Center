@@ -21,7 +21,7 @@ cek("nav notifikasi hidup", sidebar.includes('href: "/notifikasi"'));
 const act = readFileSync(join(root, "app/api/activity/route.ts"), "utf8");
 cek("activity format mentah", act.includes("format") && act.includes("mentah"));
 const halNotif = readFileSync(join(root, "app/notifikasi/page.tsx"), "utf8");
-cek("halaman notifikasi + empty", halNotif.includes("fetchPenting") && halNotif.includes("Tidak ada notifikasi"));
+cek("halaman notifikasi + empty", halNotif.includes("fetchNotifikasi") && halNotif.includes("Tidak ada notifikasi"));
 
 // E3
 for (const f of ["app/api/commands/cancel/route.ts"]) {

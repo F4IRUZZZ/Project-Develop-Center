@@ -36,7 +36,7 @@ const authSrv = readFileSync(join(root, "lib/server-auth.ts"), "utf8");
 cek("401 saat logout", authSrv.includes("401"));
 
 const apiId = readFileSync(join(root, "app/api/commands/[id]/route.ts"), "utf8");
-cek("PATCH + DELETE", apiId.includes("export async function PATCH") && apiId.includes("export async function DELETE"));
+cek("PATCH di [id], DELETE di koleksi (pindah G2)", apiId.includes("export async function PATCH") && readFileSync(join(root, "app/api/commands/route.ts"), "utf8").includes("export async function DELETE"));
 
 const queue = readFileSync(join(root, "lib/queue.ts"), "utf8");
 cek("polling 5 detik", queue.includes("5000"));

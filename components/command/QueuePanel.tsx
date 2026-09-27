@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Inbox, Trash2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { bersihkanAntrian, sumberDariStatus, useQueue } from "@/lib/queue";
@@ -37,6 +38,7 @@ export function QueuePanel() {
   const { status } = useSession();
   const { antrian } = useQueue();
   const selesai = antrian.filter((c) => c.status === "completed" || c.status === "failed").length;
+  const [gagalHapus, setGagalHapus] = useState(false);
 
   return (
     <div className="mt-6 rounded-2xl border border-border bg-card p-[18px]">
@@ -48,20 +50,28 @@ export function QueuePanel() {
         </div>
         {selesai > 0 && (
           <button
-            onClick={() => void bersihkanAntrian(sumberDariStatus(status))}
+            onClick={async () => {
+              const ok = await bersihkanAntrian(sumberDariStatus(status));
+              setGagalHapus(!ok);
+            }}
             className="flex items-center gap-1.5 rounded-[9px] border border-border px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
           >
             <Trash2 className="h-3.5 w-3.5" /> Bersihkan selesai
           </button>
         )}
       </div>
+      {gagalHapus && (
+        <p className="mb-3 rounded-[9px] border border-red-500/30 bg-red-500/10 px-3 py-2 text-[13px] text-red-500">
+          Gagal membersihkan. Coba lagi.
+        </p>
+      )}
 
       {antrian.length === 0 ? (
         <p className="text-[13px] text-muted-foreground">
           Belum ada perintah. Klik <b className="font-semibold">Perintah</b> pada kartu proyek untuk mengirim satu.
         </p>
       ) : (
-        <div>
+        <div className="scroll-tipis max-h-[400px] overflow-y-auto pr-1">
           {antrian.map((c) => (
             <div key={c.id} className="border-b border-border py-2.5 last:border-b-0">
               <div className="flex items-center justify-between gap-2">

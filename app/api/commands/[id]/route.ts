@@ -31,11 +31,3 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (rows.length === 0) return NextResponse.json({ error: "Perintah tidak ketemu" }, { status: 404 });
   return NextResponse.json({ ok: true });
 }
-
-export async function DELETE(req: NextRequest) {
-  const ctx = await sesiUser(req);
-  if (isErr(ctx)) return NextResponse.json({ error: ctx.error }, { status: ctx.status });
-
-  await db()`DELETE FROM command_queue WHERE user_id = ${ctx.userId} AND status IN ('completed', 'failed')`;
-  return NextResponse.json({ ok: true });
-}

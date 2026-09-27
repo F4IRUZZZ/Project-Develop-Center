@@ -63,17 +63,19 @@ export async function kirimPerintah(projectId: string, text: string, sumber: Sum
   }
 }
 
-export async function bersihkanAntrian(sumber: Sumber) {
+export async function bersihkanAntrian(sumber: Sumber): Promise<boolean> {
   if (sumber === "lokal") {
     bersihkanSelesai();
-    return;
+    return true;
   }
   try {
-    await fetch("/api/commands", { method: "DELETE" });
+    const res = await fetch("/api/commands", { method: "DELETE" });
+    if (!res.ok) return false;
   } catch {
-    /* abaikan */
+    return false;
   }
   await muatDariApi();
+  return true;
 }
 
 function mulai(sumber: Sumber) {

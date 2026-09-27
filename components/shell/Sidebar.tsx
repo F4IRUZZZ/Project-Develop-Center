@@ -13,7 +13,7 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { fetchPenting } from "@/lib/notifikasi";
+import { fetchNotifikasi, EVENT_NOTIF } from "@/lib/notifikasi";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { cn } from "@/lib/utils";
 
@@ -35,12 +35,17 @@ function NotifBadge() {
       return;
     }
     const muat = () =>
-      fetchPenting()
-        .then((rows) => setN(rows.length))
+      fetchNotifikasi()
+        .then((rows) => setN(rows.filter((r) => !r.dibaca).length))
         .catch(() => {});
     void muat();
+    // Event aksi (stop/tandai) = instan; poll 30s = jaring pengaman.
+    window.addEventListener(EVENT_NOTIF, muat);
     const t = window.setInterval(muat, 30000);
-    return () => window.clearInterval(t);
+    return () => {
+      window.removeEventListener(EVENT_NOTIF, muat);
+      window.clearInterval(t);
+    };
   }, [status]);
 
   if (n === 0) return null;

@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { isErr, sesiUser } from "@/lib/server-auth";
 import { syncProjects } from "@/lib/sync";
+import { TANDA_STOP } from "@/lib/tasks";
 import type { AIStatus, Project } from "@/lib/types";
 
 interface TaskRow {
@@ -10,6 +11,7 @@ interface TaskRow {
   status: AIStatus;
   progress: number;
   git_branch: string | null;
+  result_summary: string | null;
   updated_at: string;
 }
 
@@ -30,7 +32,7 @@ export async function GET(req: NextRequest) {
   }
 
   const tasks = (await sql`
-    SELECT DISTINCT ON (project_id) project_id, title, status, progress, git_branch, updated_at
+    SELECT DISTINCT ON (project_id) project_id, title, status, progress, git_branch, result_summary, updated_at
     FROM tasks WHERE user_id = ${ctx.userId} ORDER BY project_id, created_at DESC
   `) as unknown as TaskRow[];
   const perProyek = new Map(tasks.map((t) => [t.project_id, t]));
@@ -38,8 +40,11 @@ export async function GET(req: NextRequest) {
   const out: Project[] = projects.map((p) => {
     const id = String(p.id);
     const t = perProyek.get(id);
-    const status = (t?.status ?? "idle") as AIStatus;
-    const progress = t ? Number(t.progress) : 100;
+    // Stop-cancel tampil idle ("seolah tak terjadi"); failed-asli tetap merah.
+    // Riwayat (/api/tasks) tidak tersentuh: tetap catat failed.
+    const dibatalkan = t?.status === "failed" && t?.result_summary === TANDA_STOP;
+    const status = (dibatalkan ? "idle" : (t?.status ?? "idle")) as AIStatus;
+    const progress = dibatalkan ? 100 : t ? Number(t.progress) : 100;
     return {
       id,
       repoName: String(p.repo_name),
@@ -47,7 +52,7 @@ export async function GET(req: NextRequest) {
       status,
       statusLabel: status[0].toUpperCase() + status.slice(1),
       taskLabel: t ? t.title : `Branch ${String(p.default_branch ?? "main")}`,
-      taskPrefix: (t ? "Tugas" : "Terakhir") as Project["taskPrefix"],
+      taskPrefix: (!t || dibatalkan ? "Terakhir" : "Tugas") as Project["taskPrefix"],
       progress,
       progressTone: (status === "idle" || status === "completed"
         ? "success"

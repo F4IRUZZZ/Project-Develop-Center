@@ -39,6 +39,12 @@ export default function Home() {
     return () => window.clearInterval(t);
   }, [status]);
 
+  const muatUlang = () => {
+    fetchDashboard()
+      .then(setLive)
+      .catch(() => {});
+  };
+
   const semua = live ?? mockProjects;
   const perhatian = (live ?? []).filter((p) => PERHATIAN.has(p.status));
 
@@ -80,6 +86,7 @@ export default function Home() {
         open={modalOpen}
         initialProjectId={selectedId}
         projects={live ?? mockProjects}
+        onTerkirim={muatUlang}
         onClose={() => setModalOpen(false)}
       />
     </div>

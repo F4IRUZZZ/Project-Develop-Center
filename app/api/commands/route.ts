@@ -54,3 +54,11 @@ export async function POST(req: NextRequest) {
   const rows = await sql`SELECT * FROM command_queue WHERE id = ${id}`;
   return NextResponse.json({ ...baris(rows[0] as Record<string, unknown>), task_id: taskId }, { status: 201 });
 }
+
+export async function DELETE(req: NextRequest) {
+  const ctx = await sesiUser(req);
+  if (isErr(ctx)) return NextResponse.json({ error: ctx.error }, { status: ctx.status });
+
+  const hasil = await db()`DELETE FROM command_queue WHERE user_id = ${ctx.userId} AND status IN ('completed', 'failed')`;
+  return NextResponse.json({ ok: true, dihapus: hasil.length });
+}

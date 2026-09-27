@@ -51,7 +51,7 @@ export function ActivityFeed() {
         <div className="text-[15px] font-semibold">Activity Feed</div>
         <Rss className="h-4 w-4 text-muted-foreground" />
       </div>
-      <div>
+      <div className="scroll-tipis max-h-[520px] overflow-y-auto pr-1">
         {items.length === 0 && (
           <p className="text-[13px] text-muted-foreground">Belum ada aktivitas. Kirim perintah untuk memulai.</p>
         )}

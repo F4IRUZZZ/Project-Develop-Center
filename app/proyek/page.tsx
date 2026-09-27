@@ -7,6 +7,7 @@ import { LoginCard } from "@/components/dashboard/LoginCard";
 import { CommandModal } from "@/components/command/CommandModal";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { Dashboard } from "@/components/dashboard/Dashboard";
+import { siarNotifikasi } from "@/lib/notifikasi";
 import type { Project } from "@/lib/types";
 
 interface Konfirmasi {
@@ -50,6 +51,10 @@ export default function Proyek() {
       await muat();
       setSyncing(false);
     })();
+    const t = window.setInterval(() => {
+      void muat();
+    }, 10000);
+    return () => window.clearInterval(t);
   }, [status, muat]);
 
   const jalankanKonfirmasi = useCallback(async () => {
@@ -77,6 +82,7 @@ export default function Proyek() {
     }
     setKonfirmasi(null);
     await muat();
+    siarNotifikasi();
   }, [konfirmasi, muat]);
 
   const namaRepo = (id: string) => daftar.find((p) => p.id === id)?.repoName ?? id;
@@ -114,6 +120,7 @@ export default function Proyek() {
         open={modalOpen}
         initialProjectId={selectedId}
         projects={daftar}
+        onTerkirim={() => void muat()}
         onClose={() => setModalOpen(false)}
       />
       <ConfirmModal
