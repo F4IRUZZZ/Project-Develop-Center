@@ -38,12 +38,12 @@ PDC_API_URL=http://localhost:3000 PDC_API_KEY=pdc_... npm start
 
 ## Tools (working loop)
 
-| Tool | Fungsi |
-|---|---|
-| `pdc_get_pending_commands` | Ambil perintah `pending` (filter opsional `project_id`) |
-| `pdc_report_progress` | Lapor progress (`command_id`, `message`, `progress_percent?`) |
-| `pdc_report_completion` | Lapor selesai (`command_id`, `summary`, `git_branch?`) |
-| `pdc_report_error` | Lapor gagal (`command_id`, `error_message`) |
+| Tool                         | Fungsi                                                              |
+| ---------------------------- | ------------------------------------------------------------------- |
+| `pdc_get_pending_commands` | Ambil perintah`pending` (filter opsional `project_id`)          |
+| `pdc_report_progress`      | Lapor progress (`command_id`, `message`, `progress_percent?`) |
+| `pdc_report_completion`    | Lapor selesai (`command_id`, `summary`, `git_branch?`)        |
+| `pdc_report_error`         | Lapor gagal (`command_id`, `error_message`)                     |
 
 Setiap report menulis `command_queue` + `tasks` + `activity_log` via API PDC
 (auth Bearer API key). 4 tools baca (`get_projects/status/history/github_context`)

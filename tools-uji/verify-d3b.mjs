@@ -35,7 +35,11 @@ cek("enqueue buat task", cmd.includes("INSERT INTO tasks"));
 cek("enqueue tulis activity", cmd.includes("INSERT INTO activity_log"));
 
 const queue = readFileSync(join(root, "lib/queue.ts"), "utf8");
-cek("simulasi tulis task+activity", queue.includes("/api/tasks/") && queue.includes("/api/activity"));
+cek("api tanpa auto-simulasi (pending untuk AI)", !queue.includes("simulasiApi"));
+cek("lokal tetap simulasi (fallback)", queue.includes("enqueueLokal"));
+
+const modal = readFileSync(join(root, "components/command/CommandModal.tsx"), "utf8");
+cek("modal dropdown live via props", modal.includes("projects = mockProjects") && modal.includes("projects.map"));
 
 const feed = readFileSync(join(root, "components/activity/ActivityFeed.tsx"), "utf8");
 cek("feed baca API + poll", feed.includes("/api/activity") && feed.includes("5000"));
