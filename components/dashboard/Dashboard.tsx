@@ -14,6 +14,7 @@ interface Props {
   onCommand?: (projectId: string) => void;
   onStop?: (projectId: string) => void;
   onVisibility?: (projectId: string, saatIniPrivate: boolean) => void;
+  onPulls?: (projectId: string) => void;
   aksiHeader?: React.ReactNode;
 }
 
@@ -27,6 +28,7 @@ export function Dashboard({
   onCommand,
   onStop,
   onVisibility,
+  onPulls,
   aksiHeader,
 }: Props) {
   return (
@@ -48,7 +50,7 @@ export function Dashboard({
       ) : (
         <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4">
           {projects.map((p) => (
-            <ProjectCard key={p.id} project={p} readOnly={readOnly} onCommand={onCommand} onStop={onStop} onVisibility={onVisibility} />
+            <ProjectCard key={p.id} project={p} readOnly={readOnly} onCommand={onCommand} onStop={onStop} onVisibility={onVisibility} onPulls={onPulls} />
           ))}
         </div>
       )}

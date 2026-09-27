@@ -1,4 +1,5 @@
 import { Clock, FolderGit2, Lock, LockOpen, Square, Terminal } from "lucide-react";
+import { PrButton } from "@/components/command/PullModal";
 import { cn } from "@/lib/utils";
 import type { Project } from "@/lib/types";
 import { StatusBadge } from "./StatusBadge";
@@ -16,10 +17,12 @@ interface CardProps {
   onCommand?: (projectId: string) => void;
   onStop?: (projectId: string) => void;
   onVisibility?: (projectId: string, saatIniPrivate: boolean) => void;
+  onPulls?: (projectId: string) => void;
 }
 
-export function ProjectCard({ project, readOnly, onCommand, onStop, onVisibility }: CardProps) {
+export function ProjectCard({ project, readOnly, onCommand, onStop, onVisibility, onPulls }: CardProps) {
   const aksi = readOnly ? [] : project.actions;
+  const tampilPr = project.status === "waiting" && onPulls && !readOnly;
   return (
     <article className="rounded-2xl border border-border bg-card p-[17px_18px] transition-all hover:-translate-y-px hover:border-[#34344A] hover:shadow-[0_6px_18px_rgba(0,0,0,0.4)]">
       <div className="mb-3.5 flex items-start justify-between">
@@ -67,9 +70,23 @@ export function ProjectCard({ project, readOnly, onCommand, onStop, onVisibility
       <div className={cn("flex items-center gap-1.5 font-mono text-[11px] text-muted-foreground", !readOnly && "mb-[15px]")}>
         <Clock className="h-3 w-3" /> {project.meta}
       </div>
-      {aksi.length > 0 && (
+      {(aksi.length > 0 || tampilPr) && (
         <div className="flex gap-2">
-          {aksi.includes("command" as Project["actions"][number]) && (
+          {tampilPr ? (
+            <>
+              <PrButton onClick={() => onPulls?.(project.id)} />
+              {onStop && !readOnly && (
+                <button
+                  onClick={() => onStop(project.id)}
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-[9px] bg-red-500/10 px-0 py-2 text-xs font-medium text-red-500 transition-colors hover:bg-red-500/20"
+                >
+                  <Square className="h-3.5 w-3.5" /> Stop
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              {aksi.includes("command" as Project["actions"][number]) && (
             <button
               onClick={() => onCommand?.(project.id)}
               className="flex flex-1 items-center justify-center gap-1.5 rounded-[9px] bg-primary/10 px-0 py-2 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
@@ -84,6 +101,8 @@ export function ProjectCard({ project, readOnly, onCommand, onStop, onVisibility
             >
               <Square className="h-3.5 w-3.5" /> Stop
             </button>
+          )}
+            </>
           )}
         </div>
       )}
