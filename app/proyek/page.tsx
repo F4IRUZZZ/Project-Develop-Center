@@ -61,6 +61,29 @@ export default function Proyek() {
     [muat]
   );
 
+  const gantiVisibilitas = useCallback(
+    async (projectId: string, saatIniPrivate: boolean) => {
+      const target = saatIniPrivate ? "public" : "private";
+      if (
+        !window.confirm(
+          `Jadikan ${target}? Public: semua orang bisa lihat + Pages aktif. Private: sebaliknya.`
+        )
+      )
+        return;
+      try {
+        await fetch("/api/repos/visibility", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ project_id: projectId, private: !saatIniPrivate }),
+        });
+      } catch {
+        /* abaikan */
+      }
+      await muat();
+    },
+    [muat]
+  );
+
   if (status === "loading") return <p className="font-mono text-xs text-muted-foreground">Memuat sesi…</p>;
   if (!session?.user) return <LoginCard />;
 
@@ -74,6 +97,7 @@ export default function Proyek() {
           setModalOpen(true);
         }}
         onStop={(id) => void stop(id)}
+        onVisibility={(id, priv) => void gantiVisibilitas(id, priv)}
         aksiHeader={
           <button
             onClick={sync}

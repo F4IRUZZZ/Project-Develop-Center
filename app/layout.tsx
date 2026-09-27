@@ -17,8 +17,7 @@ export const metadata: Metadata = {
   description: "Satu dashboard untuk melihat, mengelola, dan mengarahkan AI agent di proyek GitHub.",
 };
 
-import { Sidebar } from "@/components/shell/Sidebar";
-import { Topbar } from "@/components/shell/Topbar";
+import { AppShell } from "@/components/shell/AppShell";
 import { Providers } from "@/components/shell/Providers";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -33,13 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-screen bg-background text-foreground">
         <Providers>
-        <div className="flex h-screen overflow-hidden">
-          <Sidebar />
-          <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-            <Topbar />
-            <div className="flex-1 overflow-auto">{children}</div>
-          </div>
-        </div>
+          <AppShell>{children}</AppShell>
         </Providers>
       </body>
     </html>

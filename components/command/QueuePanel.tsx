@@ -69,6 +69,9 @@ export function QueuePanel() {
                   {c.command_text}{" "}
                   <span className="font-mono text-[11px] text-muted-foreground">· {namaProyek(c.project_id)}</span>
                 </div>
+                <span className="shrink-0 rounded-full bg-muted px-2.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground">
+                  {c.mode === "plan" ? "Plan" : "Build"}
+                </span>
                 <span className={cn("shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-medium", WARNA[c.status])}>
                   {LABEL[c.status]}
                 </span>

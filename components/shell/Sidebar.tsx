@@ -96,7 +96,9 @@ function UserBox() {
           </div>
         </div>
         <button
-          onClick={() => signOut()}
+          onClick={() => {
+            if (window.confirm("Yakin keluar dari Project Develop Center?")) void signOut();
+          }}
           title="Keluar"
           aria-label="Keluar"
           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] text-muted-foreground hover:bg-muted hover:text-foreground"

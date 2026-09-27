@@ -42,7 +42,8 @@ const server = new McpServer({ name: "project-develop-center", version: "0.1.0" 
 server.registerTool(
   "pdc_get_pending_commands",
   {
-    description: "Ambil perintah pengguna yang belum diproses (status pending). Panggil berkala saat bekerja.",
+    description:
+      "Ambil perintah pengguna yang belum diproses (status pending). Panggil berkala saat bekerja. WAJIB patuhi field 'mode' tiap perintah: mode plan = analisa + laporkan rencana via pdc_report_progress saja, DILARANG edit/tulis file; mode build = eksekusi penuh. Mode bersifat instruksi, bukan kunci teknis.",
     inputSchema: { project_id: z.string().optional().describe("Filter per proyek, kosongkan untuk semua") },
   },
   async ({ project_id }) => {

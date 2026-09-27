@@ -89,3 +89,9 @@ CREATE TABLE IF NOT EXISTS api_keys (
 
 CREATE INDEX IF NOT EXISTS idx_api_keys_hash
   ON api_keys (key_hash);
+
+-- F-batch: mode perintah (plan/build, advisory untuk agent).
+ALTER TABLE command_queue ADD COLUMN IF NOT EXISTS mode TEXT NOT NULL DEFAULT 'build';
+
+-- F-batch: visibilitas repo (cache dari GitHub).
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS is_private BOOLEAN;

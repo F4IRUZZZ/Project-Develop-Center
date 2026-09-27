@@ -12,6 +12,7 @@ export interface Project {
   progressTone: "accent" | "warning" | "success";
   meta: string;
   branch?: string;
+  isPrivate?: boolean;
   actions: Array<"command" | "stop">;
 }
 
