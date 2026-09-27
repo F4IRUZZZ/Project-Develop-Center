@@ -5,8 +5,16 @@ import { useSession } from "next-auth/react";
 import { RefreshCw } from "lucide-react";
 import { LoginCard } from "@/components/dashboard/LoginCard";
 import { CommandModal } from "@/components/command/CommandModal";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { Dashboard } from "@/components/dashboard/Dashboard";
 import type { Project } from "@/lib/types";
+
+interface Konfirmasi {
+  jenis: "stop" | "visibility";
+  projectId: string;
+  repoName: string;
+  saatIniPrivate: boolean;
+}
 
 export default function Proyek() {
   const { data: session, status } = useSession();
@@ -14,6 +22,7 @@ export default function Proyek() {
   const [syncing, setSyncing] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
+  const [konfirmasi, setKonfirmasi] = useState<Konfirmasi | null>(null);
 
   const muat = useCallback(async () => {
     try {
@@ -43,46 +52,34 @@ export default function Proyek() {
     })();
   }, [status, muat]);
 
-  const stop = useCallback(
-    async (projectId: string) => {
-      if (!window.confirm("Yakin hentikan kerja AI di proyek ini? Perintah pending dibatalkan."))
-        return;
+  const jalankanKonfirmasi = useCallback(async () => {
+    if (!konfirmasi) return;
+    if (konfirmasi.jenis === "stop") {
       try {
         await fetch("/api/commands/cancel", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ project_id: projectId }),
+          body: JSON.stringify({ project_id: konfirmasi.projectId }),
         });
       } catch {
         /* abaikan */
       }
-      await muat();
-    },
-    [muat]
-  );
-
-  const gantiVisibilitas = useCallback(
-    async (projectId: string, saatIniPrivate: boolean) => {
-      const target = saatIniPrivate ? "public" : "private";
-      if (
-        !window.confirm(
-          `Jadikan ${target}? Public: semua orang bisa lihat + Pages aktif. Private: sebaliknya.`
-        )
-      )
-        return;
+    } else {
       try {
         await fetch("/api/repos/visibility", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ project_id: projectId, private: !saatIniPrivate }),
+          body: JSON.stringify({ project_id: konfirmasi.projectId, private: !konfirmasi.saatIniPrivate }),
         });
       } catch {
         /* abaikan */
       }
-      await muat();
-    },
-    [muat]
-  );
+    }
+    setKonfirmasi(null);
+    await muat();
+  }, [konfirmasi, muat]);
+
+  const namaRepo = (id: string) => daftar.find((p) => p.id === id)?.repoName ?? id;
 
   if (status === "loading") return <p className="font-mono text-xs text-muted-foreground">Memuat sesi…</p>;
   if (!session?.user) return <LoginCard />;
@@ -96,8 +93,12 @@ export default function Proyek() {
           setSelectedId(id);
           setModalOpen(true);
         }}
-        onStop={(id) => void stop(id)}
-        onVisibility={(id, priv) => void gantiVisibilitas(id, priv)}
+        onStop={(id) =>
+          setKonfirmasi({ jenis: "stop", projectId: id, repoName: namaRepo(id), saatIniPrivate: false })
+        }
+        onVisibility={(id, priv) =>
+          setKonfirmasi({ jenis: "visibility", projectId: id, repoName: namaRepo(id), saatIniPrivate: priv })
+        }
         aksiHeader={
           <button
             onClick={sync}
@@ -114,6 +115,21 @@ export default function Proyek() {
         initialProjectId={selectedId}
         projects={daftar}
         onClose={() => setModalOpen(false)}
+      />
+      <ConfirmModal
+        open={konfirmasi !== null}
+        judul={konfirmasi?.jenis === "stop" ? "Hentikan kerja AI?" : "Ubah visibilitas repo?"}
+        pesan={
+          konfirmasi?.jenis === "stop"
+            ? `Kerja AI di ${konfirmasi?.repoName} dihentikan. Perintah pending dibatalkan dan task ditandai gagal.`
+            : konfirmasi?.saatIniPrivate
+              ? `${konfirmasi?.repoName} jadi PUBLIC: semua orang bisa lihat + Pages aktif.`
+              : `${konfirmasi?.repoName} jadi PRIVATE: hanya kamu + kolaborator yang bisa lihat.`
+        }
+        labelKonfirmasi={konfirmasi?.jenis === "stop" ? "Ya, hentikan" : "Ya, ubah"}
+        danger={konfirmasi?.jenis === "stop"}
+        onKonfirmasi={() => void jalankanKonfirmasi()}
+        onBatal={() => setKonfirmasi(null)}
       />
     </div>
   );

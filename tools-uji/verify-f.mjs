@@ -37,7 +37,33 @@ cek("layout via AppShell", layout.includes("AppShell") && !layout.includes("<Sid
 const landing = readFileSync(join(root, "components/shell/LoginLanding.tsx"), "utf8");
 cek("landing OAuth-style", landing.includes("Masuk dengan GitHub"));
 const sidebar = readFileSync(join(root, "components/shell/Sidebar.tsx"), "utf8");
-cek("logout confirm", sidebar.includes("Yakin keluar"));
+cek("logout confirm", sidebar.includes("Yakin keluar") || sidebar.includes("Keluar dari PDC"));
+
+import { readdirSync, statSync } from "node:fs";
+const kena = [];
+(function jalan(dir) {
+  for (const e of readdirSync(dir)) {
+    const p = join(dir, e);
+    if (statSync(p).isDirectory()) {
+      if (e !== "node_modules") jalan(p);
+    } else if (/\.(tsx?|mts)$/.test(e)) {
+      const isi = readFileSync(p, "utf8");
+      if (/window\.(confirm|alert)\s*\(/.test(isi)) kena.push(p.replace(root, "").slice(1));
+    }
+  }
+})(join(root, "app"));
+(function jalan2(dir) {
+  for (const e of readdirSync(dir)) {
+    const p = join(dir, e);
+    if (statSync(p).isDirectory()) {
+      jalan2(p);
+    } else if (/\.(tsx?|mts)$/.test(e)) {
+      const isi = readFileSync(p, "utf8");
+      if (/window\.(confirm|alert)\s*\(/.test(isi)) kena.push(p.replace(root, "").slice(1));
+    }
+  }
+})(join(root, "components"));
+cek("tanpa window.confirm/alert", kena.length === 0, kena.join(", "));
 
 if (gagal > 0) {
   console.log(`\nF-CEK: ${gagal} gagal`);
