@@ -50,6 +50,10 @@ export default function Proyek() {
       await muat();
       setSyncing(false);
     })();
+    const t = window.setInterval(() => {
+      void muat();
+    }, 10000);
+    return () => window.clearInterval(t);
   }, [status, muat]);
 
   const jalankanKonfirmasi = useCallback(async () => {
@@ -114,6 +118,7 @@ export default function Proyek() {
         open={modalOpen}
         initialProjectId={selectedId}
         projects={daftar}
+        onTerkirim={() => void muat()}
         onClose={() => setModalOpen(false)}
       />
       <ConfirmModal

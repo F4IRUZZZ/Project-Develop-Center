@@ -74,6 +74,17 @@ CREATE TABLE IF NOT EXISTS activity_log (
 CREATE INDEX IF NOT EXISTS idx_activity_log_user
   ON activity_log (user_id, created_at DESC);
 
+-- G: status dibaca notifikasi turunan (tanpa FK ke activity agar tahan hapus).
+CREATE TABLE IF NOT EXISTS notification_reads (
+  activity_id TEXT NOT NULL,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  read_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (activity_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_notification_reads_user
+  ON notification_reads (user_id);
+
 -- D4: API keys untuk MCP bridge (hash, bukan secret mentah).
 
 CREATE TABLE IF NOT EXISTS api_keys (

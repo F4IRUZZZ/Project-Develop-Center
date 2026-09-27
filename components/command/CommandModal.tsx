@@ -12,10 +12,11 @@ interface Props {
   open: boolean;
   initialProjectId?: string;
   projects?: Project[];
+  onTerkirim?: () => void;
   onClose: () => void;
 }
 
-export function CommandModal({ open, initialProjectId, projects = mockProjects, onClose }: Props) {
+export function CommandModal({ open, initialProjectId, projects = mockProjects, onTerkirim, onClose }: Props) {
   const { status } = useSession();
   const [projectId, setProjectId] = useState(initialProjectId ?? projects[0]?.id ?? "");
   const [text, setText] = useState("");
@@ -110,8 +111,10 @@ export function CommandModal({ open, initialProjectId, projects = mockProjects, 
           <button
             onClick={async () => {
               const ok = await kirimPerintah(projectId, text, sumberDariStatus(status));
-              if (ok) onClose();
-              else setGagal(true);
+              if (ok) {
+                onTerkirim?.();
+                onClose();
+              } else setGagal(true);
             }}
             disabled={text.trim().length === 0 || projectId === ""}
             className={cn(

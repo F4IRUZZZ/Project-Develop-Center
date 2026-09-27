@@ -27,3 +27,21 @@ export async function fetchPenting(): Promise<ActivityMentah[]> {
   const rows = (await res.json()) as ActivityMentah[];
   return saringPenting(rows);
 }
+
+export interface Notifikasi extends ActivityMentah {
+  dibaca: boolean;
+}
+
+export async function fetchNotifikasi(): Promise<Notifikasi[]> {
+  const res = await fetch("/api/notifications", { cache: "no-store" });
+  if (!res.ok) throw new Error(`API notifications ${res.status}`);
+  return (await res.json()) as Notifikasi[];
+}
+
+export async function tandaiDibaca(activityId?: string): Promise<void> {
+  await fetch("/api/notifications/read", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(activityId ? { activity_id: activityId } : { semua: true }),
+  });
+}

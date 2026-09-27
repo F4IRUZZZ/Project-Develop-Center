@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { BellOff, GitPullRequest, TriangleAlert } from "lucide-react";
+import { BellOff, CheckCheck, GitPullRequest, TriangleAlert } from "lucide-react";
 import { LoginCard } from "@/components/dashboard/LoginCard";
-import { fetchPenting, type ActivityMentah } from "@/lib/notifikasi";
+import { fetchNotifikasi, tandaiDibaca, type Notifikasi } from "@/lib/notifikasi";
 import { cn } from "@/lib/utils";
 
 function waktuRelatif(iso: string): string {
@@ -19,23 +19,44 @@ function waktuRelatif(iso: string): string {
 
 export default function Notifikasi() {
   const { data: session, status } = useSession();
-  const [items, setItems] = useState<ActivityMentah[] | null>(null);
+  const [items, setItems] = useState<Notifikasi[] | null>(null);
+
+  const muat = useCallback(() => {
+    fetchNotifikasi()
+      .then(setItems)
+      .catch(() => setItems([]));
+  }, []);
 
   useEffect(() => {
     if (status !== "authenticated") return;
-    fetchPenting()
-      .then(setItems)
-      .catch(() => setItems([]));
-  }, [status]);
+    muat();
+  }, [status, muat]);
 
   if (status === "loading") return <p className="font-mono text-xs text-muted-foreground">Memuat sesi…</p>;
   if (!session?.user) return <LoginCard />;
 
+  const belum = items?.filter((e) => !e.dibaca).length ?? 0;
+
+  const tandai = async (id?: string) => {
+    await tandaiDibaca(id);
+    muat();
+  };
+
   return (
     <div className="mx-auto w-full max-w-2xl p-4 sm:p-6">
-      <h2 className="mb-1 text-[17px] font-semibold tracking-tight">
-        Notifikasi {items && items.length > 0 && <span className="font-mono text-xs font-normal text-muted-foreground">({items.length})</span>}
-      </h2>
+      <div className="mb-1 flex items-center justify-between">
+        <h2 className="text-[17px] font-semibold tracking-tight">
+          Notifikasi {items && belum > 0 && <span className="font-mono text-xs font-normal text-muted-foreground">({belum} baru)</span>}
+        </h2>
+        {belum > 0 && (
+          <button
+            onClick={() => void tandai()}
+            className="flex items-center gap-1.5 rounded-[9px] border border-border px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            <CheckCheck className="h-3.5 w-3.5" /> Tandai semua dibaca
+          </button>
+        )}
+      </div>
       <p className="mb-6 text-[13px] text-muted-foreground">PR dan error 24 jam terakhir dari semua proyek.</p>
 
       {!items ? (
@@ -53,7 +74,13 @@ export default function Notifikasi() {
           {items.map((e) => {
             const pr = e.type === "pr";
             return (
-              <div key={e.id} className="flex gap-2.5 border-b border-border py-2.5 last:border-b-0">
+              <div
+                key={e.id}
+                className={cn(
+                  "flex gap-2.5 border-b border-border py-2.5 last:border-b-0",
+                  e.dibaca && "opacity-55"
+                )}
+              >
                 <div
                   className={cn(
                     "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg",
@@ -64,9 +91,19 @@ export default function Notifikasi() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="text-[12.5px] leading-snug">
-                    {e.message} <b className="font-semibold">{e.repo_name ?? e.project_id}</b>
+                    {e.message} <b className="font-semibold">{e.repo_name}</b>
                   </div>
-                  <div className="mt-1 font-mono text-[10.5px] text-muted-foreground">{waktuRelatif(e.created_at)}</div>
+                  <div className="mt-1 flex items-center gap-2 font-mono text-[10.5px] text-muted-foreground">
+                    <span>{waktuRelatif(e.created_at)}</span>
+                    {!e.dibaca && (
+                      <button
+                        onClick={() => void tandai(e.id)}
+                        className="rounded-full bg-primary/10 px-2 py-0.5 font-sans text-[10px] font-medium text-primary hover:bg-primary/20"
+                      >
+                        Tandai dibaca
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             );

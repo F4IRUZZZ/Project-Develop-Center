@@ -82,3 +82,16 @@
     font-size: 14px;
   }
 }
+
+/* Scrollbar tipis Nebula untuk panel feed/antrian */
+.scroll-tipis {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.scroll-tipis::-webkit-scrollbar {
+  width: 6px;
+}
+.scroll-tipis::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 6px;
+}

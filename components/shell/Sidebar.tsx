@@ -13,7 +13,7 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { fetchPenting } from "@/lib/notifikasi";
+import { fetchNotifikasi } from "@/lib/notifikasi";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { cn } from "@/lib/utils";
 
@@ -35,8 +35,8 @@ function NotifBadge() {
       return;
     }
     const muat = () =>
-      fetchPenting()
-        .then((rows) => setN(rows.length))
+      fetchNotifikasi()
+        .then((rows) => setN(rows.filter((r) => !r.dibaca).length))
         .catch(() => {});
     void muat();
     const t = window.setInterval(muat, 30000);
