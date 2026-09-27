@@ -24,13 +24,14 @@
 - [X] D3: Neon queue (users + command_queue, token AES-256-GCM, API, polling 5s)
 - [X] D3b: tabel projects/tasks/activity_log + API + UI baca DB (status AI dari DB)
 - [X] D4: MCP bridge working loop (API key + 4 tools stdio, OpenCode bisa ambil/lapor)
-- [ ] D3: DB Postgres + API routes + SSE (PRD F2-F5)
-- [ ] D4: MCP bridge `@pdc/mcp-server` + 8 tools (PRD F8 — risiko tertinggi)
+- [X] D0: deploy Vercel production (login + kirim + loop AI hijau di URL live)
+- [ ] D4b: 4 tools baca MCP (projects/status/history/github_context)
 
 ## E. Riwayat Perubahan
 
 | Tanggal | Perubahan | Uji |
 |---|---|---|
+| 2026-09-27 | D0 live (deploy + login prod + kirim prod + loop AI prod) | URL live + OAuth prod + kirim manual |
 | 2026-09-27 | D4 bridge merged (API key + 4 tools MCP stdio) | D4-CEK ALL-OK + tsc + build + handshake/tools-list + Bearer-401 |
 | 2026-09-27 | D3b tabel penuh merged (projects/tasks/activity + dashboard API) | D3B-CEK ALL-OK + 8 suite hijau + tsc + build + 401-gate |
 | 2026-09-27 | D3 Neon queue merged (API + polling + token terenkripsi) | D3-CEK ALL-OK + tsc + build + migrasi + 401-gate + crypto OK |
