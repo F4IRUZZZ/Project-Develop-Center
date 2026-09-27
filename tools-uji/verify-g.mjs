@@ -29,6 +29,8 @@ const halNotif = readFileSync(join(root, "app/notifikasi/page.tsx"), "utf8");
 cek("tombol tandai per item+semua", halNotif.includes("Tandai dibaca") && halNotif.includes("Tandai semua dibaca"));
 const sidebar = readFileSync(join(root, "components/shell/Sidebar.tsx"), "utf8");
 cek("badge minus dibaca", sidebar.includes("fetchNotifikasi"));
+const dashApi = readFileSync(join(root, "app/api/dashboard/route.ts"), "utf8");
+cek("stop-cancel tampil idle, riwayat jujur", dashApi.includes("TANDA_STOP") && dashApi.includes('"idle"'));
 const notif = readFileSync(join(root, "lib/notifikasi.ts"), "utf8");
 cek("badge event-driven + poll fallback", notif.includes("EVENT_NOTIF") && sidebar.includes("EVENT_NOTIF"));
 

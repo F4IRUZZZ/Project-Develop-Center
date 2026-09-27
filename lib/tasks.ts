@@ -3,6 +3,10 @@
 // tanpa mengubah tipe ini.
 export type CommandStatus = "pending" | "processing" | "completed" | "failed";
 
+// Penanda hasil pembatalan pengguna (Stop). Dashboard menampilkan ini sebagai
+// idle ("seolah tak terjadi"); riwayat tetap catat failed (jujur).
+export const TANDA_STOP = "Dihentikan pengguna dari webapp.";
+
 export interface QueuedCommand {
   id: string;
   project_id: string;
