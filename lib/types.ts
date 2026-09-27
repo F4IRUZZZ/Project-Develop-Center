@@ -12,7 +12,7 @@ export interface Project {
   progressTone: "accent" | "warning" | "success";
   meta: string;
   branch?: string;
-  actions: Array<"detail" | "command" | "stop" | "merge">;
+  actions: Array<"command" | "stop">;
 }
 
 export interface ActivityEvent {

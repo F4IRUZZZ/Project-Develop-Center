@@ -12,15 +12,43 @@ import {
 import { signIn, signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { fetchPenting } from "@/lib/notifikasi";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { label: "Dashboard", icon: LayoutDashboard, href: "/", badge: null },
-  { label: "Proyek", icon: FolderGit2, href: "/proyek", badge: null },
-  { label: "Riwayat", icon: History, href: "/riwayat", badge: null },
-  { label: "Notifikasi", icon: Bell, href: null as string | null, badge: "2" },
-  { label: "Pengaturan", icon: Settings, href: "/pengaturan", badge: null },
+  { label: "Dashboard", icon: LayoutDashboard, href: "/", badge: null as string | null },
+  { label: "Proyek", icon: FolderGit2, href: "/proyek", badge: null as string | null },
+  { label: "Riwayat", icon: History, href: "/riwayat", badge: null as string | null },
+  { label: "Notifikasi", icon: Bell, href: "/notifikasi", badge: "live" },
+  { label: "Pengaturan", icon: Settings, href: "/pengaturan", badge: null as string | null },
 ];
+
+function NotifBadge() {
+  const { status } = useSession();
+  const [n, setN] = useState(0);
+
+  useEffect(() => {
+    if (status !== "authenticated") {
+      setN(0);
+      return;
+    }
+    const muat = () =>
+      fetchPenting()
+        .then((rows) => setN(rows.length))
+        .catch(() => {});
+    void muat();
+    const t = window.setInterval(muat, 30000);
+    return () => window.clearInterval(t);
+  }, [status]);
+
+  if (n === 0) return null;
+  return (
+    <span className="ml-auto flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-semibold text-white">
+      {n > 9 ? "9+" : n}
+    </span>
+  );
+}
 
 function UserBox() {
   const { data: session, status } = useSession();
@@ -108,10 +136,14 @@ export function Sidebar() {
             <>
               <item.icon className="h-[18px] w-[18px]" strokeWidth={1.75} />
               {item.label}
-              {item.badge && (
-                <span className="ml-auto flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-semibold text-white">
-                  {item.badge}
-                </span>
+              {item.badge === "live" ? (
+                <NotifBadge />
+              ) : (
+                item.badge && (
+                  <span className="ml-auto flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-semibold text-white">
+                    {item.badge}
+                  </span>
+                )
               )}
             </>
           );

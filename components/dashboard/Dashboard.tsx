@@ -6,24 +6,50 @@ import { Stats } from "./Stats";
 
 interface Props {
   projects?: Project[];
+  judul?: string;
+  readOnly?: boolean;
+  sembunyiStats?: boolean;
+  sembunyiAksiHeader?: boolean;
+  teksKosong?: string;
   onCommand?: (projectId: string) => void;
+  onStop?: (projectId: string) => void;
+  aksiHeader?: React.ReactNode;
 }
 
-export function Dashboard({ projects = mockProjects, onCommand }: Props) {
+export function Dashboard({
+  projects = mockProjects,
+  judul = "Proyek Dipantau",
+  readOnly,
+  sembunyiStats,
+  sembunyiAksiHeader,
+  teksKosong = "Belum ada proyek.",
+  onCommand,
+  onStop,
+  aksiHeader,
+}: Props) {
   return (
     <div>
-      <Stats proyekAktif={projects.length} />
+      {!sembunyiStats && <Stats proyekAktif={projects.length} />}
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-[17px] font-semibold tracking-tight">Proyek Dipantau</h2>
-        <button className="flex items-center gap-1.5 rounded-[9px] bg-primary px-3.5 py-2 text-[13px] font-medium text-white transition-colors hover:bg-[#5457E5]">
-          <Plus className="h-[15px] w-[15px]" /> Tambah Proyek
-        </button>
+        <h2 className="text-[17px] font-semibold tracking-tight">{judul}</h2>
+        {!sembunyiAksiHeader &&
+          (aksiHeader ?? (
+            <button className="flex items-center gap-1.5 rounded-[9px] bg-primary px-3.5 py-2 text-[13px] font-medium text-white transition-colors hover:bg-[#5457E5]">
+              <Plus className="h-[15px] w-[15px]" /> Tambah Proyek
+            </button>
+          ))}
       </div>
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4">
-        {projects.map((p) => (
-          <ProjectCard key={p.id} project={p} onCommand={onCommand} />
-        ))}
-      </div>
+      {projects.length === 0 ? (
+        <p className="rounded-2xl border border-border bg-card px-4 py-8 text-center text-[13px] text-muted-foreground">
+          {teksKosong}
+        </p>
+      ) : (
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4">
+          {projects.map((p) => (
+            <ProjectCard key={p.id} project={p} readOnly={readOnly} onCommand={onCommand} onStop={onStop} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

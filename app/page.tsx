@@ -7,9 +7,12 @@ import { CommandModal } from "@/components/command/CommandModal";
 import { QueuePanel } from "@/components/command/QueuePanel";
 import { Dashboard } from "@/components/dashboard/Dashboard";
 import { LoginCard } from "@/components/dashboard/LoginCard";
+import { Stats } from "@/components/dashboard/Stats";
 import { fetchDashboard } from "@/lib/github";
 import { projects as mockProjects } from "@/lib/mock";
 import type { Project } from "@/lib/types";
+
+const PERHATIAN = new Set(["working", "waiting", "stuck", "failed"]);
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -36,6 +39,9 @@ export default function Home() {
     return () => window.clearInterval(t);
   }, [status]);
 
+  const semua = live ?? mockProjects;
+  const perhatian = (live ?? []).filter((p) => PERHATIAN.has(p.status));
+
   return (
     <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-6 p-4 sm:p-6 xl:flex-row">
       <div className="min-w-0 flex-1">
@@ -44,7 +50,17 @@ export default function Home() {
         ) : !session?.user ? (
           <LoginCard />
         ) : live ? (
-          <Dashboard projects={live} onCommand={openFor} />
+          <>
+            <Stats proyekAktif={semua.length} />
+            <Dashboard
+              projects={perhatian}
+              judul="Perlu Perhatian"
+              readOnly
+              sembunyiStats
+              sembunyiAksiHeader
+              teksKosong="Semua tenang — tidak ada AI yang bekerja. Kirim perintah dari menu Proyek."
+            />
+          </>
         ) : gagalRepo ? (
           <>
             <p className="mb-4 rounded-[9px] border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[13px] text-amber-500">

@@ -19,7 +19,7 @@ export const projects: Project[] = [
     progressTone: "accent",
     meta: "2m lalu · feature/login",
     branch: "feature/login",
-    actions: ["detail", "command", "stop"],
+    actions: ["command", "stop"],
   },
   {
     id: "p2",
@@ -32,7 +32,7 @@ export const projects: Project[] = [
     progress: 100,
     progressTone: "warning",
     meta: "15m lalu · menunggu merge",
-    actions: ["detail", "merge"],
+    actions: [],
   },
   {
     id: "p3",
@@ -45,7 +45,7 @@ export const projects: Project[] = [
     progress: 100,
     progressTone: "success",
     meta: "3j lalu · selesai",
-    actions: ["detail", "command"],
+    actions: ["command"],
   },
 ];
 
