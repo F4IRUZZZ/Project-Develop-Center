@@ -10,22 +10,26 @@ function cek(nama, ok, detail = "") {
   if (!ok) gagal += 1;
 }
 
-// F-mode
+// F-mode DIBATALKAN total: tidak boleh ada sisa mode plan/build di kode.
+// (Kolom DB di-drop via migrasi; riwayat git/PR jadi arsip.)
+const schema = readFileSync(join(root, "db/schema.sql"), "utf8");
+cek("skema drop kolom mode", schema.includes("DROP COLUMN IF EXISTS mode"));
+cek("kolom is_private", schema.includes("ADD COLUMN IF NOT EXISTS is_private"));
+const cmd = readFileSync(join(root, "app/api/commands/route.ts"), "utf8");
+cek("API tanpa mode", !cmd.includes("mode"));
+const modal = readFileSync(join(root, "components/command/CommandModal.tsx"), "utf8");
+cek("modal tanpa selector mode", !modal.includes("Mode AI") && !modal.includes("CommandMode"));
+const src = readFileSync(join(mcp, "src/index.ts"), "utf8");
+cek("tool tanpa aturan mode", !src.includes("WAJIB patuhi") && !src.includes("mode plan"));
+const tasks = readFileSync(join(root, "lib/tasks.ts"), "utf8");
+cek("tipe tanpa CommandMode", !tasks.includes("CommandMode"));
+const queue = readFileSync(join(root, "lib/queue.ts"), "utf8");
+cek("queue tanpa mode", !queue.includes("CommandMode") && !queue.includes("mode,"));
+
+// F-visibility
 for (const f of ["app/api/repos/visibility/route.ts", "components/shell/LoginLanding.tsx", "components/shell/AppShell.tsx"]) {
   cek(f, existsSync(join(root, f)));
 }
-const schema = readFileSync(join(root, "db/schema.sql"), "utf8");
-cek("kolom mode", schema.includes("ADD COLUMN IF NOT EXISTS mode"));
-cek("kolom is_private", schema.includes("ADD COLUMN IF NOT EXISTS is_private"));
-const cmd = readFileSync(join(root, "app/api/commands/route.ts"), "utf8");
-cek("API terima mode", cmd.includes("mode"));
-const modal = readFileSync(join(root, "components/command/CommandModal.tsx"), "utf8");
-cek("modal selector plan/build", modal.includes('"plan"') && modal.includes('"build"') && modal.includes("Mode AI"));
-cek("modal catatan advisory", modal.includes("dipatuhi agent"));
-const src = readFileSync(join(mcp, "src/index.ts"), "utf8");
-cek("tool patuhi mode", src.includes("WAJIB patuhi"));
-
-// F-visibility
 const vis = readFileSync(join(root, "app/api/repos/visibility/route.ts"), "utf8");
 cek("visibility PATCH GitHub", vis.includes("PATCH") && vis.includes("/repos/"));
 const card = readFileSync(join(root, "components/dashboard/ProjectCard.tsx"), "utf8");

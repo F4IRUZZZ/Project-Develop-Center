@@ -3,16 +3,11 @@
 // tanpa mengubah tipe ini.
 export type CommandStatus = "pending" | "processing" | "completed" | "failed";
 
-// Mode perintah (F-batch): advisory untuk agent, bukan enforcement.
-// plan = analisa + lapor rencana saja; build = eksekusi.
-export type CommandMode = "plan" | "build";
-
 export interface QueuedCommand {
   id: string;
   project_id: string;
   command_text: string;
   status: CommandStatus;
-  mode: CommandMode;
   created_at: string;
   processed_at: string | null;
   result: string | null;
@@ -35,8 +30,7 @@ export function bacaQueue(): QueuedCommand[] {
     const mentah = window.localStorage.getItem(KUNCI_QUEUE);
     if (!mentah) return [];
     const arr = JSON.parse(mentah) as QueuedCommand[];
-    if (!Array.isArray(arr)) return [];
-    return arr.map((c) => ({ ...c, mode: c.mode === "plan" ? "plan" as const : "build" as const }));
+    return Array.isArray(arr) ? arr : [];
   } catch {
     return [];
   }
@@ -73,13 +67,12 @@ function jadwalSimulasi(id: string) {
   }, 2000);
 }
 
-export function enqueue(projectId: string, text: string, mode: CommandMode = "build"): QueuedCommand {
+export function enqueue(projectId: string, text: string): QueuedCommand {
   const cmd: QueuedCommand = {
     id: buatId(),
     project_id: projectId,
     command_text: text.trim(),
     status: "pending",
-    mode,
     created_at: new Date().toISOString(),
     processed_at: null,
     result: null,

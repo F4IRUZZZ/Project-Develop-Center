@@ -6,7 +6,6 @@ import { useSession } from "next-auth/react";
 import { projects as mockProjects } from "@/lib/mock";
 import type { Project } from "@/lib/types";
 import { kirimPerintah, sumberDariStatus } from "@/lib/queue";
-import type { CommandMode } from "@/lib/tasks";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -20,7 +19,6 @@ export function CommandModal({ open, initialProjectId, projects = mockProjects, 
   const { status } = useSession();
   const [projectId, setProjectId] = useState(initialProjectId ?? projects[0]?.id ?? "");
   const [text, setText] = useState("");
-  const [mode, setMode] = useState<CommandMode>("build");
   const [gagal, setGagal] = useState(false);
 
   // Reset hanya saat modal dibuka / pemicu berubah.
@@ -31,7 +29,6 @@ export function CommandModal({ open, initialProjectId, projects = mockProjects, 
     if (open) {
       setProjectId(initialProjectId ?? projects[0]?.id ?? "");
       setText("");
-      setMode("build");
       setGagal(false);
     }
   }, [open, initialProjectId]);
@@ -103,29 +100,6 @@ export function CommandModal({ open, initialProjectId, projects = mockProjects, 
             Gagal menyimpan ke database. Coba lagi.
           </p>
         )}
-        <div className="mb-4">
-          <span className="mb-1.5 block text-xs font-medium text-muted-foreground">Mode AI</span>
-          <div className="flex gap-2">
-            {(["plan", "build"] as CommandMode[]).map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => setMode(m)}
-                className={cn(
-                  "flex-1 rounded-[9px] border px-3 py-2 text-[13px] font-medium capitalize transition-colors",
-                  mode === m
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-border text-muted-foreground hover:bg-muted hover:text-foreground"
-                )}
-              >
-                {m === "plan" ? "Plan (rencana saja)" : "Build (eksekusi)"}
-              </button>
-            ))}
-          </div>
-          <p className="mt-1.5 font-mono text-[10.5px] text-muted-foreground">
-            Mode dipatuhi agent, bukan dikunci sistem.
-          </p>
-        </div>
         <div className="flex justify-end gap-2.5">
           <button
             onClick={onClose}
@@ -135,7 +109,7 @@ export function CommandModal({ open, initialProjectId, projects = mockProjects, 
           </button>
           <button
             onClick={async () => {
-              const ok = await kirimPerintah(projectId, text, sumberDariStatus(status), mode);
+              const ok = await kirimPerintah(projectId, text, sumberDariStatus(status));
               if (ok) onClose();
               else setGagal(true);
             }}

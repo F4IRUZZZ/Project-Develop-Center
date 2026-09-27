@@ -7,7 +7,6 @@ import {
   bacaQueue,
   bersihkanSelesai,
   enqueue as enqueueLokal,
-  type CommandMode,
   type QueuedCommand,
 } from "./tasks";
 
@@ -42,14 +41,9 @@ function muatDariLokal() {
 // Simulasi hanya untuk mode lokal (lib/tasks.ts). Mode api TIDAK auto-simulasi:
 // perintah tetap pending sampai AI asli (OpenCode via MCP bridge) melapor.
 
-export async function kirimPerintah(
-  projectId: string,
-  text: string,
-  sumber: Sumber,
-  mode: CommandMode = "build"
-): Promise<boolean> {
+export async function kirimPerintah(projectId: string, text: string, sumber: Sumber): Promise<boolean> {
   if (sumber === "lokal") {
-    enqueueLokal(projectId, text, mode);
+    enqueueLokal(projectId, text);
     return true;
   }
   // Mode api: TIDAK ada auto-simulasi. Perintah tetap pending sampai AI asli
@@ -59,7 +53,7 @@ export async function kirimPerintah(
     const res = await fetch("/api/commands", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ project_id: projectId, command_text: text, mode }),
+      body: JSON.stringify({ project_id: projectId, command_text: text }),
     });
     if (!res.ok) return false;
     await muatDariApi();

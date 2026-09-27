@@ -36,7 +36,7 @@ Jalankan manual (debug):
 PDC_API_URL=http://localhost:3000 PDC_API_KEY=pdc_... npm start
 ```
 
-## Tools (working loop)
+## Tools (8)
 
 | Tool                         | Fungsi                                                              |
 | ---------------------------- | ------------------------------------------------------------------- |
@@ -44,19 +44,10 @@ PDC_API_URL=http://localhost:3000 PDC_API_KEY=pdc_... npm start
 | `pdc_report_progress`      | Lapor progress (`command_id`, `message`, `progress_percent?`) |
 | `pdc_report_completion`    | Lapor selesai (`command_id`, `summary`, `git_branch?`)        |
 | `pdc_report_error`         | Lapor gagal (`command_id`, `error_message`)                     |
+| `pdc_get_projects` | Daftar proyek dipantau |
+| `pdc_get_project_status` | Status AI proyek (`project_id`) |
+| `pdc_get_task_history` | Riwayat tugas (`project_id`) |
+| `pdc_get_github_context` | Branch, PR, issue terbuka (`project_id`) |
 
 Setiap report menulis `command_queue` + `tasks` + `activity_log` via API PDC
-(auth Bearer API key). 4 tools baca (`get_projects/status/history/github_context`)
-menyusul di D4b.
-
-## Mode perintah (plan/build)
-
-Setiap perintah punya field `mode`. Ini **kontrak kepatuhan (advisory),
-bukan enforcement teknis** — PDC tidak bisa memaksa agent dari jauh:
-
-- `plan`: analisa + laporkan rencana via `pdc_report_progress` saja.
-  DILARANG edit/tulis file atau menjalankan perintah yang mengubah sistem.
-- `build`: eksekusi penuh + laporkan via report tools.
-
-Aturan yang sama berlaku untuk mode plan/build OpenCode itu sendiri
-(instruksi prompt, bukan sandbox).
+(auth Bearer API key).

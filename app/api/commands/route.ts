@@ -9,7 +9,6 @@ function baris(r: Record<string, unknown>): QueuedCommand {
     project_id: String(r.project_id),
     command_text: String(r.command_text),
     status: r.status as QueuedCommand["status"],
-    mode: (r.mode === "plan" ? "plan" : "build") as QueuedCommand["mode"],
     created_at: new Date(r.created_at as string).toISOString(),
     processed_at: r.processed_at ? new Date(r.processed_at as string).toISOString() : null,
     result: (r.result as string | null) ?? null,
@@ -27,7 +26,7 @@ export async function POST(req: NextRequest) {
   const ctx = await sesiUser(req);
   if (isErr(ctx)) return NextResponse.json({ error: ctx.error }, { status: ctx.status });
 
-  let body: { project_id?: string; command_text?: string; mode?: string };
+  let body: { project_id?: string; command_text?: string };
   try {
     body = await req.json();
   } catch {
@@ -35,7 +34,6 @@ export async function POST(req: NextRequest) {
   }
   const projectId = body.project_id?.trim() ?? "";
   const text = body.command_text?.trim() ?? "";
-  const mode = body.mode === "plan" ? "plan" : "build";
   if (!projectId || !text) {
     return NextResponse.json({ error: "project_id + command_text wajib" }, { status: 400 });
   }
@@ -43,7 +41,7 @@ export async function POST(req: NextRequest) {
   const id = buatId("cmd");
   const taskId = buatId("task");
   const sql = db();
-  await sql`INSERT INTO command_queue (id, user_id, project_id, command_text, status, mode) VALUES (${id}, ${ctx.userId}, ${projectId}, ${text}, 'pending', ${mode})`;
+  await sql`INSERT INTO command_queue (id, user_id, project_id, command_text, status) VALUES (${id}, ${ctx.userId}, ${projectId}, ${text}, 'pending')`;
   // Task menyertai perintah. Project dipastikan ada by id (bukan by repo_full
   // placeholder, agar tidak tabrakan PK dengan baris hasil sync).
   await sql`
