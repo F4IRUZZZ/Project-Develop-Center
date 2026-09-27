@@ -33,6 +33,7 @@ export default function Riwayat() {
   const [filter, setFilter] = useState("");
   const [tasks, setTasks] = useState<TaskRow[]>([]);
   const [commands, setCommands] = useState<QueuedCommand[]>([]);
+  const [namaRepo, setNamaRepo] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (status !== "authenticated") return;
@@ -44,12 +45,24 @@ export default function Riwayat() {
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((d) => setCommands(d as QueuedCommand[]))
       .catch(() => {});
+    fetch("/api/projects", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((d) =>
+        setNamaRepo(
+          Object.fromEntries(
+            (d as Array<{ id: string; repo_name: string }>).map((p) => [p.id, p.repo_name])
+          )
+        )
+      )
+      .catch(() => {});
   }, [status]);
 
   if (status === "loading") return <p className="font-mono text-xs text-muted-foreground">Memuat sesi…</p>;
   if (!session?.user) return <LoginCard />;
 
   const proyekIds = [...new Set([...tasks.map((t) => t.project_id), ...commands.map((c) => c.project_id)])];
+  const namaUntuk = (id: string) =>
+    namaRepo[id] ?? tasks.find((t) => t.project_id === id)?.repo_name ?? id;
   const tasksTampil = filter ? tasks.filter((t) => t.project_id === filter) : tasks;
   const commandsTampil = filter ? commands.filter((c) => c.project_id === filter) : commands;
 
@@ -65,7 +78,7 @@ export default function Riwayat() {
           <option value="">Semua proyek</option>
           {proyekIds.map((id) => (
             <option key={id} value={id}>
-              {id}
+              {namaUntuk(id)}
             </option>
           ))}
         </select>
@@ -127,7 +140,7 @@ export default function Riwayat() {
               <div className="flex items-center justify-between gap-2">
                 <div className="min-w-0 flex-1 truncate text-[13px]">
                   {c.command_text}{" "}
-                  <span className="font-mono text-[11px] text-muted-foreground">· {c.project_id}</span>
+                  <span className="font-mono text-[11px] text-muted-foreground">· {namaUntuk(c.project_id)}</span>
                 </div>
                 <span className={cn("shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-medium", WARNA_CMD[c.status])}>
                   {c.status}
