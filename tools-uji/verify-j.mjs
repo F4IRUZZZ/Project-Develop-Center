@@ -29,6 +29,7 @@ cek("detail tab 3", detail.includes('"tugas"') && detail.includes('"perintah"') 
 cek("detail progress task", detail.includes("aktif") && detail.includes("progress"));
 const card = readFileSync(join(root, "components/dashboard/ProjectCard.tsx"), "utf8");
 cek("kartu link detail", card.includes("/proyek/${project.id}") || card.includes("/proyek/"));
+cek("detail stop kondisional", detail.includes("adaJalan"));
 
 if (gagal > 0) {
   console.log(`\nJ-CEK: ${gagal} gagal`);
