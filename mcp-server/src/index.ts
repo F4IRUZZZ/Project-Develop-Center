@@ -119,6 +119,57 @@ server.registerTool(
   }
 );
 
+// ---- D4b: tools baca (introspeksi, tanpa tulis) ----
+
+server.registerTool(
+  "pdc_get_projects",
+  {
+    description: "Ambil daftar proyek yang dipantau di PDC.",
+  },
+  async () => {
+    const data = await api("/api/projects");
+    return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
+  }
+);
+
+server.registerTool(
+  "pdc_get_project_status",
+  {
+    description: "Ambil status AI proyek tertentu (idle/working/waiting/completed/failed/stuck).",
+    inputSchema: { project_id: z.string() },
+  },
+  async ({ project_id }) => {
+    const semua = (await api("/api/dashboard")) as Array<Record<string, unknown>>;
+    const p = semua.find((x) => x.id === project_id);
+    if (!p) throw new Error(`Proyek ${project_id} tidak ketemu di dashboard`);
+    return { content: [{ type: "text", text: JSON.stringify(p, null, 2) }] };
+  }
+);
+
+server.registerTool(
+  "pdc_get_task_history",
+  {
+    description: "Ambil riwayat tugas AI per proyek.",
+    inputSchema: { project_id: z.string() },
+  },
+  async ({ project_id }) => {
+    const data = await api(`/api/tasks?project_id=${encodeURIComponent(project_id)}`);
+    return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
+  }
+);
+
+server.registerTool(
+  "pdc_get_github_context",
+  {
+    description: "Ambil konteks GitHub repo: branch, PR terbuka, issue terbuka.",
+    inputSchema: { project_id: z.string() },
+  },
+  async ({ project_id }) => {
+    const data = await api(`/api/github?project_id=${encodeURIComponent(project_id)}`);
+    return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
+  }
+);
+
 async function main() {
   await server.connect(new StdioServerTransport());
   console.error("[pdc] MCP bridge jalan, menunggu perintah OpenCode…");
