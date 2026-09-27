@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Inbox, Trash2 } from "lucide-react";
-import { EVENT_QUEUE, bacaQueue, bersihkanSelesai, type QueuedCommand } from "@/lib/tasks";
+import { useSession } from "next-auth/react";
+import { bersihkanAntrian, sumberDariStatus, useQueue } from "@/lib/queue";
+import type { QueuedCommand } from "@/lib/tasks";
 import { projects } from "@/lib/mock";
 import { cn } from "@/lib/utils";
 
@@ -33,15 +34,8 @@ function waktuRelatif(iso: string): string {
 }
 
 export function QueuePanel() {
-  const [antrian, setAntrian] = useState<QueuedCommand[]>([]);
-
-  useEffect(() => {
-    setAntrian(bacaQueue());
-    const fn = () => setAntrian(bacaQueue());
-    window.addEventListener(EVENT_QUEUE, fn);
-    return () => window.removeEventListener(EVENT_QUEUE, fn);
-  }, []);
-
+  const { status } = useSession();
+  const { antrian } = useQueue();
   const selesai = antrian.filter((c) => c.status === "completed" || c.status === "failed").length;
 
   return (
@@ -54,7 +48,7 @@ export function QueuePanel() {
         </div>
         {selesai > 0 && (
           <button
-            onClick={bersihkanSelesai}
+            onClick={() => void bersihkanAntrian(sumberDariStatus(status))}
             className="flex items-center gap-1.5 rounded-[9px] border border-border px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
           >
             <Trash2 className="h-3.5 w-3.5" /> Bersihkan selesai

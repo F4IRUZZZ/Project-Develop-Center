@@ -4,6 +4,7 @@ import GitHubProvider from "next-auth/providers/github";
 declare module "next-auth/jwt" {
   interface JWT {
     accessToken?: string;
+    username?: string;
   }
 }
 
@@ -19,8 +20,10 @@ export const authOptions: NextAuthOptions = {
   ],
   session: { strategy: "jwt" },
   callbacks: {
-    async jwt({ token, account }) {
+    async jwt({ token, account, profile }) {
       if (account?.access_token) token.accessToken = account.access_token;
+      const login = (profile as { login?: string } | undefined)?.login;
+      if (login) token.username = login;
       return token;
     },
   },
