@@ -1,27 +1,40 @@
-import { Bell, Search } from "lucide-react";
+"use client";
+
+import { Bell, User } from "lucide-react";
+import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { PemilihTema } from "./PemilihTema";
+import { NotifBadge } from "./NotifBadge";
+import { UserMenu } from "./UserMenu";
+import { SearchBox } from "./SearchBox";
 
 export function Topbar() {
+  const { data: session } = useSession();
+  const nama = session?.user?.name ?? session?.user?.email ?? "?";
+  const inisial = nama.slice(0, 2).toUpperCase();
+
   return (
     <header className="flex h-[58px] shrink-0 items-center justify-between gap-3 border-b border-border bg-card/85 px-4 backdrop-blur-md sm:px-6">
-      <div className="relative min-w-0 flex-1 sm:max-w-[300px] sm:flex-none sm:basis-[300px]">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <input
-          className="w-full rounded-[9px] border border-border bg-muted py-2 pl-9 pr-3 text-[13px] text-muted-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
-          placeholder="Cari proyek, tugas, atau log…"
-        />
-      </div>
+      <SearchBox />
       <div className="flex shrink-0 items-center gap-2.5">
-        <button
+        <Link
+          href="/notifikasi"
           aria-label="Notifikasi"
-          className="flex h-9 w-9 items-center justify-center rounded-[9px] border border-border bg-muted text-muted-foreground transition-colors hover:text-foreground"
+          className="relative flex h-9 w-9 items-center justify-center rounded-[9px] border border-border bg-muted text-muted-foreground transition-colors hover:text-foreground"
         >
           <Bell className="h-[17px] w-[17px]" />
-        </button>
+          <span className="absolute -right-1 -top-1">
+            <NotifBadge className="" />
+          </span>
+        </Link>
         <PemilihTema />
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">
-          AD
-        </div>
+        {session?.user ? (
+          <UserMenu nama={nama} inisial={inisial} gambar={session.user.image} />
+        ) : (
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-muted-foreground">
+            <User className="h-4 w-4" />
+          </div>
+        )}
       </div>
     </header>
   );

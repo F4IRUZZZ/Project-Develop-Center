@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { TriangleAlert, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +26,12 @@ export function ConfirmModal({
   onKonfirmasi,
   onBatal,
 }: Props) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     if (!open) return;
     const fn = (e: KeyboardEvent) => {
@@ -34,11 +41,11 @@ export function ConfirmModal({
     return () => window.removeEventListener("keydown", fn);
   }, [open, onBatal]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-[5px]"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 p-4 backdrop-blur-[5px]"
       onClick={onBatal}
       role="alertdialog"
       aria-modal="true"
@@ -89,6 +96,7 @@ export function ConfirmModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
