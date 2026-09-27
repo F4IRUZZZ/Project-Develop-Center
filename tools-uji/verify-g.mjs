@@ -29,6 +29,8 @@ const halNotif = readFileSync(join(root, "app/notifikasi/page.tsx"), "utf8");
 cek("tombol tandai per item+semua", halNotif.includes("Tandai dibaca") && halNotif.includes("Tandai semua dibaca"));
 const sidebar = readFileSync(join(root, "components/shell/Sidebar.tsx"), "utf8");
 cek("badge minus dibaca", sidebar.includes("fetchNotifikasi"));
+const notif = readFileSync(join(root, "lib/notifikasi.ts"), "utf8");
+cek("badge event-driven + poll fallback", notif.includes("EVENT_NOTIF") && sidebar.includes("EVENT_NOTIF"));
 
 // G4
 const modal = readFileSync(join(root, "components/command/CommandModal.tsx"), "utf8");

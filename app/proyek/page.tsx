@@ -7,6 +7,7 @@ import { LoginCard } from "@/components/dashboard/LoginCard";
 import { CommandModal } from "@/components/command/CommandModal";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { Dashboard } from "@/components/dashboard/Dashboard";
+import { siarNotifikasi } from "@/lib/notifikasi";
 import type { Project } from "@/lib/types";
 
 interface Konfirmasi {
@@ -81,6 +82,7 @@ export default function Proyek() {
     }
     setKonfirmasi(null);
     await muat();
+    siarNotifikasi();
   }, [konfirmasi, muat]);
 
   const namaRepo = (id: string) => daftar.find((p) => p.id === id)?.repoName ?? id;

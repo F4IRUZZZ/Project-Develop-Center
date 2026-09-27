@@ -1,5 +1,10 @@
 // Notifikasi turunan (E2): tanpa tabel baru, dibaca dari activity_log mentah
 // via /api/activity?format=mentah. Penting = tipe pr/error 24 jam terakhir.
+export const EVENT_NOTIF = "pdc-notif";
+
+export function siarNotifikasi() {
+  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent(EVENT_NOTIF));
+}
 export interface ActivityMentah {
   id: string;
   project_id: string;

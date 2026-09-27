@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { BellOff, CheckCheck, GitPullRequest, TriangleAlert } from "lucide-react";
 import { LoginCard } from "@/components/dashboard/LoginCard";
-import { fetchNotifikasi, tandaiDibaca, type Notifikasi } from "@/lib/notifikasi";
+import { fetchNotifikasi, siarNotifikasi, tandaiDibaca, type Notifikasi } from "@/lib/notifikasi";
 import { cn } from "@/lib/utils";
 
 function waktuRelatif(iso: string): string {
@@ -39,6 +39,7 @@ export default function Notifikasi() {
 
   const tandai = async (id?: string) => {
     await tandaiDibaca(id);
+    siarNotifikasi();
     muat();
   };
 
