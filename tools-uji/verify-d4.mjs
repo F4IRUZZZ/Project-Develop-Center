@@ -15,6 +15,7 @@ for (const f of [
   "lib/id.ts",
   "app/api/keys/route.ts",
   "app/api/keys/[id]/route.ts",
+  "app/api/github/route.ts",
   "app/pengaturan/page.tsx",
   "mcp-server/package.json",
   "mcp-server/tsconfig.json",
@@ -35,7 +36,7 @@ const sa = readFileSync(join(root, "lib/server-auth.ts"), "utf8");
 cek("auth Bearer alternatif sesi", sa.includes("bacaBearer") && sa.includes("verifikasiApiKey"));
 
 const src = readFileSync(join(mcp, "src/index.ts"), "utf8");
-for (const t of ["pdc_get_pending_commands", "pdc_report_progress", "pdc_report_completion", "pdc_report_error"]) {
+for (const t of ["pdc_get_pending_commands", "pdc_report_progress", "pdc_report_completion", "pdc_report_error", "pdc_get_projects", "pdc_get_project_status", "pdc_get_task_history", "pdc_get_github_context"]) {
   cek(`tool ${t}`, src.includes(t));
 }
 cek("transport stdio", src.includes("StdioServerTransport"));
