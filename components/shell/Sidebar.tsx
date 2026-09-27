@@ -12,8 +12,8 @@ import {
 import { signIn, signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { fetchNotifikasi, EVENT_NOTIF } from "@/lib/notifikasi";
+import { useState } from "react";
+import { NotifBadge } from "./NotifBadge";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { cn } from "@/lib/utils";
 
@@ -24,37 +24,6 @@ const NAV = [
   { label: "Notifikasi", icon: Bell, href: "/notifikasi", badge: "live" },
   { label: "Pengaturan", icon: Settings, href: "/pengaturan", badge: null as string | null },
 ];
-
-function NotifBadge() {
-  const { status } = useSession();
-  const [n, setN] = useState(0);
-
-  useEffect(() => {
-    if (status !== "authenticated") {
-      setN(0);
-      return;
-    }
-    const muat = () =>
-      fetchNotifikasi()
-        .then((rows) => setN(rows.filter((r) => !r.dibaca).length))
-        .catch(() => {});
-    void muat();
-    // Event aksi (stop/tandai) = instan; poll 30s = jaring pengaman.
-    window.addEventListener(EVENT_NOTIF, muat);
-    const t = window.setInterval(muat, 30000);
-    return () => {
-      window.removeEventListener(EVENT_NOTIF, muat);
-      window.clearInterval(t);
-    };
-  }, [status]);
-
-  if (n === 0) return null;
-  return (
-    <span className="ml-auto flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-semibold text-white">
-      {n > 9 ? "9+" : n}
-    </span>
-  );
-}
 
 function UserBox() {
   const { data: session, status } = useSession();
