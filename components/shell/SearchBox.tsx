@@ -7,6 +7,8 @@ import { Search } from "lucide-react";
 import type { Project } from "@/lib/types";
 import type { QueuedCommand } from "@/lib/tasks";
 
+export const EVENT_SEARCH = "pdc-search";
+
 interface Hasil {
   key: string;
   label: string;
@@ -21,6 +23,13 @@ export function SearchBox() {
   const [hasil, setHasil] = useState<Hasil[]>([]);
   const [buka, setBuka] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+
+  const updateSearch = (val: string) => {
+    setQ(val);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent(EVENT_SEARCH, { detail: val }));
+    }
+  };
 
   useEffect(() => {
     if (!buka) return;
@@ -90,7 +99,7 @@ export function SearchBox() {
         id="searchBox"
         name="searchBox"
         value={q}
-        onChange={(e) => setQ(e.target.value)}
+        onChange={(e) => updateSearch(e.target.value)}
         onFocus={() => hasil.length > 0 && setBuka(true)}
         className="w-full rounded-[9px] border border-border bg-muted py-2 pl-9 pr-3 text-[13px] text-muted-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
         placeholder="Cari proyek, tugas, atau log…"
@@ -102,7 +111,7 @@ export function SearchBox() {
               key={h.key}
               onClick={() => {
                 setBuka(false);
-                setQ("");
+                updateSearch("");
                 router.push(h.href);
               }}
               className="block w-full px-3.5 py-2.5 text-left hover:bg-muted"

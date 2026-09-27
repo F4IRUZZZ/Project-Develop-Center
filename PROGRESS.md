@@ -40,7 +40,8 @@
 - [X] J: stats asli + stop kondisional + halaman detail proyek
 - [X] F9: webhook GitHub + stuck display (PR)
 - [X] K: Stop di detail hanya bila ada yang jalan
-- [X] L: navigasi HP bottom tab bar (PR)
+- [X] L: navigasi HP bottom tab bar
+- [X] N: topbar hidup + scroll notif + search live + pengaturan lengkap (PR)
 
 ## H. Riwayat Perubahan
 
