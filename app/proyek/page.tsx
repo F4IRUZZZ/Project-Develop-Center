@@ -6,6 +6,7 @@ import { RefreshCw } from "lucide-react";
 import { LoginCard } from "@/components/dashboard/LoginCard";
 import { CommandModal } from "@/components/command/CommandModal";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { PullModal } from "@/components/command/PullModal";
 import { Dashboard } from "@/components/dashboard/Dashboard";
 import { siarNotifikasi } from "@/lib/notifikasi";
 import type { Project } from "@/lib/types";
@@ -23,6 +24,8 @@ export default function Proyek() {
   const [syncing, setSyncing] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
+  const [pullOpen, setPullOpen] = useState(false);
+  const [pullId, setPullId] = useState<string | undefined>(undefined);
   const [konfirmasi, setKonfirmasi] = useState<Konfirmasi | null>(null);
 
   const muat = useCallback(async () => {
@@ -105,6 +108,10 @@ export default function Proyek() {
         onVisibility={(id, priv) =>
           setKonfirmasi({ jenis: "visibility", projectId: id, repoName: namaRepo(id), saatIniPrivate: priv })
         }
+        onPulls={(id) => {
+          setPullId(id);
+          setPullOpen(true);
+        }}
         aksiHeader={
           <button
             onClick={sync}
@@ -122,6 +129,13 @@ export default function Proyek() {
         projects={daftar}
         onTerkirim={() => void muat()}
         onClose={() => setModalOpen(false)}
+      />
+      <PullModal
+        open={pullOpen}
+        projectId={pullId}
+        repoName={pullId ? namaRepo(pullId) : undefined}
+        onMerged={() => void muat()}
+        onClose={() => setPullOpen(false)}
       />
       <ConfirmModal
         open={konfirmasi !== null}

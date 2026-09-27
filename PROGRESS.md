@@ -36,11 +36,13 @@
 
 - [X] F-batch: visibility repo + login landing + logout confirm + ConfirmModal (mode dicabut total)
 - [X] G: notif dibaca + bersihkan (bug) + scroll + refresh (PR)
+- [X] H: approval merge PR dari webapp (tombol PR + PullModal + confirm, merge commit)
 
 ## H. Riwayat Perubahan
 
 | Tanggal | Perubahan | Uji |
 |---|---|---|
+| 2026-09-27 | H approval merge (PR, tombol PR + PullModal + confirm) | H-CEK ALL-OK + 13 suite hijau + tsc + build |
 | 2026-09-27 | G notif+refresh (PR, reads + DELETE fix + scroll + refetch) | G-CEK ALL-OK + 13 suite hijau + tsc + build |
 | 2026-09-27 | F-batch merged (visibility + landing + confirm + ConfirmModal) | F-CEK ALL-OK + 12 suite hijau + tsc + build + uji manual |
 | 2026-09-27 | E23 notifikasi + restruktur (PR, badge live + kartu kelola/monitor) | E23-CEK ALL-OK + 11 suite hijau + tsc + build |
