@@ -38,24 +38,29 @@ function muatDariLokal() {
   siar();
 }
 
-// Simulasi D1 untuk baris DB (diganti worker/MCP di D4).
-function simulasiApi(id: string) {
+// Simulasi D3b untuk baris DB (diganti worker/MCP di D4).
+// Menulis command + task + activity agar konsisten.
+async function json(url: string, method: string, body: unknown) {
+  await fetch(url, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  }).catch(() => {});
+}
+
+function simulasiApi(cmd: QueuedCommand & { task_id?: string }) {
+  const { id, project_id, command_text, task_id } = cmd;
   window.setTimeout(async () => {
-    await fetch(`/api/commands/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "processing" }),
-    });
+    await json(`/api/commands/${id}`, "PATCH", { status: "processing" });
+    if (task_id) await json(`/api/tasks/${task_id}`, "PATCH", { status: "working", progress: 45 });
+    await json("/api/activity", "POST", { project_id, type: "progress", message: `Mengerjakan: ${command_text}` });
     await muatDariApi();
     window.setTimeout(async () => {
-      await fetch(`/api/commands/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          status: "completed",
-          result: "Simulasi D3: perintah tersimpan di Neon. AI asli tersambung di D4.",
-        }),
-      });
+      const hasil = "Simulasi D3b: perintah + task + activity tersimpan di Neon. AI asli tersambung di D4.";
+      await json(`/api/commands/${id}`, "PATCH", { status: "completed", result: hasil });
+      if (task_id)
+        await json(`/api/tasks/${task_id}`, "PATCH", { status: "completed", progress: 100, result_summary: hasil });
+      await json("/api/activity", "POST", { project_id, type: "info", message: `Selesai: ${command_text}` });
       await muatDariApi();
     }, 3000);
   }, 2000);
@@ -73,8 +78,8 @@ export async function kirimPerintah(projectId: string, text: string, sumber: Sum
       body: JSON.stringify({ project_id: projectId, command_text: text }),
     });
     if (!res.ok) return false;
-    const cmd = (await res.json()) as QueuedCommand;
-    simulasiApi(cmd.id);
+    const cmd = (await res.json()) as QueuedCommand & { task_id?: string };
+    simulasiApi({ ...cmd, command_text: text, project_id: projectId });
     await muatDariApi();
     return true;
   } catch {

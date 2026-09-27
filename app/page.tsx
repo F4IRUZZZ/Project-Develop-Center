@@ -7,7 +7,7 @@ import { CommandModal } from "@/components/command/CommandModal";
 import { QueuePanel } from "@/components/command/QueuePanel";
 import { Dashboard } from "@/components/dashboard/Dashboard";
 import { LoginCard } from "@/components/dashboard/LoginCard";
-import { fetchLiveProjects } from "@/lib/github";
+import { fetchDashboard } from "@/lib/github";
 import { projects as mockProjects } from "@/lib/mock";
 import type { Project } from "@/lib/types";
 
@@ -25,9 +25,15 @@ export default function Home() {
 
   useEffect(() => {
     if (status !== "authenticated") return;
-    fetchLiveProjects()
+    fetchDashboard()
       .then(setLive)
       .catch(() => setGagalRepo(true));
+    const t = window.setInterval(() => {
+      fetchDashboard()
+        .then(setLive)
+        .catch(() => {});
+    }, 10000);
+    return () => window.clearInterval(t);
   }, [status]);
 
   return (

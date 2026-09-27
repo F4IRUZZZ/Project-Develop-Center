@@ -26,3 +26,50 @@ CREATE TABLE IF NOT EXISTS command_queue (
 
 CREATE INDEX IF NOT EXISTS idx_command_queue_user
   ON command_queue (user_id, created_at DESC);
+
+-- D3b: projects/tasks/activity_log (PRD §10, subset).
+
+CREATE TABLE IF NOT EXISTS projects (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  repo_name TEXT NOT NULL,
+  repo_full TEXT NOT NULL,
+  repo_url TEXT,
+  default_branch TEXT,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (user_id, repo_full)
+);
+
+CREATE TABLE IF NOT EXISTS tasks (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  command_id TEXT REFERENCES command_queue(id) ON DELETE SET NULL,
+  title TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'idle'
+    CHECK (status IN ('idle', 'working', 'waiting', 'completed', 'failed', 'stuck')),
+  progress INTEGER NOT NULL DEFAULT 0,
+  result_summary TEXT,
+  git_branch TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  completed_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_tasks_project
+  ON tasks (project_id, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS activity_log (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  type TEXT NOT NULL DEFAULT 'info'
+    CHECK (type IN ('progress', 'commit', 'pr', 'issue', 'error', 'info')),
+  message TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_activity_log_user
+  ON activity_log (user_id, created_at DESC);

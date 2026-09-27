@@ -22,6 +22,7 @@
 - [X] D1: command queue mock (localStorage, lifecycle simulasi, kontrak PRD §10)
 - [X] D2: GitHub OAuth + daftar repo live (token JWT server-side, max 10 repo)
 - [X] D3: Neon queue (users + command_queue, token AES-256-GCM, API, polling 5s)
+- [X] D3b: tabel projects/tasks/activity_log + API + UI baca DB (status AI dari DB)
 - [ ] D3: DB Postgres + API routes + SSE (PRD F2-F5)
 - [ ] D4: MCP bridge `@pdc/mcp-server` + 8 tools (PRD F8 — risiko tertinggi)
 
@@ -29,6 +30,7 @@
 
 | Tanggal | Perubahan | Uji |
 |---|---|---|
+| 2026-09-27 | D3b tabel penuh merged (projects/tasks/activity + dashboard API) | D3B-CEK ALL-OK + 8 suite hijau + tsc + build + 401-gate |
 | 2026-09-27 | D3 Neon queue merged (API + polling + token terenkripsi) | D3-CEK ALL-OK + tsc + build + migrasi + 401-gate + crypto OK |
 | 2026-09-27 | D2 OAuth merged (login + repo live, token server-side) | D2-CEK ALL-OK + tsc + build + login manual |
 | 2026-09-27 | D1 queue mock merged (enqueue + panel + badge) | D1-CEK ALL-OK + tsc + build |

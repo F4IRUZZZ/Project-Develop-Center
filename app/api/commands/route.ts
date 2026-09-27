@@ -39,7 +39,17 @@ export async function POST(req: NextRequest) {
   }
 
   const id = buatId("cmd");
-  await db()`INSERT INTO command_queue (id, user_id, project_id, command_text, status) VALUES (${id}, ${ctx.userId}, ${projectId}, ${text}, 'pending')`;
-  const rows = await db()`SELECT * FROM command_queue WHERE id = ${id}`;
-  return NextResponse.json(baris(rows[0] as Record<string, unknown>), { status: 201 });
+  const taskId = buatId("task");
+  const sql = db();
+  await sql`INSERT INTO command_queue (id, user_id, project_id, command_text, status) VALUES (${id}, ${ctx.userId}, ${projectId}, ${text}, 'pending')`;
+  // Task menyertai perintah (status working, progress 0). Project dipastikan ada (sync ringan bila belum).
+  await sql`
+    INSERT INTO projects (id, user_id, repo_name, repo_full, is_active)
+    VALUES (${projectId}, ${ctx.userId}, ${projectId}, ${projectId}, true)
+    ON CONFLICT (user_id, repo_full) DO NOTHING
+  `;
+  await sql`INSERT INTO tasks (id, user_id, project_id, command_id, title, status, progress) VALUES (${taskId}, ${ctx.userId}, ${projectId}, ${id}, ${text}, 'working', 0)`;
+  await sql`INSERT INTO activity_log (id, user_id, project_id, type, message) VALUES (${buatId("act")}, ${ctx.userId}, ${projectId}, 'info', ${`Perintah baru: ${text}`})`;
+  const rows = await sql`SELECT * FROM command_queue WHERE id = ${id}`;
+  return NextResponse.json({ ...baris(rows[0] as Record<string, unknown>), task_id: taskId }, { status: 201 });
 }
