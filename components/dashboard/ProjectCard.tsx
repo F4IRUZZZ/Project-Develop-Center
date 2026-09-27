@@ -1,4 +1,5 @@
 import { Clock, FolderGit2, Lock, LockOpen, Square, Terminal } from "lucide-react";
+import Link from "next/link";
 import { PrButton } from "@/components/command/PullModal";
 import { cn } from "@/lib/utils";
 import type { Project } from "@/lib/types";
@@ -32,7 +33,9 @@ export function ProjectCard({ project, readOnly, onCommand, onStop, onVisibility
           </div>
           <div>
             <div className="flex items-center text-sm font-semibold tracking-tight">
-              {project.repoName}
+              <Link href={`/proyek/${project.id}`} className="hover:text-primary hover:underline">
+                {project.repoName}
+              </Link>
               <PendingBadge projectId={project.id} />
             </div>
             <div className="font-mono text-[11px] text-muted-foreground">{project.repoFull}</div>
