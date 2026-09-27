@@ -32,10 +32,15 @@
 - [X] E1: halaman Proyek (tabel + Sync) + Riwayat (tab Tugas + Perintah)
 - [X] E23: notifikasi turunan activity + restruktur monitor-vs-kelola (Proyek kelola, Dashboard monitor)
 
-## F. Riwayat Perubahan
+## G. Input pengguna (pasca-D0)
+
+- [X] F-batch: mode plan/build + visibility repo + login landing + logout confirm (PR)
+
+## H. Riwayat Perubahan
 
 | Tanggal | Perubahan | Uji |
 |---|---|---|
+| 2026-09-27 | F-batch mode+visibility+login (PR, 4 masukan pengguna) | F-CEK ALL-OK + 12 suite hijau + tsc + build |
 | 2026-09-27 | E23 notifikasi + restruktur (PR, badge live + kartu kelola/monitor) | E23-CEK ALL-OK + 11 suite hijau + tsc + build |
 | 2026-09-27 | E1 menu Proyek + Riwayat (PR, tabel + tab) | E1-CEK ALL-OK + 10 suite hijau + tsc + build |
 | 2026-09-27 | D4b 8 tools (PR, tools/list 8 + github 401-gate) | D4-CEK ALL-OK + tsc + build mcp-server & webapp |
