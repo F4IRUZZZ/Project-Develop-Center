@@ -37,17 +37,20 @@
 - [X] F-batch: visibility repo + login landing + logout confirm + ConfirmModal (mode dicabut total)
 - [X] G: notif dibaca + bersihkan (bug) + scroll + refresh
 - [X] H: approval merge PR dari webapp (tombol PR + PullModal + confirm, merge commit)
-- [X] J: stats asli + stop kondisional + halaman detail proyek (PR)
+- [X] J: stats asli + stop kondisional + halaman detail proyek
+- [X] K: Stop di detail hanya bila ada yang jalan
+- [X] L: navigasi HP bottom tab bar (PR)
 
 ## H. Riwayat Perubahan
 
 | Tanggal | Perubahan | Uji |
 |---|---|---|
+| 2026-09-27 | L bottom nav HP (PR, 5 item + badge bersama) | L-CEK ALL-OK + 14 suite hijau + tsc + build |
+| 2026-09-27 | K stop detail kondisional merged | J-CEK ALL-OK + tsc + build |
 | 2026-09-27 | J stats+stop+detail (PR, angka DB + stop jalan + /proyek/[id]) | J-CEK ALL-OK + 14 suite hijau + tsc + build + stats 401-gate |
 | 2026-09-27 | H approval merge merged (tombol PR + tutup task + Stop waiting) | H-CEK ALL-OK + 13 suite hijau + tsc + build + merge live |
 | 2026-09-27 | G notif+refresh (PR, reads + DELETE fix + scroll + refetch) | G-CEK ALL-OK + 13 suite hijau + tsc + build |
 | 2026-09-27 | F-batch merged (visibility + landing + confirm + ConfirmModal) | F-CEK ALL-OK + 12 suite hijau + tsc + build + uji manual |
-| 2026-09-27 | E23 notifikasi + restruktur (PR, badge live + kartu kelola/monitor) | E23-CEK ALL-OK + 11 suite hijau + tsc + build |
 | 2026-09-27 | E23 notifikasi + restruktur (PR, badge live + kartu kelola/monitor) | E23-CEK ALL-OK + 11 suite hijau + tsc + build |
 | 2026-09-27 | E1 menu Proyek + Riwayat (PR, tabel + tab) | E1-CEK ALL-OK + 10 suite hijau + tsc + build |
 | 2026-09-27 | D4b 8 tools (PR, tools/list 8 + github 401-gate) | D4-CEK ALL-OK + tsc + build mcp-server & webapp |
