@@ -27,10 +27,16 @@
 - [X] D4b: 4 tools baca MCP (projects/status/history/github_context)
 - [X] D0: deploy Vercel production (login + kirim + loop AI hijau di URL live)
 
-## E. Riwayat Perubahan
+## E. Menu penuh (pasca-MVP)
+
+- [X] E1: halaman Proyek (tabel + Sync) + Riwayat (tab Tugas + Perintah)
+- [ ] E2: Notifikasi turunan activity (badge live + halaman)
+
+## F. Riwayat Perubahan
 
 | Tanggal | Perubahan | Uji |
 |---|---|---|
+| 2026-09-27 | E1 menu Proyek + Riwayat (PR, tabel + tab) | E1-CEK ALL-OK + 10 suite hijau + tsc + build |
 | 2026-09-27 | D4b 8 tools (PR, tools/list 8 + github 401-gate) | D4-CEK ALL-OK + tsc + build mcp-server & webapp |
 | 2026-09-27 | D0 live (deploy + login prod + kirim prod + loop AI prod) | URL live + OAuth prod + kirim manual |
 | 2026-09-27 | D4 bridge merged (API key + 4 tools MCP stdio) | D4-CEK ALL-OK + tsc + build + handshake/tools-list + Bearer-401 |
