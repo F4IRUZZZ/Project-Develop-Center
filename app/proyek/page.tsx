@@ -22,6 +22,7 @@ export default function Proyek() {
   const { data: session, status } = useSession();
   const [daftar, setDaftar] = useState<Project[]>([]);
   const [syncing, setSyncing] = useState(true);
+  const [angka, setAngka] = useState<{ proyekAktif: number; aiBekerja: number; tugasSelesai: number } | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
   const [pullOpen, setPullOpen] = useState(false);
@@ -32,6 +33,13 @@ export default function Proyek() {
     try {
       const res = await fetch("/api/dashboard", { cache: "no-store" });
       if (res.ok) setDaftar((await res.json()) as Project[]);
+    } catch {
+      /* abaikan */
+    }
+    try {
+      const res = await fetch("/api/stats", { cache: "no-store" });
+      if (res.ok)
+        setAngka((await res.json()) as { proyekAktif: number; aiBekerja: number; tugasSelesai: number });
     } catch {
       /* abaikan */
     }
@@ -98,6 +106,7 @@ export default function Proyek() {
       <Dashboard
         projects={daftar}
         judul={`Proyek (${daftar.length})`}
+        stats={angka ?? undefined}
         onCommand={(id) => {
           setSelectedId(id);
           setModalOpen(true);

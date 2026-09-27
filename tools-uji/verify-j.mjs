@@ -15,6 +15,8 @@ const stats = readFileSync(join(root, "app/api/stats/route.ts"), "utf8");
 cek("stats hitung DB", stats.includes("COUNT(*)") && stats.includes("tugasSelesai"));
 const page = readFileSync(join(root, "app/page.tsx"), "utf8");
 cek("stats pakai API", page.includes("/api/stats"));
+const halProyek = readFileSync(join(root, "app/proyek/page.tsx"), "utf8");
+cek("proyek stats asli (bukan mock)", halProyek.includes("/api/stats"));
 
 // J2
 const dash = readFileSync(join(root, "app/api/dashboard/route.ts"), "utf8");

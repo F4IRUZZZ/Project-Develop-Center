@@ -7,6 +7,7 @@ import { Stats } from "./Stats";
 interface Props {
   projects?: Project[];
   judul?: string;
+  stats?: { proyekAktif: number; aiBekerja: number; tugasSelesai: number };
   readOnly?: boolean;
   sembunyiStats?: boolean;
   sembunyiAksiHeader?: boolean;
@@ -21,6 +22,7 @@ interface Props {
 export function Dashboard({
   projects = mockProjects,
   judul = "Proyek Dipantau",
+  stats,
   readOnly,
   sembunyiStats,
   sembunyiAksiHeader,
@@ -33,7 +35,13 @@ export function Dashboard({
 }: Props) {
   return (
     <div>
-      {!sembunyiStats && <Stats proyekAktif={projects.length} />}
+      {!sembunyiStats && (
+        <Stats
+          proyekAktif={stats?.proyekAktif ?? projects.length}
+          aiBekerja={stats?.aiBekerja}
+          tugasSelesai={stats?.tugasSelesai}
+        />
+      )}
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-[17px] font-semibold tracking-tight">{judul}</h2>
         {!sembunyiAksiHeader &&
