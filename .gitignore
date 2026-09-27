@@ -1,5 +1,5 @@
 # dependencies
-/node_modules
+node_modules
 /.pnp
 .pnp.*
 
@@ -9,6 +9,9 @@
 # next.js
 /.next/
 /out/
+
+# mcp-server build output
+mcp-server/dist/
 
 # production
 /build

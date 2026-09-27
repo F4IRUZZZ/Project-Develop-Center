@@ -10,14 +10,16 @@ import {
   Settings,
 } from "lucide-react";
 import { signIn, signOut, useSession } from "next-auth/react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { label: "Dashboard", icon: LayoutDashboard, active: true, badge: null },
-  { label: "Proyek", icon: FolderGit2, active: false, badge: null },
-  { label: "Riwayat", icon: History, active: false, badge: null },
-  { label: "Notifikasi", icon: Bell, active: false, badge: "2" },
-  { label: "Pengaturan", icon: Settings, active: false, badge: null },
+  { label: "Dashboard", icon: LayoutDashboard, href: "/", badge: null },
+  { label: "Proyek", icon: FolderGit2, href: null as string | null, badge: null },
+  { label: "Riwayat", icon: History, href: null as string | null, badge: null },
+  { label: "Notifikasi", icon: Bell, href: null as string | null, badge: "2" },
+  { label: "Pengaturan", icon: Settings, href: "/pengaturan", badge: null },
 ];
 
 function UserBox() {
@@ -79,6 +81,7 @@ function UserBox() {
 }
 
 export function Sidebar() {
+  const pathname = usePathname();
   return (
     <aside className="hidden w-[232px] shrink-0 flex-col border-r border-border bg-card px-3.5 py-[18px] lg:flex">
       <div className="flex items-center gap-2.5 px-1.5 pb-[22px]">
@@ -95,25 +98,33 @@ export function Sidebar() {
         Menu
       </div>
       <nav>
-        {NAV.map((item) => (
-          <div
-            key={item.label}
-            className={cn(
-              "mb-0.5 flex cursor-pointer items-center gap-2.5 rounded-[9px] px-2.5 py-2 text-[13.5px] font-medium transition-colors",
-              item.active
-                ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
-            )}
-          >
-            <item.icon className="h-[18px] w-[18px]" strokeWidth={1.75} />
-            {item.label}
-            {item.badge && (
-              <span className="ml-auto flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-semibold text-white">
-                {item.badge}
-              </span>
-            )}
-          </div>
-        ))}
+        {NAV.map((item) => {
+          const aktif = item.href ? pathname === item.href : item.label === "Dashboard" && pathname === "/";
+          const cls = cn(
+            "mb-0.5 flex cursor-pointer items-center gap-2.5 rounded-[9px] px-2.5 py-2 text-[13.5px] font-medium transition-colors",
+            aktif ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          );
+          const isi = (
+            <>
+              <item.icon className="h-[18px] w-[18px]" strokeWidth={1.75} />
+              {item.label}
+              {item.badge && (
+                <span className="ml-auto flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-semibold text-white">
+                  {item.badge}
+                </span>
+              )}
+            </>
+          );
+          return item.href ? (
+            <Link key={item.label} href={item.href} className={cls}>
+              {isi}
+            </Link>
+          ) : (
+            <div key={item.label} className={cls}>
+              {isi}
+            </div>
+          );
+        })}
       </nav>
 
       <UserBox />

@@ -2,6 +2,8 @@ import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { db, dbSiap } from "@/lib/db";
 import { dekrip, enkrip } from "@/lib/crypto";
+import { bacaBearer, verifikasiApiKey } from "@/lib/api-key";
+import { buatId } from "@/lib/id";
 
 export interface Ctx {
   userId: string;
@@ -16,9 +18,19 @@ export function isErr(x: Ctx | ApiError): x is ApiError {
   return (x as ApiError).error !== undefined;
 }
 
-// Auth via JWT + upsert user + simpan token terenkripsi (PRD §14.2).
+// Auth via sesi JWT (browser) ATAU Bearer API key (MCP bridge, D4).
 export async function sesiUser(req: NextRequest): Promise<Ctx | ApiError> {
   if (!dbSiap()) return { error: "Database belum dikonfigurasi", status: 503 };
+
+  const bearer = bacaBearer(req);
+  if (bearer) {
+    const userId = await verifikasiApiKey(bearer);
+    if (!userId) return { error: "API key tidak valid / dicabut", status: 401 };
+    const ada = await db()`SELECT id FROM users WHERE id = ${userId}`;
+    if (ada.length === 0) return { error: "Akun belum pernah login via web", status: 401 };
+    return { userId };
+  }
+
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
   if (!token?.sub) return { error: "Belum login GitHub", status: 401 };
 
@@ -42,9 +54,7 @@ export async function sesiUser(req: NextRequest): Promise<Ctx | ApiError> {
   return { userId };
 }
 
-export function buatId(prefix: string): string {
-  return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
-}
+export { buatId };
 
 // Ambil token GitHub user (dekrip) untuk fetch server-side.
 export async function tokenGitHub(userId: string): Promise<string | null> {
