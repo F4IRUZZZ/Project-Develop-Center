@@ -71,7 +71,7 @@ export default function Notifikasi() {
           </p>
         </div>
       ) : (
-        <div className="rounded-2xl border border-border bg-card p-[18px]">
+        <div className="scroll-tipis max-h-[520px] overflow-y-auto rounded-2xl border border-border bg-card p-[18px]">
           {items.map((e) => {
             const pr = e.type === "pr";
             return (
