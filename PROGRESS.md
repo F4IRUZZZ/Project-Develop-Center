@@ -42,7 +42,7 @@
 
 | Tanggal | Perubahan | Uji |
 |---|---|---|
-| 2026-09-27 | H approval merge (PR, tombol PR + PullModal + confirm) | H-CEK ALL-OK + 13 suite hijau + tsc + build |
+| 2026-09-27 | H approval merge merged (tombol PR + tutup task + Stop waiting) | H-CEK ALL-OK + 13 suite hijau + tsc + build + merge live |
 | 2026-09-27 | G notif+refresh (PR, reads + DELETE fix + scroll + refetch) | G-CEK ALL-OK + 13 suite hijau + tsc + build |
 | 2026-09-27 | F-batch merged (visibility + landing + confirm + ConfirmModal) | F-CEK ALL-OK + 12 suite hijau + tsc + build + uji manual |
 | 2026-09-27 | E23 notifikasi + restruktur (PR, badge live + kartu kelola/monitor) | E23-CEK ALL-OK + 11 suite hijau + tsc + build |
