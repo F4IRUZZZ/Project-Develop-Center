@@ -41,7 +41,7 @@ try {
 
 try {
   const page = readFileSync(join(root, "app/page.tsx"), "utf8");
-  cek("page C0 marker", page.includes("C0 Scaffold OK"));
+  cek("page render dashboard/login", page.includes("Dashboard") || page.includes("LoginCard"));
 } catch (e) {
   cek("page.tsx terbaca", false, String(e));
 }

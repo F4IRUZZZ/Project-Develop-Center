@@ -17,7 +17,7 @@ const sidebar = readFileSync(join(root, "components/shell/Sidebar.tsx"), "utf8")
 cek("sidebar 232px", sidebar.includes("w-[232px]"));
 cek("nav Dashboard", sidebar.includes("Dashboard"));
 cek("nav Notifikasi badge 2", sidebar.includes("Notifikasi") && sidebar.includes('"2"'));
-cek("user @andi_dev", sidebar.includes("@andi_dev"));
+cek("user box session-aware (D2)", sidebar.includes("UserBox") && sidebar.includes("useSession"));
 
 const topbar = readFileSync(join(root, "components/shell/Topbar.tsx"), "utf8");
 cek("topbar 58px", topbar.includes("h-[58px]"));
