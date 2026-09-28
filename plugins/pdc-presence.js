@@ -22,7 +22,13 @@ export const PdcPresencePlugin = async ({ directory, client }) => {
     }
   };
 
-  await log("info", "pdc-presence loaded", { directory, mode: MODE, keyAda: Boolean(KEY) });
+  await log("info", "pdc-presence loaded", {
+    directory,
+    mode: MODE,
+    keyAda: Boolean(KEY),
+    node: typeof process !== "undefined" ? process.version : "tak-dikenal",
+    execPath: typeof process !== "undefined" ? process.execPath : "tak-dikenal",
+  });
 
   // Mengembalikan {ok, status} agar "terkirim" vs "diterima" tak ambigu.
   // stdout anak dibaca (bukan ignore) supaya kode status tercatat di log.
@@ -45,9 +51,14 @@ export const PdcPresencePlugin = async ({ directory, client }) => {
         timeout: 15000,
       }).trim();
       const m = out.match(/HTTP:(\d+)/);
-      return { ok: Boolean(m && Number(m[1]) >= 200 && Number(m[1]) < 300), status: m ? m[1] : out.slice(0, 120) || "tanpa-respons" };
+      if (m) return { ok: Number(m[1]) >= 200 && Number(m[1]) < 300, status: m[1] };
+      const err = out.match(/ERR:([\s\S]*)/);
+      return { ok: false, status: "anak:" + (err ? err[1].trim().slice(0, 300) : out.slice(0, 300) || "tanpa-respons") };
     } catch (e) {
-      return { ok: false, status: "exec-gagal:" + String(e && e.message ? e.message : e).slice(0, 120) };
+      const std = e && e.stdout ? String(e.stdout).slice(0, 300) : "";
+      const ste = e && e.stderr ? String(e.stderr).slice(0, 300) : "";
+      const msg = String((e && e.message) || e).slice(0, 200);
+      return { ok: false, status: `exec-gagal:${msg} stdout:[${std}] stderr:[${ste}]` };
     }
   };
 
