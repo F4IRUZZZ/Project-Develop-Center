@@ -28,13 +28,16 @@ export function Topbar() {
           </span>
         </Link>
         <PemilihTema />
-        {session?.user ? (
-          <UserMenu nama={nama} inisial={inisial} gambar={session.user.image} />
-        ) : (
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-muted-foreground">
-            <User className="h-4 w-4" />
-          </div>
-        )}
+        {/* Avatar hanya di HP: desktop memakai UserBox sidebar */}
+        <div className="lg:hidden">
+          {session?.user ? (
+            <UserMenu nama={nama} inisial={inisial} gambar={session.user.image} />
+          ) : (
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-muted-foreground">
+              <User className="h-4 w-4" />
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );

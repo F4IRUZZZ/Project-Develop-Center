@@ -41,12 +41,14 @@
 - [X] F9: webhook GitHub + stuck display (PR)
 - [X] K: Stop di detail hanya bila ada yang jalan
 - [X] L: navigasi HP bottom tab bar
-- [X] N: topbar hidup + scroll notif + search live + pengaturan lengkap (PR)
+- [X] N: topbar hidup + scroll notif + search live + pengaturan lengkap
+- [X] O: login ala referensi + logo Hexagon-P + favicon + avatar responsif (PR)
 
 ## H. Riwayat Perubahan
 
 | Tanggal | Perubahan | Uji |
 |---|---|---|
+| 2026-09-27 | O login referensi + logo + favicon (PR, unauthenticated shell fix) | O-CEK ALL-OK + tsc + build |
 | 2026-09-27 | D0 re-verifikasi production (deploy PR #35 + fitur baru + perintah) | providers OK + visual baru + perintah masuk |
 | 2026-09-27 | L bottom nav HP (PR, 5 item + badge bersama) | L-CEK ALL-OK + 14 suite hijau + tsc + build |
 | 2026-09-27 | K stop detail kondisional merged | J-CEK ALL-OK + tsc + build |
