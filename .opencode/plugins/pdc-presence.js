@@ -9,20 +9,10 @@
 // Blind spot yang diketahui: resume (--continue) di sebagian versi OpenCode
 // tidak memicu event; PDC menutupnya via timeout basi 15 menit (display).
 
-export const PdcPresencePlugin = async ({ directory, client }) => {
+export const PdcPresencePlugin = async ({ directory }) => {
   const API = (process.env.PDC_API_URL || "http://localhost:3000").replace(/\/$/, "");
   const KEY = process.env.PDC_API_KEY || "";
   const MODE = process.env.PDC_MODE === "plan" ? "plan" : "build";
-
-  const log = async (level, message, extra) => {
-    try {
-      await client.app.log({ body: { service: "pdc-presence", level, message, extra: extra ?? {} } });
-    } catch {
-      /* abaikan: logging tak boleh mengganggu sesi */
-    }
-  };
-
-  await log("info", "pdc-presence loaded", { directory, mode: MODE, keyAda: Boolean(KEY) });
 
   const kirim = async (path, method, body) => {
     if (!KEY) return;
@@ -69,35 +59,18 @@ export const PdcPresencePlugin = async ({ directory, client }) => {
 
   return {
     event: async ({ event }) => {
-      await log("info", `event diterima: ${event.type}`, { sessionId: infoSesi(event).id });
       if (event.type === "session.created") {
         const s = infoSesi(event);
-        if (!s.id) {
-          await log("warn", "session.created tanpa id, dilewati");
-          return;
-        }
-        if (!KEY) {
-          await log("warn", "PDC_API_KEY kosong, lewati lapor (set env User PDC_API_KEY)");
-          return;
-        }
+        if (!s.id) return;
         await kirim("/api/sessions", "POST", { session_id: s.id, repo_full: await repoFull(), mode: s.mode });
-        await log("info", "POST /api/sessions dikirim", { sessionId: s.id });
       }
       if (event.type === "session.idle" || event.type === "session.error") {
         const s = infoSesi(event);
-        if (!s.id) {
-          await log("warn", `${event.type} tanpa id, dilewati`);
-          return;
-        }
-        if (!KEY) {
-          await log("warn", "PDC_API_KEY kosong, lewati lapor (set env User PDC_API_KEY)");
-          return;
-        }
+        if (!s.id) return;
         await kirim("/api/sessions", "PATCH", {
           session_id: s.id,
           status: event.type === "session.error" ? "error" : "idle",
         });
-        await log("info", `PATCH /api/sessions dikirim (${event.type})`, { sessionId: s.id });
       }
     },
   };
