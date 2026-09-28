@@ -91,6 +91,23 @@ CREATE TABLE IF NOT EXISTS webhook_deliveries (
   diterima TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Presence: sesi AI per repo (dilaporkan plugin OpenCode, bukan LLM).
+-- ended_at NULL = masih aktif; last_seen basi >15 mnt dianggap selesai (display).
+CREATE TABLE IF NOT EXISTS agent_sessions (
+  session_id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  project_id TEXT REFERENCES projects(id) ON DELETE SET NULL,
+  repo_full TEXT,
+  mode TEXT NOT NULL DEFAULT 'build',
+  status TEXT NOT NULL DEFAULT 'active',
+  started_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  last_seen_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  ended_at TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_agent_sessions_user
+  ON agent_sessions (user_id, last_seen_at DESC);
+
 -- D4: API keys untuk MCP bridge (hash, bukan secret mentah).
 
 CREATE TABLE IF NOT EXISTS api_keys (
