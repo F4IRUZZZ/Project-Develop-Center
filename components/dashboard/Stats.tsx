@@ -1,5 +1,4 @@
 import { Bot, CheckCheck, FolderGit2 } from "lucide-react";
-import { stats as mockStats } from "@/lib/mock";
 
 interface Props {
   proyekAktif?: number;
@@ -7,15 +6,15 @@ interface Props {
   tugasSelesai?: number;
 }
 
-export function Stats({
-  proyekAktif = mockStats.proyekAktif,
-  aiBekerja = mockStats.aiBekerja,
-  tugasSelesai = mockStats.tugasSelesai,
-}: Props) {
+function nilai(v: number | undefined): string {
+  return v === undefined ? "—" : String(v);
+}
+
+export function Stats({ proyekAktif, aiBekerja, tugasSelesai }: Props) {
   const ITEMS = [
-    { icon: FolderGit2, value: proyekAktif, label: "Proyek Aktif", tone: "bg-primary/10 text-primary" },
-    { icon: Bot, value: aiBekerja, label: "AI Bekerja", tone: "bg-sky-500/10 text-sky-500" },
-    { icon: CheckCheck, value: tugasSelesai, label: "Tugas Selesai", tone: "bg-emerald-500/10 text-emerald-500" },
+    { icon: FolderGit2, value: nilai(proyekAktif), label: "Proyek Aktif", tone: "bg-primary/10 text-primary" },
+    { icon: Bot, value: nilai(aiBekerja), label: "AI Bekerja", tone: "bg-sky-500/10 text-sky-500" },
+    { icon: CheckCheck, value: nilai(tugasSelesai), label: "Tugas Selesai", tone: "bg-emerald-500/10 text-emerald-500" },
   ];
 
   return (

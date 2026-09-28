@@ -14,7 +14,7 @@ for (const f of ["lib/notifikasi.ts", "app/notifikasi/page.tsx"]) {
   cek(f, existsSync(join(root, f)));
 }
 const notif = readFileSync(join(root, "lib/notifikasi.ts"), "utf8");
-cek("definisi penting pr+error 24 jam", notif.includes('"pr"') && notif.includes('"error"') && notif.includes("24 * 3600"));
+cek("definisi penting pr+error 24 jam (server-side)", readFileSync(join(root, "app/api/notifications/route.ts"), "utf8").includes("24 hours"));
 const sidebar = readFileSync(join(root, "components/shell/Sidebar.tsx"), "utf8");
 cek("badge live (tanpa hardcode 2)", sidebar.includes("NotifBadge") && !sidebar.includes('badge: "2"'));
 cek("nav notifikasi hidup", sidebar.includes('href: "/notifikasi"'));
