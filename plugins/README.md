@@ -16,13 +16,15 @@ tanpa perintah PDC pun tetap terlacak per repo.
    - `PDC_MODE` — opsional, `plan` bila sesi itu dipakai untuk rencana saja.
 3. Restart total OpenCode (semua instance) agar plugin dimuat.
 4. Buka sesi di repo itu → kartu repo di PDC tampil **AI aktif** <10 detik.
-5. Tutup/biarkan idle → indikator padam (atau padam sendiri bila basi >15 menit).
+5. Diam 30 menit pun tetap menyala (denyut interval tiap 60 dtk); tutup OpenCode → padam ≤~4 menit.
 
 ## Cara kerja & batas
 
-- `session.created` → `POST /api/sessions` (buka/segarkan).
-- `session.idle` / `session.error` → `PATCH /api/sessions` (tutup).
+- `session.created` → `POST /api/sessions` (buka) + sesi didaftarkan ke denyut.
+- Denyut interval 60 dtk → `POST` ulang tiap sesi dikenal (mati sendiri saat proses tutup).
+- `session.idle` / `session.status` → `PATCH idle` (heartbeat, bukan tutup).
+- `session.deleted` → `PATCH selesai`; `session.error` → `PATCH error` (keduanya final).
 - Semua kegagalan diabaikan diam-diam: presence tak boleh mengganggu sesi.
-- Blind spot: resume (`--continue`) di sebagian versi OpenCode tidak memicu
-  event — PDC menutupnya via timeout basi 15 menit (tampilan).
+- Batas jujur: close/kill/crash tak memicu event apa pun — PDC mendeteksinya
+  via timeout 3 menit (tampilan), jadi "hantu aktif" 0–4 menit tak terhapus total.
 - Tanpa key (`PDC_API_KEY` kosong) plugin nonaktif sendiri.

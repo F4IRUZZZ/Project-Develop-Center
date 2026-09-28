@@ -35,11 +35,12 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ ok: true }, { status: 201 });
 }
 
-// Heartbeat (idle) vs tutup (error).
-// session.idle fire tiap agent selesai menjawab (menunggu input) — BUKAN sesi
-// berakhir — jadi ia hanya menyegarkan status active + last_seen_at (ended_at
-// dibersihkan). Selesai sejati: timeout 15 mnt di flag sesiAktif dashboard.
-// session.error tetap final karena butuh perhatian user.
+// Heartbeat (idle) vs tutup (error/selesai).
+// session.idle/session.status fire tiap agent selesai menjawab (menunggu
+// input) — BUKAN sesi berakhir — jadi hanya menyegarkan status active +
+// last_seen_at (ended_at dibersihkan). Tutup sejati: session.error (final,
+// butuh perhatian), session.deleted (selesai eksplisit), atau timeout 3 mnt
+// di flag sesiAktif dashboard (untuk close/kill/crash tanpa event).
 export async function PATCH(req: NextRequest) {
   const ctx = await sesiUser(req);
   if (isErr(ctx)) return NextResponse.json({ error: ctx.error }, { status: ctx.status });
@@ -54,8 +55,9 @@ export async function PATCH(req: NextRequest) {
   if (!sessionId) return NextResponse.json({ error: "session_id wajib" }, { status: 400 });
 
   const sql = db();
-  if (body.status === "error") {
-    const tutup = await sql`UPDATE agent_sessions SET status = 'error', ended_at = now(), last_seen_at = now() WHERE session_id = ${sessionId} AND user_id = ${ctx.userId} RETURNING session_id`;
+  if (body.status === "error" || body.status === "selesai") {
+    const akhir = body.status === "error" ? "error" : "selesai";
+    const tutup = await sql`UPDATE agent_sessions SET status = ${akhir}, ended_at = now(), last_seen_at = now() WHERE session_id = ${sessionId} AND user_id = ${ctx.userId} RETURNING session_id`;
     if (tutup.length === 0) return NextResponse.json({ error: "Sesi tidak ketemu" }, { status: 404 });
     return NextResponse.json({ ok: true });
   }

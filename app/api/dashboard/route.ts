@@ -45,11 +45,13 @@ export async function GET(req: NextRequest) {
   `) as unknown as Array<{ project_id: string }>;
   const jalanSet = new Set(jalan.map((r) => r.project_id));
 
-  // Sesi AI aktif: status active + terlihat <15 mnt (tutup blind spot event).
+  // Sesi AI aktif: status active + denyut <3 mnt. Denyut dikirim plugin tiap
+  // 60 dtk selama proses OpenCode hidup, jadi timeout pendek aman dari kedip
+  // dan padam ≤~4 mnt setelah close/kill/crash (tanpa event tutup-proses).
   const sesi = (await sql`
     SELECT project_id FROM agent_sessions
     WHERE user_id = ${ctx.userId} AND status = 'active'
-      AND last_seen_at > now() - interval '15 minutes'
+      AND last_seen_at > now() - interval '3 minutes'
   `) as unknown as Array<{ project_id: string | null }>;
   const sesiSet = new Set(sesi.map((r) => r.project_id));
 

@@ -23,13 +23,14 @@ cek("PATCH idle = heartbeat (active + ended_at NULL)",
   api.includes("ended_at = NULL") && api.includes("status = 'active'"));
 
 const dash = readFileSync(join(root, "app/api/dashboard/route.ts"), "utf8");
-cek("flag sesiAktif 15 mnt", dash.includes("sesiAktif") && dash.includes("15 minutes"));
+cek("flag sesiAktif 3 mnt", dash.includes("sesiAktif") && dash.includes("3 minutes"));
 
 const card = readFileSync(join(root, "components/dashboard/ProjectCard.tsx"), "utf8");
 cek("indikator AI aktif", card.includes("AI aktif") && card.includes("animate-pulse"));
 
 const plug = readFileSync(join(root, "plugins/pdc-presence.js"), "utf8");
 cek("plugin session.created/idle/error", plug.includes("session.created") && plug.includes("session.idle") && plug.includes("session.error"));
+cek("plugin denyut interval + deleted", plug.includes("setInterval") && plug.includes("60000") && plug.includes("session.deleted"));
 cek("plugin tanpa key mentah", !plug.includes("pdc_") || plug.includes("process.env.PDC_API_KEY"));
 
 const detail = readFileSync(join(root, "app/proyek/[id]/page.tsx"), "utf8");
