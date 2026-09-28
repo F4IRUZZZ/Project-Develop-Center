@@ -1,4 +1,3 @@
-import { Plus } from "lucide-react";
 import { projects as mockProjects } from "@/lib/mock";
 import type { Project } from "@/lib/types";
 import { ProjectCard } from "./ProjectCard";
@@ -44,12 +43,7 @@ export function Dashboard({
       )}
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-[17px] font-semibold tracking-tight">{judul}</h2>
-        {!sembunyiAksiHeader &&
-          (aksiHeader ?? (
-            <button className="flex items-center gap-1.5 rounded-[9px] bg-primary px-3.5 py-2 text-[13px] font-medium text-white transition-colors hover:bg-[#5457E5]">
-              <Plus className="h-[15px] w-[15px]" /> Tambah Proyek
-            </button>
-          ))}
+        {!sembunyiAksiHeader && aksiHeader}
       </div>
       {projects.length === 0 ? (
         <p className="rounded-2xl border border-border bg-card px-4 py-8 text-center text-[13px] text-muted-foreground">

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { LogOut, Settings } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { signOut } from "next-auth/react";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 
@@ -41,8 +42,7 @@ export function UserMenu({ nama, inisial, gambar }: Props) {
         className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-muted text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
       >
         {gambar ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={gambar} alt={nama} className="h-full w-full object-cover" />
+          <Image src={gambar} alt={nama} width={36} height={36} className="h-full w-full object-cover" />
         ) : (
           inisial
         )}

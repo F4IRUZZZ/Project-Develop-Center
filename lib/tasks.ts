@@ -86,14 +86,6 @@ export function enqueue(projectId: string, text: string): QueuedCommand {
   return cmd;
 }
 
-export function listByProject(projectId: string): QueuedCommand[] {
-  return bacaQueue().filter((c) => c.project_id === projectId);
-}
-
-export function pendingCount(projectId: string): number {
-  return bacaQueue().filter((c) => c.project_id === projectId && (c.status === "pending" || c.status === "processing")).length;
-}
-
 export function bersihkanSelesai() {
   simpanQueue(bacaQueue().filter((c) => c.status === "pending" || c.status === "processing"));
 }

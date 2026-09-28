@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { signIn, signOut, useSession } from "next-auth/react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { NotifBadge } from "./NotifBadge";
@@ -58,8 +59,7 @@ function UserBox() {
       <div className="flex items-center gap-2.5">
         <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted text-xs font-semibold text-muted-foreground">
           {session.user.image ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={session.user.image} alt={nama} className="h-full w-full object-cover" />
+            <Image src={session.user.image} alt={nama} width={32} height={32} className="h-full w-full object-cover" />
           ) : (
             inisial
           )}
@@ -97,10 +97,11 @@ export function Sidebar() {
   return (
     <aside className="hidden w-[232px] shrink-0 flex-col border-r border-border bg-card px-3.5 py-[18px] lg:flex">
       <div className="flex items-center gap-2.5 px-1.5 pb-[22px]">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src="/logo-pdc.svg"
           alt="Logo PDC"
+          width={34}
+          height={34}
           className="h-[34px] w-[34px] rounded-[10px] shadow-[0_4px_12px_rgba(99,102,241,0.35)]"
         />
         <div>
