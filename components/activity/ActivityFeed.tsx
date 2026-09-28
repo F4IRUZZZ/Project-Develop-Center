@@ -28,19 +28,30 @@ export function ActivityFeed() {
   const { status } = useSession();
   const [live, setLive] = useState<ActivityEvent[] | null>(null);
 
+  const [prevStatus, setPrevStatus] = useState(status);
+  if (prevStatus !== status) {
+    setPrevStatus(status);
+    if (status !== "authenticated") setLive(null);
+  }
+
   useEffect(() => {
-    if (status !== "authenticated") {
-      setLive(null);
-      return;
-    }
-    const muat = () =>
+    if (status !== "authenticated") return;
+    let batal = false;
+    const poll = () => {
       fetch("/api/activity", { cache: "no-store" })
         .then((r) => (r.ok ? r.json() : Promise.reject()))
-        .then((d) => setLive(d as ActivityEvent[]))
+        .then((d) => {
+          if (!batal) setLive(d as ActivityEvent[]);
+        })
         .catch(() => {});
-    void muat();
-    const t = window.setInterval(muat, 5000);
-    return () => window.clearInterval(t);
+    };
+    const t0 = window.setTimeout(poll, 0);
+    const t = window.setInterval(poll, 5000);
+    return () => {
+      batal = true;
+      window.clearTimeout(t0);
+      window.clearInterval(t);
+    };
   }, [status]);
 
   const items = live ?? mockFeed;

@@ -13,7 +13,7 @@ import {
 export type Sumber = "api" | "lokal";
 
 let cache: QueuedCommand[] = [];
-let pendengar = new Set<() => void>();
+const pendengar = new Set<() => void>();
 let interval: number | null = null;
 let langgananLokal = false;
 

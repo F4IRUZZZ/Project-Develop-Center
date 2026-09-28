@@ -21,6 +21,13 @@ export async function POST(req: Request) {
   const event = req.headers.get("x-github-event") ?? "";
   if (event === "ping") return NextResponse.json({ ok: true, msg: "pong" });
 
+  // M7: tolak pengiriman ulang (replay) delivery ID yang sama.
+  const delivery = req.headers.get("x-github-delivery") ?? "";
+  if (delivery) {
+    const tandai = await db()`INSERT INTO webhook_deliveries (delivery_id) VALUES (${delivery}) ON CONFLICT DO NOTHING RETURNING delivery_id`;
+    if (tandai.length === 0) return NextResponse.json({ ok: true, abaikan: "duplikat delivery" });
+  }
+
   let body: Record<string, unknown>;
   try {
     body = JSON.parse(mentah) as Record<string, unknown>;

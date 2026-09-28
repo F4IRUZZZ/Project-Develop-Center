@@ -49,11 +49,11 @@ export function SearchBox() {
 
   useEffect(() => {
     const kata = q.trim().toLowerCase();
-    if (status !== "authenticated" || kata.length < 2) {
-      setHasil([]);
-      return;
-    }
     const t = window.setTimeout(async () => {
+      if (status !== "authenticated" || kata.length < 2) {
+        setHasil([]);
+        return;
+      }
       try {
         const [d, tk, c] = await Promise.all([
           fetch("/api/dashboard", { cache: "no-store" }).then((r) => (r.ok ? r.json() : [])),

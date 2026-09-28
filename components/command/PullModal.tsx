@@ -24,16 +24,33 @@ export function PullModal({ open, projectId, repoName, onMerged, onClose }: Prop
   const [target, setTarget] = useState<PR | null>(null);
   const [menggabungkan, setMenggabungkan] = useState(false);
 
-  useEffect(() => {
-    if (!open || !projectId) return;
+  const [resetKey, setResetKey] = useState(0);
+  if (open && resetKey === 0 && projectId) {
+    // Reset sekali saat dibuka (render-phase, bukan effect).
+    setResetKey(1);
     setPrs(null);
     setGagal(null);
     setTarget(null);
+  }
+  if (!open && resetKey !== 0) {
+    setResetKey(0);
+  }
+
+  useEffect(() => {
+    if (!open || !projectId) return;
+    let batal = false;
     fetch(`/api/github?project_id=${encodeURIComponent(projectId)}`, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
-      .then((d) => setPrs((d as { open_prs: PR[] }).open_prs ?? []))
-      .catch(() => setGagal("Gagal memuat PR. Coba lagi."));
-  }, [open, projectId]);
+      .then((d) => {
+        if (!batal) setPrs((d as { open_prs: PR[] }).open_prs ?? []);
+      })
+      .catch(() => {
+        if (!batal) setGagal("Gagal memuat PR. Coba lagi.");
+      });
+    return () => {
+      batal = true;
+    };
+  }, [open, projectId, resetKey]);
 
   useEffect(() => {
     if (!open) return;

@@ -18,7 +18,7 @@ function baris(r: Record<string, unknown>): QueuedCommand {
 export async function GET(req: NextRequest) {
   const ctx = await sesiUser(req);
   if (isErr(ctx)) return NextResponse.json({ error: ctx.error }, { status: ctx.status });
-  const rows = await db()`SELECT * FROM command_queue WHERE user_id = ${ctx.userId} ORDER BY created_at DESC`;
+  const rows = await db()`SELECT * FROM command_queue WHERE user_id = ${ctx.userId} ORDER BY created_at DESC LIMIT 100`;
   return NextResponse.json((rows as Record<string, unknown>[]).map(baris));
 }
 
