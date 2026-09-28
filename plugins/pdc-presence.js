@@ -24,8 +24,10 @@ export const PdcPresencePlugin = async ({ directory, client }) => {
 
   await log("info", "pdc-presence loaded", { directory, mode: MODE, keyAda: Boolean(KEY) });
 
+  // Mengembalikan {ok, status} agar "terkirim" vs "diterima" tak ambigu.
+  // stdout anak dibaca (bukan ignore) supaya kode status tercatat di log.
   const kirim = async (path, method, body) => {
-    if (!KEY) return;
+    if (!KEY) return { ok: false, status: "tanpa-key" };
     try {
       const script =
         "fetch(" +
@@ -36,11 +38,16 @@ export const PdcPresencePlugin = async ({ directory, client }) => {
         KEY +
         "','Content-Type':'application/json'},body:" +
         JSON.stringify(JSON.stringify(body)) +
-        ",signal:AbortSignal.timeout(10000)}).catch(()=>{})";
+        ",signal:AbortSignal.timeout(10000)}).then(r=>console.log('HTTP:'+r.status)).catch(e=>console.log('ERR:'+String(e&&e.message?e.message:e).slice(0,120)))";
       const { execFileSync } = await import("node:child_process");
-      execFileSync(process.execPath, ["-e", script], { stdio: "ignore", timeout: 15000 });
-    } catch {
-      /* abaikan: presence tak boleh mengganggu sesi */
+      const out = execFileSync(process.execPath, ["-e", script], {
+        encoding: "utf8",
+        timeout: 15000,
+      }).trim();
+      const m = out.match(/HTTP:(\d+)/);
+      return { ok: Boolean(m && Number(m[1]) >= 200 && Number(m[1]) < 300), status: m ? m[1] : out.slice(0, 120) || "tanpa-respons" };
+    } catch (e) {
+      return { ok: false, status: "exec-gagal:" + String(e && e.message ? e.message : e).slice(0, 120) };
     }
   };
 
@@ -111,8 +118,12 @@ export const PdcPresencePlugin = async ({ directory, client }) => {
             await log("warn", "PDC_API_KEY kosong, lewati lapor (set env User PDC_API_KEY)");
             return;
           }
-          await kirim("/api/sessions", "POST", { session_id: s.id, repo_full: await repoFull(), mode: s.mode });
-          await log("info", "POST /api/sessions dikirim", { sessionId: s.id });
+        const hasilPost = await kirim("/api/sessions", "POST", {
+          session_id: s.id,
+          repo_full: await repoFull(),
+          mode: s.mode,
+        });
+        await log(hasilPost.ok ? "info" : "warn", `POST /api/sessions -> ${hasilPost.status}`, { sessionId: s.id });
         }
         if (tipe === "session.idle" || tipe === "session.error") {
           await log("info", `idle-masuk: ${tipe}`);
@@ -132,11 +143,13 @@ export const PdcPresencePlugin = async ({ directory, client }) => {
             await log("warn", "PDC_API_KEY kosong, lewati lapor (set env User PDC_API_KEY)");
             return;
           }
-          await kirim("/api/sessions", "PATCH", {
-            session_id: s.id,
-            status: tipe === "session.error" ? "error" : "idle",
-          });
-          await log("info", `PATCH /api/sessions dikirim (${tipe})`, { sessionId: s.id });
+        const hasilPatch = await kirim("/api/sessions", "PATCH", {
+          session_id: s.id,
+          status: tipe === "session.error" ? "error" : "idle",
+        });
+        await log(hasilPatch.ok ? "info" : "warn", `PATCH /api/sessions -> ${hasilPatch.status} (${tipe})`, {
+          sessionId: s.id,
+        });
         }
       } catch (e) {
         try {
