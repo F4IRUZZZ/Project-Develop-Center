@@ -19,6 +19,8 @@ cek("tabel agent_sessions", schema.includes("CREATE TABLE IF NOT EXISTS agent_se
 const api = readFileSync(join(root, "app/api/sessions/route.ts"), "utf8");
 cek("POST upsert + PATCH tutup + GET riwayat",
   api.includes("ON CONFLICT (session_id)") && api.includes("ended_at") && api.includes("project_id"));
+cek("PATCH idle = heartbeat (active + ended_at NULL)",
+  api.includes("ended_at = NULL") && api.includes("status = 'active'"));
 
 const dash = readFileSync(join(root, "app/api/dashboard/route.ts"), "utf8");
 cek("flag sesiAktif 15 mnt", dash.includes("sesiAktif") && dash.includes("15 minutes"));

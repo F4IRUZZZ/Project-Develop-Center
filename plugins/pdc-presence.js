@@ -49,18 +49,6 @@ export const PdcPresencePlugin = async ({ directory, client }) => {
     }
   };
 
-  const bentukEvent = (event) => {
-    try {
-      return {
-        keys: Object.keys(event ?? {}),
-        propKeys: Object.keys(event?.properties ?? {}),
-        infoKeys: Object.keys(event?.properties?.info ?? {}),
-      };
-    } catch {
-      return { keys: [], propKeys: [], infoKeys: [] };
-    }
-  };
-
   const infoSesi = (event) => {
     const p = event?.properties ?? {};
     const info = p?.info ?? {};
@@ -124,14 +112,7 @@ export const PdcPresencePlugin = async ({ directory, client }) => {
         await log(hasilPost.ok ? "info" : "warn", `POST /api/sessions -> ${hasilPost.status}`, { sessionId: s.id });
         }
         if (tipe === "session.idle" || tipe === "session.error") {
-          await log("info", `idle-masuk: ${tipe}`);
-          let bentuk = { keys: [], propKeys: [], infoKeys: [] };
-          try {
-            bentuk = bentukEvent(event);
-            await log("info", `bentuk event ${tipe}`, bentuk);
-          } catch (e) {
-            await log("warn", `idle-gagal-bentuk: ${String(e && e.message ? e.message : e)}`);
-          }
+          // idle = heartbeat (sesi masih terbuka, menunggu input) — bukan tutup.
           const s = infoSesi(event);
           if (!s.id) {
             await log("warn", `${tipe} tanpa id sesi, dilewati`);
