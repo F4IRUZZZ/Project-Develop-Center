@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { Copy, KeyRound, Trash2, GitBranch, AlertTriangle, ShieldCheck, User, Palette, Sparkles } from "lucide-react";
+import { Copy, KeyRound, Trash2, GitBranch, AlertTriangle, ShieldCheck, User, Palette, Sparkles, Sun, Moon, Monitor } from "lucide-react";
+import { terapkanTema, type Tema } from "@/lib/tema";
 import { LoginCard } from "@/components/dashboard/LoginCard";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 
@@ -24,7 +25,7 @@ export default function Pengaturan() {
   const [githubToken, setGithubToken] = useState("");
   const [openaiKey, setOpenaiKey] = useState("");
   const [anthropicKey, setAnthropicKey] = useState("");
-  const [tema, setTema] = useState("system");
+  const [tema, setTema] = useState<Tema>("gelap");
 
   const [modal, setModal] = useState({
     open: false,
@@ -44,7 +45,8 @@ export default function Pengaturan() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setTema(localStorage.getItem("pdc-tema") === "terang" ? "terang" : "gelap");
+      const s = localStorage.getItem("pdc-tema");
+      setTema(s === "terang" || s === "sistem" ? (s as Tema) : "gelap");
     }
     if (status === "authenticated") void muat();
   }, [status, muat]);
@@ -138,25 +140,36 @@ export default function Pengaturan() {
           </div>
           <div className="flex items-center gap-2">
             <Palette className="h-4 w-4 text-muted-foreground" />
-            <select
-              value={tema}
-              onChange={(e) => {
-                const val = e.target.value;
-                setTema(val);
-                localStorage.setItem("pdc-tema", val);
-                if (val === "terang") {
-                  document.documentElement.classList.remove("dark");
-                  document.documentElement.classList.add("light");
-                } else {
-                  document.documentElement.classList.remove("light");
-                  document.documentElement.classList.add("dark");
-                }
-              }}
-              className="rounded-[9px] border border-border bg-muted px-3 py-1.5 text-[12px] text-foreground focus:border-primary focus:outline-none"
+            <div
+              role="radiogroup"
+              aria-label="Pilih tema tampilan"
+              className="flex items-center gap-1 rounded-full bg-muted p-1"
             >
-              <option value="gelap">Gelap (Default)</option>
-              <option value="terang">Terang</option>
-            </select>
+              {(
+                [
+                  { value: "terang", label: "Light", Icon: Sun },
+                  { value: "gelap", label: "Dark", Icon: Moon },
+                  { value: "sistem", label: "System", Icon: Monitor },
+                ] as const
+              ).map(({ value, label, Icon }) => (
+                <button
+                  key={value}
+                  role="radio"
+                  aria-checked={tema === value}
+                  onClick={() => {
+                    setTema(value);
+                    terapkanTema(value);
+                  }}
+                  className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors ${
+                    tema === value
+                      ? "bg-primary text-white"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Icon className="h-3.5 w-3.5" /> {label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>

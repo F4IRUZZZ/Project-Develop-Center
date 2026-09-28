@@ -97,9 +97,12 @@ export function Sidebar() {
   return (
     <aside className="hidden w-[232px] shrink-0 flex-col border-r border-border bg-card px-3.5 py-[18px] lg:flex">
       <div className="flex items-center gap-2.5 px-1.5 pb-[22px]">
-        <div className="flex h-[34px] w-[34px] items-center justify-center rounded-[10px] bg-gradient-to-br from-primary to-violet-500 font-bold text-white shadow-[0_4px_12px_rgba(99,102,241,0.35)]">
-          P
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/logo-pdc.svg"
+          alt="Logo PDC"
+          className="h-[34px] w-[34px] rounded-[10px] shadow-[0_4px_12px_rgba(99,102,241,0.35)]"
+        />
         <div>
           <div className="text-[15px] font-semibold tracking-tight">Develop Center</div>
           <div className="text-[11px] font-medium text-muted-foreground">Project</div>
