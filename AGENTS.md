@@ -33,3 +33,11 @@
 
 - Tipe `QueuedCommand`/skema PRD §10 stabil; D4 mengganti implementasi tanpa mengubah kontrak.
 - Token GitHub hanya server-side (JWT/DB terenkripsi AES-256-GCM), tidak pernah ke frontend.
+
+## 6. Backend bridge = production (opsi B, aktif)
+
+- MCP menunjuk `https://project-develop-center.vercel.app`, bukan localhost.
+- Perilaku tools mengikuti deploy terbaru — tunggu Vercel Ready setelah push.
+- Butuh internet; `npm run dev` tidak diperlukan untuk operasi.
+- Troubleshooting "fetch failed" = cek deployment + env production, bukan port laptop.
+- Rollback: restore `opencode.json.backup-before-pdc-prod-20260928` (disimpan) + restart OpenCode.
