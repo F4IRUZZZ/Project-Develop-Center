@@ -55,6 +55,7 @@
 | 2026-09-28 | Presence sesi AI (PR, agent_sessions + API + indikator + plugin) | PRESENCE-CEK ALL-OK + tsc + build + siklus live + bersih |
 | 2026-09-28 | Bridge pindah ke production (opsi B, backup disimpan) | tools OK tanpa dev lokal |
 | 2026-09-28 | Presence sesi AI merged (indikator + tab Sesi, spawnSync diganti direct-fetch) | PRESENCE-CEK ALL-OK + 23 suite hijau + tsc + build + loop live |
+| 2026-09-28 | Presence realtime (#47/#48): denyut 60 dtk + timeout 3 mnt + tutup via deleted + label Nonaktif | 24/24 suite + tsc + build + live (denyut 201, deleted→selesai) |
 | 2026-09-28 | Audit-3 ringan (PR, tombol mati + skeleton + deps + image + tema + dead code)    | AUDIT3-CEK ALL-OK + 22 suite hijau + tsc + eslint nol + build     |
 | 2026-09-28 | Audit-2 ketahanan (PR, eslint nol + LIMIT + timeout + dedup)                     | AUDIT2-CEK ALL-OK + 21 suite hijau + tsc + build + replay 1 baris |
 | 2026-09-28 | Audit-1 remediasi (PR, provider-keys + hapus akun + M1/M3/M5)                    | AUDIT1-CEK ALL-OK + 19 suite hijau + tsc + build + 401-gate       |
