@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Inbox, Trash2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { bersihkanAntrian, sumberDariStatus, useQueue } from "@/lib/queue";
 import type { QueuedCommand } from "@/lib/tasks";
-import { projects } from "@/lib/mock";
 import { cn } from "@/lib/utils";
 
 const WARNA: Record<QueuedCommand["status"], string> = {
@@ -22,8 +21,17 @@ const LABEL: Record<QueuedCommand["status"], string> = {
   failed: "Gagal",
 };
 
-function namaProyek(id: string): string {
-  return projects.find((p) => p.id === id)?.repoName ?? id;
+function useNamaProyek(): (id: string) => string {
+  const [peta, setPeta] = useState<Record<string, string>>({});
+  useEffect(() => {
+    fetch("/api/projects", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((d) =>
+        setPeta(Object.fromEntries((d as Array<{ id: string; repo_name: string }>).map((p) => [p.id, p.repo_name])))
+      )
+      .catch(() => {});
+  }, []);
+  return (id: string) => peta[id] ?? id;
 }
 
 function waktuRelatif(iso: string): string {
@@ -39,6 +47,7 @@ export function QueuePanel() {
   const { antrian } = useQueue();
   const selesai = antrian.filter((c) => c.status === "completed" || c.status === "failed").length;
   const [gagalHapus, setGagalHapus] = useState(false);
+  const namaProyek = useNamaProyek();
 
   return (
     <div className="mt-6 rounded-2xl border border-border bg-card p-[18px]">
