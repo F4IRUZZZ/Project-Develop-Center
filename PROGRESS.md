@@ -50,7 +50,7 @@
 | 2026-09-27 | D0 re-verifikasi production (deploy PR #35 + fitur baru + perintah) | providers OK + visual baru + perintah masuk |
 | 2026-09-27 | L bottom nav HP (PR, 5 item + badge bersama) | L-CEK ALL-OK + 14 suite hijau + tsc + build |
 | 2026-09-27 | K stop detail kondisional merged | J-CEK ALL-OK + tsc + build |
-| 2026-09-27 | F9 webhook (PR, hook + stuck display) | F9-CEK ALL-OK + 14 suite hijau + tsc + build + 401/pong/abaikan/tulis |
+| 2026-09-27 | F9 webhook merged + uji live hijau (ping/push/PR) | F9-CEK ALL-OK + tsc + build + live manual penuh |
 | 2026-09-27 | J stats+stop+detail (PR, angka DB + stop jalan + /proyek/[id]) | J-CEK ALL-OK + 14 suite hijau + tsc + build + stats 401-gate |
 | 2026-09-27 | H approval merge merged (tombol PR + tutup task + Stop waiting) | H-CEK ALL-OK + 13 suite hijau + tsc + build + merge live |
 | 2026-09-27 | G notif+refresh (PR, reads + DELETE fix + scroll + refetch) | G-CEK ALL-OK + 13 suite hijau + tsc + build |
