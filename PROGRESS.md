@@ -1,5 +1,3 @@
-n
-
 # Progress — Project Develop Center (PDC)
 
 > Aturan: 1 fitur = 1 Issue + 1 PR + uji hijau (tsc + build + tools-uji).
