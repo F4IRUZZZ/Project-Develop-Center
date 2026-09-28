@@ -47,6 +47,7 @@
 
 | Tanggal | Perubahan | Uji |
 |---|---|---|
+| 2026-09-27 | D0 re-verifikasi production (deploy PR #35 + fitur baru + perintah) | providers OK + visual baru + perintah masuk |
 | 2026-09-27 | L bottom nav HP (PR, 5 item + badge bersama) | L-CEK ALL-OK + 14 suite hijau + tsc + build |
 | 2026-09-27 | K stop detail kondisional merged | J-CEK ALL-OK + tsc + build |
 | 2026-09-27 | F9 webhook (PR, hook + stuck display) | F9-CEK ALL-OK + 14 suite hijau + tsc + build + 401/pong/abaikan/tulis |
