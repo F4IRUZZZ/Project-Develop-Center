@@ -25,7 +25,11 @@ export default function Pengaturan() {
   const [githubToken, setGithubToken] = useState("");
   const [openaiKey, setOpenaiKey] = useState("");
   const [anthropicKey, setAnthropicKey] = useState("");
-  const [tema, setTema] = useState<Tema>("gelap");
+  const [tema, setTema] = useState<Tema>(() => {
+    if (typeof window === "undefined") return "gelap";
+    const s = window.localStorage.getItem("pdc-tema");
+    return s === "terang" || s === "sistem" ? (s as Tema) : "gelap";
+  });
   const [tersimpan, setTersimpan] = useState<string[]>([]);
   const [gagalSimpan, setGagalSimpan] = useState<string | null>(null);
 
@@ -50,11 +54,9 @@ export default function Pengaturan() {
   }, []);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const s = localStorage.getItem("pdc-tema");
-      setTema(s === "terang" || s === "sistem" ? (s as Tema) : "gelap");
-    }
-    if (status === "authenticated") void muat();
+    if (status !== "authenticated") return;
+    const t = window.setTimeout(() => void muat(), 0);
+    return () => window.clearTimeout(t);
   }, [status, muat]);
 
   if (status === "loading") return <p className="font-mono text-xs text-muted-foreground">Memuat sesi…</p>;

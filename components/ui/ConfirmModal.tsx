@@ -26,11 +26,7 @@ export function ConfirmModal({
   onKonfirmasi,
   onBatal,
 }: Props) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const [mounted] = useState(() => typeof document !== "undefined");
 
   useEffect(() => {
     if (!open) return;

@@ -59,9 +59,12 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
 
   useEffect(() => {
     if (status !== "authenticated") return;
-    void muat();
+    const t0 = window.setTimeout(() => void muat(), 0);
     const t = window.setInterval(muat, 10000);
-    return () => window.clearInterval(t);
+    return () => {
+      window.clearTimeout(t0);
+      window.clearInterval(t);
+    };
   }, [status, muat]);
 
   const stop = async () => {

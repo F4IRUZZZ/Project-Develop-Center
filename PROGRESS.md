@@ -50,6 +50,7 @@
 |---|---|---|
 | 2026-09-27 | O login referensi + logo + favicon merged (+octocat, tema Sistem, a11y) | O-CEK ALL-OK + 18 suite hijau + tsc + build |
 | 2026-09-28 | Audit-1 remediasi merged (provider-keys + hapus akun + M1/M3/M5) | AUDIT1-CEK ALL-OK + 20 suite hijau + tsc + build + 401-gate |
+| 2026-09-28 | Audit-2 ketahanan (PR, eslint nol + LIMIT + timeout + dedup) | AUDIT2-CEK ALL-OK + 21 suite hijau + tsc + build + replay 1 baris |
 | 2026-09-28 | Audit-1 remediasi (PR, provider-keys + hapus akun + M1/M3/M5) | AUDIT1-CEK ALL-OK + 19 suite hijau + tsc + build + 401-gate |
 | 2026-09-27 | D0 re-verifikasi production (deploy PR #35 + fitur baru + perintah) | providers OK + visual baru + perintah masuk |
 | 2026-09-27 | L bottom nav HP (PR, 5 item + badge bersama) | L-CEK ALL-OK + 14 suite hijau + tsc + build |

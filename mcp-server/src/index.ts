@@ -18,6 +18,7 @@ async function api(path: string, method = "GET", body?: unknown) {
       "Content-Type": "application/json",
     },
     body: body === undefined ? undefined : JSON.stringify(body),
+    signal: AbortSignal.timeout(15000),
   });
   const data = (await res.json().catch(() => ({}))) as unknown;
   if (!res.ok) {

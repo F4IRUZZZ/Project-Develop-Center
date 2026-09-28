@@ -22,17 +22,17 @@ export function CommandModal({ open, initialProjectId, projects = mockProjects, 
   const [text, setText] = useState("");
   const [gagal, setGagal] = useState(false);
 
-  // Reset hanya saat modal dibuka / pemicu berubah.
-  // projects TIDAK masuk deps: referensinya berganti tiap polling dashboard,
-  // dan itu dulu yang menghapus teks saat mengetik panjang.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
+  // Reset saat modal dibuka (render-phase; projects TIDAK jadi pemicu agar
+  // polling dashboard tak menghapus teks saat mengetik panjang).
+  const [bukaSebelumnya, setBukaSebelumnya] = useState(open);
+  if (open !== bukaSebelumnya) {
+    setBukaSebelumnya(open);
     if (open) {
       setProjectId(initialProjectId ?? projects[0]?.id ?? "");
       setText("");
       setGagal(false);
     }
-  }, [open, initialProjectId]);
+  }
 
   useEffect(() => {
     if (!open) return;

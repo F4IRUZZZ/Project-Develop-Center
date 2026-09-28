@@ -2,17 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
-import { EVENT_TEMA, bacaTema, gelapAktif, pantauSistem, terapkanTema, type Tema } from "@/lib/tema";
+import { EVENT_TEMA, gelapAktif, pantauSistem, terapkanTema, type Tema } from "@/lib/tema";
 
 export function PemilihTema() {
-  const [tema, setTema] = useState<Tema>("gelap");
-  const [gelap, setGelap] = useState(true);
+  const [gelap, setGelap] = useState<boolean>(() => gelapAktif());
 
   useEffect(() => {
-    setTema(bacaTema());
-    setGelap(gelapAktif());
-    const fn = (e: Event) => {
-      setTema((e as CustomEvent<Tema>).detail);
+    const fn = () => {
       setGelap(gelapAktif());
     };
     window.addEventListener(EVENT_TEMA, fn);

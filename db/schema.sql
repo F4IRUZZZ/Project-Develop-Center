@@ -85,6 +85,12 @@ CREATE TABLE IF NOT EXISTS notification_reads (
 CREATE INDEX IF NOT EXISTS idx_notification_reads_user
   ON notification_reads (user_id);
 
+-- Audit-2 M7: dedup pengiriman webhook GitHub (anti-replay).
+CREATE TABLE IF NOT EXISTS webhook_deliveries (
+  delivery_id TEXT PRIMARY KEY,
+  diterima TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 -- D4: API keys untuk MCP bridge (hash, bukan secret mentah).
 
 CREATE TABLE IF NOT EXISTS api_keys (

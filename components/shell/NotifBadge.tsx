@@ -9,12 +9,14 @@ import { cn } from "@/lib/utils";
 export function NotifBadge({ className }: { className?: string }) {
   const { status } = useSession();
   const [n, setN] = useState(0);
+  const [prevStatus, setPrevStatus] = useState(status);
+  if (prevStatus !== status) {
+    setPrevStatus(status);
+    if (status !== "authenticated") setN(0);
+  }
 
   useEffect(() => {
-    if (status !== "authenticated") {
-      setN(0);
-      return;
-    }
+    if (status !== "authenticated") return;
     const muat = () =>
       fetchNotifikasi()
         .then((rows) => setN(rows.filter((r) => !r.dibaca).length))
