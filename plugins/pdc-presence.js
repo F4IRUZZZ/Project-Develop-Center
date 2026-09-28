@@ -30,35 +30,22 @@ export const PdcPresencePlugin = async ({ directory, client }) => {
     execPath: typeof process !== "undefined" ? process.execPath : "tak-dikenal",
   });
 
-  // Mengembalikan {ok, status} agar "terkirim" vs "diterima" tak ambigu.
-  // stdout anak dibaca (bukan ignore) supaya kode status tercatat di log.
+  // Direct fetch di proses plugin (tanpa anak-proses): execFileSync(process.execPath)
+  // terbukti gagal di lingkungan ini (spawnSync ditolak). Mengembalikan
+  // {ok, status} agar "terkirim" vs "diterima" tak ambigu.
   const kirim = async (path, method, body) => {
     if (!KEY) return { ok: false, status: "tanpa-key" };
+    if (typeof fetch !== "function") return { ok: false, status: "tanpa-fetch" };
     try {
-      const script =
-        "fetch(" +
-        JSON.stringify(`${API}${path}`) +
-        ",{method:" +
-        JSON.stringify(method) +
-        ",headers:{'Authorization':'Bearer " +
-        KEY +
-        "','Content-Type':'application/json'},body:" +
-        JSON.stringify(JSON.stringify(body)) +
-        ",signal:AbortSignal.timeout(10000)}).then(r=>console.log('HTTP:'+r.status)).catch(e=>console.log('ERR:'+String(e&&e.message?e.message:e).slice(0,120)))";
-      const { execFileSync } = await import("node:child_process");
-      const out = execFileSync(process.execPath, ["-e", script], {
-        encoding: "utf8",
-        timeout: 15000,
-      }).trim();
-      const m = out.match(/HTTP:(\d+)/);
-      if (m) return { ok: Number(m[1]) >= 200 && Number(m[1]) < 300, status: m[1] };
-      const err = out.match(/ERR:([\s\S]*)/);
-      return { ok: false, status: "anak:" + (err ? err[1].trim().slice(0, 300) : out.slice(0, 300) || "tanpa-respons") };
+      const res = await fetch(`${API}${path}`, {
+        method,
+        headers: { Authorization: `Bearer ${KEY}`, "Content-Type": "application/json" },
+        body: body === undefined ? undefined : JSON.stringify(body),
+        signal: AbortSignal.timeout(10000),
+      });
+      return { ok: res.ok, status: String(res.status) };
     } catch (e) {
-      const std = e && e.stdout ? String(e.stdout).slice(0, 300) : "";
-      const ste = e && e.stderr ? String(e.stderr).slice(0, 300) : "";
-      const msg = String((e && e.message) || e).slice(0, 200);
-      return { ok: false, status: `exec-gagal:${msg} stdout:[${std}] stderr:[${ste}]` };
+      return { ok: false, status: "jaringan:" + String((e && e.message) || e).slice(0, 200) };
     }
   };
 
