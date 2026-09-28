@@ -88,36 +88,62 @@ export const PdcPresencePlugin = async ({ directory, client }) => {
 
   return {
     event: async ({ event }) => {
-      await log("info", `event diterima: ${event.type}`, { sessionId: infoSesi(event).id });
-      if (event.type === "session.created") {
-        const s = infoSesi(event);
-        if (!s.id) {
-          await log("warn", "session.created tanpa id, dilewati");
-          return;
+      const tipe = (() => {
+        try {
+          return String(event?.type ?? "tak-dikenal");
+        } catch {
+          return "tak-terbaca";
         }
-        if (!KEY) {
-          await log("warn", "PDC_API_KEY kosong, lewati lapor (set env User PDC_API_KEY)");
-          return;
-        }
-        await kirim("/api/sessions", "POST", { session_id: s.id, repo_full: await repoFull(), mode: s.mode });
-        await log("info", "POST /api/sessions dikirim", { sessionId: s.id });
+      })();
+      try {
+        await log("info", `event diterima: ${tipe}`, { sessionId: infoSesi(event).id });
+      } catch {
+        /* abaikan */
       }
-      if (event.type === "session.idle" || event.type === "session.error") {
-        await log("info", `bentuk event ${event.type}`, bentukEvent(event));
-        const s = infoSesi(event);
-        if (!s.id) {
-          await log("warn", `${event.type} tanpa id sesi, dilewati`);
-          return;
+      try {
+        if (tipe === "session.created") {
+          const s = infoSesi(event);
+          if (!s.id) {
+            await log("warn", "session.created tanpa id, dilewati");
+            return;
+          }
+          if (!KEY) {
+            await log("warn", "PDC_API_KEY kosong, lewati lapor (set env User PDC_API_KEY)");
+            return;
+          }
+          await kirim("/api/sessions", "POST", { session_id: s.id, repo_full: await repoFull(), mode: s.mode });
+          await log("info", "POST /api/sessions dikirim", { sessionId: s.id });
         }
-        if (!KEY) {
-          await log("warn", "PDC_API_KEY kosong, lewati lapor (set env User PDC_API_KEY)");
-          return;
+        if (tipe === "session.idle" || tipe === "session.error") {
+          await log("info", `idle-masuk: ${tipe}`);
+          let bentuk = { keys: [], propKeys: [], infoKeys: [] };
+          try {
+            bentuk = bentukEvent(event);
+            await log("info", `bentuk event ${tipe}`, bentuk);
+          } catch (e) {
+            await log("warn", `idle-gagal-bentuk: ${String(e && e.message ? e.message : e)}`);
+          }
+          const s = infoSesi(event);
+          if (!s.id) {
+            await log("warn", `${tipe} tanpa id sesi, dilewati`);
+            return;
+          }
+          if (!KEY) {
+            await log("warn", "PDC_API_KEY kosong, lewati lapor (set env User PDC_API_KEY)");
+            return;
+          }
+          await kirim("/api/sessions", "PATCH", {
+            session_id: s.id,
+            status: tipe === "session.error" ? "error" : "idle",
+          });
+          await log("info", `PATCH /api/sessions dikirim (${tipe})`, { sessionId: s.id });
         }
-        await kirim("/api/sessions", "PATCH", {
-          session_id: s.id,
-          status: event.type === "session.error" ? "error" : "idle",
-        });
-        await log("info", `PATCH /api/sessions dikirim (${event.type})`, { sessionId: s.id });
+      } catch (e) {
+        try {
+          await log("error", `handler gagal di ${tipe}: ${String(e && e.message ? e.message : e)}`);
+        } catch {
+          /* abaikan */
+        }
       }
     },
   };
