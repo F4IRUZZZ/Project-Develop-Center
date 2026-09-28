@@ -240,8 +240,8 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
                   {s.session_id.slice(0, 8)}… · {s.mode}
                 </div>
                 <StatusBadge
-                  status={s.status === "active" ? "working" : s.status === "error" ? "failed" : "idle"}
-                  label={s.ended_at ? `Selesai (${s.status})` : "Aktif"}
+                  status={s.status === "active" && Date.now() - new Date(s.last_seen_at).getTime() <= 3 * 60 * 1000 ? "working" : s.status === "error" ? "failed" : "idle"}
+                  label={s.ended_at ? `Selesai (${s.status})` : Date.now() - new Date(s.last_seen_at).getTime() > 3 * 60 * 1000 ? "Nonaktif" : "Aktif"}
                 />
               </div>
               <div className="mt-1 font-mono text-[10.5px] text-muted-foreground">

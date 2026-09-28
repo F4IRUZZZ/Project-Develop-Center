@@ -3,11 +3,14 @@
 // Butuh env di mesin: PDC_API_URL (default http://localhost:3000),
 // PDC_API_KEY (buat di webapp PDC > Pengaturan), opsional PDC_MODE (plan/build).
 //
-// Cara kerja: session.created -> POST /api/sessions (buka sesi),
-// session.idle/session.error -> PATCH (tutup sesi). Tanpa interaksi LLM,
-// jadi sesi revisi/lanjutan yang tanpa perintah PDC pun tetap terlacak.
-// Blind spot yang diketahui: resume (--continue) di sebagian versi OpenCode
-// tidak memicu event; PDC menutupnya via timeout basi 15 menit (display).
+// Cara kerja: session.created -> POST (buka sesi); tiap 60 detik POST ulang
+// (denyut interval — selama proses hidup, sesi dianggap aktif walau user diam);
+// session.deleted -> PATCH selesai (tutup eksplisit); session.error -> PATCH
+// error (final, butuh perhatian); session.idle/session.status -> PATCH idle
+// (heartbeat, bukan tutup). Tanpa interaksi LLM, jadi sesi revisi/lanjutan
+// yang tanpa perintah PDC pun tetap terlacak. Selesai sejati saat close/kill/
+// crash terdeteksi via timeout 3 menit di flag sesiAktif dashboard (tak ada
+// event tutup-proses di OpenCode, jadi goodbye-message tak bisa diandalkan).
 
 export const PdcPresencePlugin = async ({ directory, client }) => {
   const API = (process.env.PDC_API_URL || "http://localhost:3000").replace(/\/$/, "");
@@ -49,17 +52,28 @@ export const PdcPresencePlugin = async ({ directory, client }) => {
     }
   };
 
-  const bentukEvent = (event) => {
-    try {
-      return {
-        keys: Object.keys(event ?? {}),
-        propKeys: Object.keys(event?.properties ?? {}),
-        infoKeys: Object.keys(event?.properties?.info ?? {}),
-      };
-    } catch {
-      return { keys: [], propKeys: [], infoKeys: [] };
+  // Sesi yang dikenal proses ini (untuk denyut interval). Kunci = session id,
+  // nilai = {repo_full, mode} dari saat sesi dibuka.
+  const dikenal = new Map();
+  const DENYUT_MS = 60000;
+
+  const denyut = async () => {
+    if (!KEY || dikenal.size === 0) return;
+    for (const [id, meta] of dikenal) {
+      const hasil = await kirim("/api/sessions", "POST", {
+        session_id: id,
+        repo_full: meta.repo_full,
+        mode: meta.mode,
+      });
+      await log(hasil.ok ? "info" : "warn", `denyut -> ${hasil.status}`, { sessionId: id });
     }
   };
+
+  // Interval hidup selama proses OpenCode hidup; mati sendiri saat close/kill.
+  const denyutTimer = setInterval(() => {
+    denyut().catch(() => {});
+  }, DENYUT_MS);
+  if (typeof denyutTimer.unref === "function") denyutTimer.unref();
 
   const infoSesi = (event) => {
     const p = event?.properties ?? {};
@@ -116,22 +130,18 @@ export const PdcPresencePlugin = async ({ directory, client }) => {
             await log("warn", "PDC_API_KEY kosong, lewati lapor (set env User PDC_API_KEY)");
             return;
           }
+        const repo = await repoFull();
         const hasilPost = await kirim("/api/sessions", "POST", {
           session_id: s.id,
-          repo_full: await repoFull(),
+          repo_full: repo,
           mode: s.mode,
         });
+        if (hasilPost.ok) dikenal.set(s.id, { repo_full: repo, mode: s.mode });
         await log(hasilPost.ok ? "info" : "warn", `POST /api/sessions -> ${hasilPost.status}`, { sessionId: s.id });
         }
-        if (tipe === "session.idle" || tipe === "session.error") {
-          await log("info", `idle-masuk: ${tipe}`);
-          let bentuk = { keys: [], propKeys: [], infoKeys: [] };
-          try {
-            bentuk = bentukEvent(event);
-            await log("info", `bentuk event ${tipe}`, bentuk);
-          } catch (e) {
-            await log("warn", `idle-gagal-bentuk: ${String(e && e.message ? e.message : e)}`);
-          }
+        // idle/status = heartbeat (masih terbuka, menunggu input) — bukan tutup.
+        // (session.idle deprecated di OpenCode baru, diganti session.status.)
+        if (tipe === "session.idle" || tipe === "session.status") {
           const s = infoSesi(event);
           if (!s.id) {
             await log("warn", `${tipe} tanpa id sesi, dilewati`);
@@ -143,9 +153,30 @@ export const PdcPresencePlugin = async ({ directory, client }) => {
           }
         const hasilPatch = await kirim("/api/sessions", "PATCH", {
           session_id: s.id,
-          status: tipe === "session.error" ? "error" : "idle",
+          status: "idle",
         });
         await log(hasilPatch.ok ? "info" : "warn", `PATCH /api/sessions -> ${hasilPatch.status} (${tipe})`, {
+          sessionId: s.id,
+        });
+        }
+        if (tipe === "session.error" || tipe === "session.deleted") {
+          // Tutup sejati: error (butuh perhatian) atau hapus eksplisit.
+          const s = infoSesi(event);
+          if (!s.id) {
+            await log("warn", `${tipe} tanpa id sesi, dilewati`);
+            return;
+          }
+          if (!KEY) {
+            await log("warn", "PDC_API_KEY kosong, lewati lapor (set env User PDC_API_KEY)");
+            return;
+          }
+        const akhir = tipe === "session.error" ? "error" : "selesai";
+        const hasilTutup = await kirim("/api/sessions", "PATCH", {
+          session_id: s.id,
+          status: akhir,
+        });
+        if (hasilTutup.ok) dikenal.delete(s.id);
+        await log(hasilTutup.ok ? "info" : "warn", `PATCH /api/sessions -> ${hasilTutup.status} (${tipe})`, {
           sessionId: s.id,
         });
         }
