@@ -52,6 +52,7 @@
 | 2026-09-28 | Audit-1 remediasi merged (provider-keys + hapus akun + M1/M3/M5)                 | AUDIT1-CEK ALL-OK + 20 suite hijau + tsc + build + 401-gate       |
 | 2026-09-28 | Audit-2 ketahanan merged (eslint nol + LIMIT + timeout + dedup)                  | AUDIT2-CEK ALL-OK + 21 suite hijau + tsc + build + replay 1 baris |
 | 2026-09-28 | Audit-3 ringan merged (tombol mati + skeleton + deps + image + tema + dead code) | AUDIT3-CEK ALL-OK + 22 suite hijau + tsc + eslint nol + build |
+| 2026-09-28 | Presence sesi AI (PR, agent_sessions + API + indikator + plugin) | PRESENCE-CEK ALL-OK + tsc + build + siklus live + bersih |
 | 2026-09-28 | Bridge pindah ke production (opsi B, backup disimpan) | tools OK tanpa dev lokal |
 | 2026-09-28 | Audit-3 ringan (PR, tombol mati + skeleton + deps + image + tema + dead code)    | AUDIT3-CEK ALL-OK + 22 suite hijau + tsc + eslint nol + build     |
 | 2026-09-28 | Audit-2 ketahanan (PR, eslint nol + LIMIT + timeout + dedup)                     | AUDIT2-CEK ALL-OK + 21 suite hijau + tsc + build + replay 1 baris |

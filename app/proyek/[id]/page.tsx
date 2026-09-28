@@ -14,7 +14,16 @@ import type { QueuedCommand } from "@/lib/tasks";
 import type { ActivityEvent } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-type Tab = "tugas" | "perintah" | "aktivitas";
+type Tab = "tugas" | "perintah" | "aktivitas" | "sesi";
+
+interface SesiRow {
+  session_id: string;
+  mode: string;
+  status: string;
+  started_at: string;
+  last_seen_at: string;
+  ended_at: string | null;
+}
 
 interface TaskRow {
   id: string;
@@ -32,13 +41,14 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
   const [commands, setCommands] = useState<QueuedCommand[]>([]);
   const [feed, setFeed] = useState<ActivityEvent[]>([]);
   const [tab, setTab] = useState<Tab>("tugas");
+  const [sesi, setSesi] = useState<SesiRow[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [pullOpen, setPullOpen] = useState(false);
   const [tanyaStop, setTanyaStop] = useState(false);
 
   const muat = useCallback(async () => {
     try {
-      const [d, t, c, a] = await Promise.all([
+      const [d, t, c, a, s] = await Promise.all([
         fetch("/api/dashboard", { cache: "no-store" }).then((r) => (r.ok ? r.json() : [])),
         fetch(`/api/tasks?project_id=${encodeURIComponent(id)}`, { cache: "no-store" }).then((r) =>
           r.ok ? r.json() : []
@@ -47,11 +57,15 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
         fetch(`/api/activity?project_id=${encodeURIComponent(id)}`, { cache: "no-store" }).then((r) =>
           r.ok ? r.json() : []
         ),
+        fetch(`/api/sessions?project_id=${encodeURIComponent(id)}`, { cache: "no-store" }).then((r) =>
+          r.ok ? r.json() : []
+        ),
       ]);
       setProyek(((d as Project[]).find((p) => p.id === id) ?? null));
       setTasks(t as TaskRow[]);
       setCommands((c as QueuedCommand[]).filter((x) => x.project_id === id));
       setFeed(a as ActivityEvent[]);
+      setSesi(s as SesiRow[]);
     } catch {
       /* abaikan */
     }
@@ -156,7 +170,7 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
       </div>
 
       <div className="mb-4 mt-6 flex gap-2">
-        {(["tugas", "perintah", "aktivitas"] as Tab[]).map((t) => (
+        {(["tugas", "perintah", "aktivitas", "sesi"] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -207,6 +221,32 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
             <div key={e.id} className="border-b border-border py-2.5 last:border-b-0">
               <div className="text-[13px]">{e.message}</div>
               <div className="mt-1 font-mono text-[10.5px] text-muted-foreground">{e.time}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab === "sesi" && (
+        <div className="rounded-2xl border border-border bg-card p-[18px]">
+          {sesi.length === 0 && (
+            <p className="text-[13px] text-muted-foreground">
+              Belum ada sesi tercatat. Pasang plugin pdc-presence di repo ini agar sesi OpenCode terlacak otomatis.
+            </p>
+          )}
+          {sesi.map((s) => (
+            <div key={s.session_id} className="border-b border-border py-2.5 last:border-b-0">
+              <div className="flex items-center justify-between gap-2">
+                <div className="font-mono text-[11px] text-muted-foreground">
+                  {s.session_id.slice(0, 8)}… · {s.mode}
+                </div>
+                <StatusBadge
+                  status={s.status === "active" ? "working" : s.status === "error" ? "failed" : "idle"}
+                  label={s.ended_at ? `Selesai (${s.status})` : "Aktif"}
+                />
+              </div>
+              <div className="mt-1 font-mono text-[10.5px] text-muted-foreground">
+                mulai {new Date(s.started_at).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+              </div>
             </div>
           ))}
         </div>

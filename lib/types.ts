@@ -13,6 +13,7 @@ export interface Project {
   meta: string;
   branch?: string;
   isPrivate?: boolean;
+  sesiAktif?: boolean;
   actions: Array<"command" | "stop">;
 }
 

@@ -45,6 +45,14 @@ export async function GET(req: NextRequest) {
   `) as unknown as Array<{ project_id: string }>;
   const jalanSet = new Set(jalan.map((r) => r.project_id));
 
+  // Sesi AI aktif: status active + terlihat <15 mnt (tutup blind spot event).
+  const sesi = (await sql`
+    SELECT project_id FROM agent_sessions
+    WHERE user_id = ${ctx.userId} AND status = 'active'
+      AND last_seen_at > now() - interval '15 minutes'
+  `) as unknown as Array<{ project_id: string | null }>;
+  const sesiSet = new Set(sesi.map((r) => r.project_id));
+
   const out: Project[] = projects.map((p) => {
     const id = String(p.id);
     const t = perProyek.get(id);
@@ -75,6 +83,7 @@ export async function GET(req: NextRequest) {
         : `push · ${String(p.default_branch ?? "main")}`,
       branch: (t?.git_branch ?? (p.default_branch as string | null) ?? undefined) as string | undefined,
       isPrivate: (p.is_private as boolean | null) ?? undefined,
+      sesiAktif: sesiSet.has(id),
       actions: (status === "waiting" ? [] : jalanSet.has(id) ? (["command", "stop"] as Project["actions"]) : (["command"] as Project["actions"])),
     };
   });
