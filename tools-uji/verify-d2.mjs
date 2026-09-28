@@ -12,7 +12,6 @@ function cek(nama, ok, detail = "") {
 for (const f of [
   "lib/auth.ts",
   "app/api/auth/[...nextauth]/route.ts",
-  "app/api/repos/route.ts",
   "lib/github.ts",
   "components/shell/Providers.tsx",
   "components/dashboard/LoginCard.tsx",
@@ -28,11 +27,10 @@ cek("scope repo", auth.includes("repo"));
 cek("strategi jwt", auth.includes('"jwt"'));
 cek("token server-side (tanpa session callback)", !auth.includes("session("));
 
-const repos = readFileSync(join(root, "app/api/repos/route.ts"), "utf8");
-cek("getToken JWT", repos.includes("getToken"));
-cek("401 saat belum login", repos.includes("401"));
-cek("max 10 repo", repos.includes("10"));
-cek("status idle (AI asli di D4)", repos.includes('"idle"'));
+cek("route warisan repos dihapus", !existsSync(join(root, "app/api/repos/route.ts")));
+const dash = readFileSync(join(root, "app/api/dashboard/route.ts"), "utf8");
+cek("401 via sesiUser", dash.includes("401") || readFileSync(join(root, "lib/server-auth.ts"), "utf8").includes("401"));
+cek("max 10 repo via sync", readFileSync(join(root, "lib/sync.ts"), "utf8").includes("MAX_REPO"));
 
 const page = readFileSync(join(root, "app/page.tsx"), "utf8");
 cek("page LoginCard saat logout", page.includes("LoginCard"));

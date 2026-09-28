@@ -41,14 +41,12 @@ export async function POST(req: NextRequest) {
   const id = buatId("cmd");
   const taskId = buatId("task");
   const sql = db();
+  // Tolak project_id asing agar tabel projects tak tercemar baris placeholder.
+  const cekProyek = await sql`SELECT id FROM projects WHERE id = ${projectId} AND user_id = ${ctx.userId}`;
+  if (cekProyek.length === 0) {
+    return NextResponse.json({ error: "Proyek tidak ketemu, sync dulu" }, { status: 404 });
+  }
   await sql`INSERT INTO command_queue (id, user_id, project_id, command_text, status) VALUES (${id}, ${ctx.userId}, ${projectId}, ${text}, 'pending')`;
-  // Task menyertai perintah. Project dipastikan ada by id (bukan by repo_full
-  // placeholder, agar tidak tabrakan PK dengan baris hasil sync).
-  await sql`
-    INSERT INTO projects (id, user_id, repo_name, repo_full, is_active)
-    SELECT ${projectId}, ${ctx.userId}, ${projectId}, ${projectId}, true
-    WHERE NOT EXISTS (SELECT 1 FROM projects WHERE id = ${projectId} AND user_id = ${ctx.userId})
-  `;
   await sql`INSERT INTO tasks (id, user_id, project_id, command_id, title, status, progress) VALUES (${taskId}, ${ctx.userId}, ${projectId}, ${id}, ${text}, 'working', 0)`;
   await sql`INSERT INTO activity_log (id, user_id, project_id, type, message) VALUES (${buatId("act")}, ${ctx.userId}, ${projectId}, 'info', ${`Perintah baru: ${text}`})`;
   const rows = await sql`SELECT * FROM command_queue WHERE id = ${id}`;

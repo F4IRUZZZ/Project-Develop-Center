@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { Copy, KeyRound, Trash2, GitBranch, AlertTriangle, ShieldCheck, User, Palette, Sparkles, Sun, Moon, Monitor } from "lucide-react";
 import { terapkanTema, type Tema } from "@/lib/tema";
 import { LoginCard } from "@/components/dashboard/LoginCard";
@@ -26,6 +26,8 @@ export default function Pengaturan() {
   const [openaiKey, setOpenaiKey] = useState("");
   const [anthropicKey, setAnthropicKey] = useState("");
   const [tema, setTema] = useState<Tema>("gelap");
+  const [tersimpan, setTersimpan] = useState<string[]>([]);
+  const [gagalSimpan, setGagalSimpan] = useState<string | null>(null);
 
   const [modal, setModal] = useState({
     open: false,
@@ -40,6 +42,10 @@ export default function Pengaturan() {
     fetch("/api/keys", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((d) => setKeys(d as ApiKey[]))
+      .catch(() => {});
+    fetch("/api/provider-keys", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((d) => setTersimpan((d as Array<{ provider: string }>).map((x) => x.provider)))
       .catch(() => {});
   }, []);
 
@@ -88,26 +94,31 @@ export default function Pengaturan() {
   };
 
   const simpanGithubToken = () => {
-    triggerModal(
-      "Simpan Token GitHub",
-      "Sesuai aturan keamanan, token ini hanya akan dienkripsi dan disimpan di server. Token tidak akan pernah ditampilkan kembali ke antarmuka. Lanjutkan?",
-      () => {
-        // TODO: Panggil API aktual ke backend untuk enkripsi
-        setGithubToken("");
-        tutupModal();
-      },
-      "Simpan Terenkripsi",
-      false
-    );
+    simpanProvider("github_pat", "Token GitHub", githubToken, () => setGithubToken(""));
   };
 
-  const simpanProvider = (namaProvider: string, resetFn: () => void) => {
+  const simpanProvider = (provider: string, label: string, nilai: string, resetFn: () => void) => {
+    setGagalSimpan(null);
     triggerModal(
-      `Simpan API Key ${namaProvider}`,
-      `API Key untuk ${namaProvider} akan dienkripsi di server (BYOK) dan tidak diekspos ke antarmuka. Lanjutkan?`,
-      () => {
-        // TODO: Panggil API ke backend
-        resetFn();
+      `Simpan API Key ${label}`,
+      `API Key untuk ${label} akan dienkripsi di server (BYOK) dan tidak diekspos ke antarmuka. Lanjutkan?`,
+      async () => {
+        try {
+          const res = await fetch("/api/provider-keys", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ provider, key: nilai }),
+          });
+          if (!res.ok) {
+            const d = (await res.json().catch(() => ({}))) as { error?: string };
+            setGagalSimpan(d.error ?? "Gagal menyimpan.");
+          } else {
+            resetFn();
+            muat();
+          }
+        } catch {
+          setGagalSimpan("Jaringan gagal. Coba lagi.");
+        }
         tutupModal();
       },
       "Simpan Key",
@@ -127,6 +138,11 @@ export default function Pengaturan() {
       <p className="mb-6 text-[13px] text-muted-foreground">
         Kelola preferensi, kredensial integrasi, dan keamanan proyek Anda.
       </p>
+      {gagalSimpan && (
+        <p className="mb-4 rounded-[9px] border border-red-500/30 bg-red-500/10 px-3 py-2 text-[13px] text-red-500">
+          {gagalSimpan}
+        </p>
+      )}
 
       {/* SEKSI PROFIL & TEMA */}
       <div className="mb-6 rounded-2xl border border-border bg-card p-[18px]">
@@ -181,6 +197,8 @@ export default function Pengaturan() {
         </div>
         <p className="mb-4 text-[13px] text-muted-foreground">
           Simpan API key untuk mengaktifkan asisten AI eksternal. Kredensial akan dienkripsi.
+          {tersimpan.includes("openai") && <span className="text-emerald-500"> OpenAI tersimpan ✓</span>}
+          {tersimpan.includes("anthropic") && <span className="text-emerald-500"> Anthropic tersimpan ✓</span>}
         </p>
         <div className="flex flex-col gap-3">
           <div className="flex gap-2">
@@ -194,7 +212,7 @@ export default function Pengaturan() {
               className="min-w-0 flex-1 rounded-[9px] border border-border bg-muted px-3 py-2 text-[13px] focus:border-primary focus:outline-none"
             />
             <button
-              onClick={() => simpanProvider("OpenAI", () => setOpenaiKey(""))}
+              onClick={() => simpanProvider("openai", "OpenAI", openaiKey, () => setOpenaiKey(""))}
               disabled={!openaiKey}
               className="flex shrink-0 items-center gap-1.5 rounded-[9px] bg-primary px-4 py-2 text-[13px] font-medium text-white hover:bg-[#5457E5] disabled:opacity-50"
             >
@@ -212,7 +230,7 @@ export default function Pengaturan() {
               className="min-w-0 flex-1 rounded-[9px] border border-border bg-muted px-3 py-2 text-[13px] focus:border-primary focus:outline-none"
             />
             <button
-              onClick={() => simpanProvider("Anthropic", () => setAnthropicKey(""))}
+              onClick={() => simpanProvider("anthropic", "Anthropic", anthropicKey, () => setAnthropicKey(""))}
               disabled={!anthropicKey}
               className="flex shrink-0 items-center gap-1.5 rounded-[9px] bg-primary px-4 py-2 text-[13px] font-medium text-white hover:bg-[#5457E5] disabled:opacity-50"
             >
@@ -229,6 +247,7 @@ export default function Pengaturan() {
         </div>
         <p className="mb-4 text-[13px] text-muted-foreground">
           Simpan Personal Access Token (PAT) untuk keperluan CI/CD dan PR. Token dijamin aman.
+          {tersimpan.includes("github_pat") && <span className="text-emerald-500"> Tersimpan ✓</span>}
         </p>
         <div className="flex gap-2">
           <input
@@ -355,7 +374,22 @@ export default function Pengaturan() {
               onClick={() => triggerModal(
                 "Hapus Akun?",
                 "Tindakan ini akan menghapus seluruh data proyek, log, dan pengaturan Anda secara permanen. Tindakan ini tidak dapat dibatalkan. Lanjutkan?",
-                () => tutupModal(),
+                async () => {
+                  try {
+                    const res = await fetch("/api/account", { method: "DELETE" });
+                    if (!res.ok) {
+                      setGagalSimpan("Gagal menghapus akun. Coba lagi.");
+                      tutupModal();
+                      return;
+                    }
+                  } catch {
+                    setGagalSimpan("Jaringan gagal. Coba lagi.");
+                    tutupModal();
+                    return;
+                  }
+                  tutupModal();
+                  await signOut();
+                },
                 "Hapus Permanen"
               )}
               className="rounded-[9px] bg-red-500 px-4 py-2 text-[12px] font-medium text-white hover:bg-red-600 transition-colors"

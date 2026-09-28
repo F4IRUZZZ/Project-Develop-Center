@@ -106,3 +106,13 @@ ALTER TABLE command_queue DROP COLUMN IF EXISTS mode;
 
 -- F-batch: visibilitas repo (cache dari GitHub).
 ALTER TABLE projects ADD COLUMN IF NOT EXISTS is_private BOOLEAN;
+
+-- Audit-1 H1: kunci provider BYOK (nilai terenkripsi, tak pernah dibaca balik).
+CREATE TABLE IF NOT EXISTS provider_keys (
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  provider TEXT NOT NULL,
+  key_enc TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (user_id, provider)
+);
