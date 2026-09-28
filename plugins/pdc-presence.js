@@ -44,10 +44,29 @@ export const PdcPresencePlugin = async ({ directory, client }) => {
     }
   };
 
+  const bentukEvent = (event) => {
+    try {
+      return {
+        keys: Object.keys(event ?? {}),
+        propKeys: Object.keys(event?.properties ?? {}),
+        infoKeys: Object.keys(event?.properties?.info ?? {}),
+      };
+    } catch {
+      return { keys: [], propKeys: [], infoKeys: [] };
+    }
+  };
+
   const infoSesi = (event) => {
     const p = event?.properties ?? {};
+    const info = p?.info ?? {};
     return {
-      id: p?.info?.id ?? event?.sessionId ?? event?.id ?? null,
+      id:
+        info.id ??
+        p.sessionId ??
+        p.sessionID ??
+        event?.sessionId ??
+        event?.sessionID ??
+        null,
       mode: MODE,
     };
   };
@@ -84,9 +103,10 @@ export const PdcPresencePlugin = async ({ directory, client }) => {
         await log("info", "POST /api/sessions dikirim", { sessionId: s.id });
       }
       if (event.type === "session.idle" || event.type === "session.error") {
+        await log("info", `bentuk event ${event.type}`, bentukEvent(event));
         const s = infoSesi(event);
         if (!s.id) {
-          await log("warn", `${event.type} tanpa id, dilewati`);
+          await log("warn", `${event.type} tanpa id sesi, dilewati`);
           return;
         }
         if (!KEY) {
