@@ -1,12 +1,13 @@
 "use client";
 
-import { FolderGit2, Inbox, Radio } from "lucide-react";
+import { Inbox, Radio } from "lucide-react";
 import { signIn } from "next-auth/react";
+import { GithubMark } from "@/components/ui/GithubMark";
 
-const FITUR = [
+const FITUR: Array<{ icon: (props: { className?: string }) => React.ReactNode; judul: string; deskripsi: string }> = [
   { icon: Radio, judul: "Pantau AI live", deskripsi: "Status, progress, dan activity semua repo dalam satu layar." },
   { icon: Inbox, judul: "Kelola antrian", deskripsi: "Kirim perintah, hentikan kerja, lihat riwayat per proyek." },
-  { icon: FolderGit2, judul: "Terhubung GitHub", deskripsi: "Repo live + jembatan MCP ke OpenCode." },
+  { icon: GithubMark, judul: "Terhubung GitHub", deskripsi: "Repo live + jembatan MCP ke OpenCode." },
 ];
 
 // Struktur meniru referensi (split brand + CTA), adaptasi dark Nebula.
@@ -36,7 +37,7 @@ export function LoginLanding() {
             onClick={() => signIn("github")}
             className="flex w-full max-w-xs items-center justify-center gap-2 rounded-full border border-white/70 bg-transparent px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-white/10"
           >
-            <FolderGit2 className="h-4 w-4" /> Masuk dengan GitHub
+            <GithubMark className="h-4 w-4" /> Masuk dengan GitHub
           </button>
           <p className="font-mono text-[10.5px] text-white/60">
             Baca repo · merge PR hanya atas persetujuanmu.

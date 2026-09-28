@@ -26,7 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{if(localStorage.getItem("pdc-tema")==="terang"){document.documentElement.classList.remove("dark");document.documentElement.classList.add("light");}}catch(e){}})();`,
+            __html: `(function(){try{var t=localStorage.getItem("pdc-tema")||"gelap";var gelap=t==="gelap"||(t==="sistem"&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",gelap);document.documentElement.classList.toggle("light",!gelap);}catch(e){}})();`,
           }}
         />
       </head>

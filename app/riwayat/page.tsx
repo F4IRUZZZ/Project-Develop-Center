@@ -70,7 +70,12 @@ export default function Riwayat() {
     <div className="mx-auto w-full max-w-[1480px] p-4 sm:p-6">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-[17px] font-semibold tracking-tight">Riwayat</h2>
+        <label htmlFor="filter-proyek" className="sr-only">
+          Filter proyek
+        </label>
         <select
+          id="filter-proyek"
+          name="filter-proyek"
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           className="rounded-[9px] border border-border bg-muted px-3 py-2 font-mono text-xs focus:border-primary focus:outline-none"

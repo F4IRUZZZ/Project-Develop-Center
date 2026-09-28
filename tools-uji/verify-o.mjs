@@ -20,6 +20,15 @@ cek("landing split brand", landing.includes("Selamat Datang Kembali") && landing
 cek("landing pill GitHub", landing.includes("Masuk dengan GitHub") && landing.includes("rounded-full"));
 cek("landing pakai logo", landing.includes("/logo-pdc.svg"));
 cek("landing tanpa shell", !landing.includes("Sidebar"));
+cek("landing logo GitHub asli", landing.includes("GithubMark"));
+
+const mark = readFileSync(join(root, "components/ui/GithubMark.tsx"), "utf8");
+cek("octocat path", mark.includes("M8 0C3.58"));
+
+const tema = readFileSync(join(root, "lib/tema.ts"), "utf8");
+cek("mode sistem + matchMedia", tema.includes('"sistem"') && tema.includes("matchMedia"));
+const peng = readFileSync(join(root, "app/pengaturan/page.tsx"), "utf8");
+cek("segmented Light/Dark/System", peng.includes("System") && peng.includes("radiogroup"));
 
 // O3 — Avatar hanya HP
 const topbar = readFileSync(join(root, "components/shell/Topbar.tsx"), "utf8");
