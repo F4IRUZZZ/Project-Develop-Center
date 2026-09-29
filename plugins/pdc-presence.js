@@ -204,14 +204,23 @@ export const PdcPresencePlugin = async ({ directory, client }) => {
         }
         await log(hasilPost.ok ? "info" : "warn", `POST /api/sessions -> ${hasilPost.status}`, { sessionId: s.id });
         }
-        // file.edited = jejak metadata: antre path-nya saja (maks 50).
+        // file.edited = jejak metadata: antre path-nya saja (maks 50),
+        // dinormalisasi relatif terhadap repo (absolut Windows bocor layout mesin).
         if (tipe === "file.edited") {
           try {
             const p = event?.properties ?? {};
             const mentah =
               p.file ?? p.path ?? p.filePath ?? p.filename ?? p.relativePath ?? p.info?.file ?? null;
             if (typeof mentah === "string" && mentah && antreSunting.length < 50) {
-              antreSunting.push(mentah.slice(0, 500));
+              let tampil = mentah;
+              try {
+                const pathMod = await import("node:path");
+                const rel = pathMod.relative(directory, mentah);
+                if (rel && !rel.startsWith("..")) tampil = rel.split(pathMod.sep).join("/");
+              } catch {
+                /* pertahankan mentah */
+              }
+              antreSunting.push(tampil.slice(0, 500));
             }
           } catch {
             /* abaikan */
