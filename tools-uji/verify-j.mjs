@@ -13,6 +13,7 @@ function cek(nama, ok, detail = "") {
 cek("app/api/stats/route.ts", existsSync(join(root, "app/api/stats/route.ts")));
 const stats = readFileSync(join(root, "app/api/stats/route.ts"), "utf8");
 cek("stats hitung DB", stats.includes("COUNT(*)") && stats.includes("tugasSelesai"));
+cek("aiBekerja union sesi+task", stats.includes("UNION") && stats.includes("last_edit_at") && stats.includes("COUNT(DISTINCT project_id)"));
 const page = readFileSync(join(root, "app/page.tsx"), "utf8");
 cek("stats pakai API", page.includes("/api/stats"));
 const halProyek = readFileSync(join(root, "app/proyek/page.tsx"), "utf8");
