@@ -92,7 +92,8 @@ CREATE TABLE IF NOT EXISTS webhook_deliveries (
 );
 
 -- Presence: sesi AI per repo (dilaporkan plugin OpenCode, bukan LLM).
--- ended_at NULL = masih aktif; last_seen basi >15 mnt dianggap selesai (display).
+-- ended_at NULL = belum ditutup eksplisit; last_seen basi >3 mnt = nonaktif (display).
+-- last_edit_at = sunting file terakhir (jejak metadata, tanpa isi konten).
 CREATE TABLE IF NOT EXISTS agent_sessions (
   session_id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -102,11 +103,30 @@ CREATE TABLE IF NOT EXISTS agent_sessions (
   status TEXT NOT NULL DEFAULT 'active',
   started_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   last_seen_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  last_edit_at TIMESTAMPTZ,
   ended_at TIMESTAMPTZ
 );
 
 CREATE INDEX IF NOT EXISTS idx_agent_sessions_user
   ON agent_sessions (user_id, last_seen_at DESC);
+
+-- Jejak aktivitas sesi (metadata saja: path + angka stat, TANPA isi file).
+-- kind: 'edit' (file disentuh) | 'commit' (milestone komit baru).
+CREATE TABLE IF NOT EXISTS session_file_events (
+  id BIGSERIAL PRIMARY KEY,
+  session_id TEXT NOT NULL REFERENCES agent_sessions(session_id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  kind TEXT NOT NULL DEFAULT 'edit',
+  file_path TEXT,
+  files_changed INT,
+  lines_added INT,
+  lines_removed INT,
+  commit_sha TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_session_file_events_sesi
+  ON session_file_events (session_id, created_at DESC);
 
 -- D4: API keys untuk MCP bridge (hash, bukan secret mentah).
 

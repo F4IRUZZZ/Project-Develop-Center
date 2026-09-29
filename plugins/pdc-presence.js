@@ -67,6 +67,7 @@ export const PdcPresencePlugin = async ({ directory, client }) => {
       });
       await log(hasil.ok ? "info" : "warn", `denyut -> ${hasil.status}`, { sessionId: id });
     }
+    await cekKomit();
   };
 
   // Interval hidup selama proses OpenCode hidup; mati sendiri saat close/kill.
@@ -74,6 +75,67 @@ export const PdcPresencePlugin = async ({ directory, client }) => {
     denyut().catch(() => {});
   }, DENYUT_MS);
   if (typeof denyutTimer.unref === "function") denyutTimer.unref();
+
+  // Jejak metadata (opsi A): antre path suntingan, flush batch tiap 30 dtk.
+  // HANYA path + waktu yang dikirim — isi file tak pernah dibaca/diirim.
+  const antreSunting = [];
+  let terakhir = null; // session id terakhir terlihat (atribusi antrean)
+  const BATCH_MS = 30000;
+
+  const git = async (args) => {
+    try {
+      const { execFileSync } = await import("node:child_process");
+      return execFileSync("git", ["-C", directory, ...args], { encoding: "utf8", timeout: 5000 }).trim();
+    } catch {
+      return null;
+    }
+  };
+
+  const siramSunting = async () => {
+    if (!KEY || antreSunting.length === 0 || dikenal.size === 0) {
+      antreSunting.length = 0;
+      return;
+    }
+    const target = terakhir && dikenal.has(terakhir) ? terakhir : [...dikenal.keys()][0];
+    const events = antreSunting.splice(0, 50).map((file_path) => ({ kind: "edit", file_path }));
+    const hasil = await kirim("/api/sessions/activity", "POST", { session_id: target, events });
+    await log(hasil.ok ? "info" : "warn", `aktivitas -> ${hasil.status} (${events.length} sunting)`, {
+      sessionId: target,
+    });
+  };
+
+  const siramTimer = setInterval(() => {
+    siramSunting().catch(() => {});
+  }, BATCH_MS);
+  if (typeof siramTimer.unref === "function") siramTimer.unref();
+
+  // Deteksi komit baru tiap denyut: milestone "perubahan dikomit".
+  // Diatribusikan ke semua sesi dikenal proses ini (satu repo per proses).
+  let headTerakhir = null;
+  const cekKomit = async () => {
+    if (!KEY || dikenal.size === 0) return;
+    const head = await git(["rev-parse", "HEAD"]);
+    if (!head) return;
+    if (headTerakhir === null) {
+      headTerakhir = head;
+      return;
+    }
+    if (head === headTerakhir) return;
+    headTerakhir = head;
+    const stat = (await git(["show", "--shortstat", "--format=%H", "HEAD"])) || "";
+    const m = stat.match(/(\d+) files? changed(?:, (\d+) insertions?\(\+\))?(?:, (\d+) deletions?\(-\))?/);
+    const milestone = {
+      kind: "commit",
+      commit_sha: head.slice(0, 40),
+      files_changed: m ? Number(m[1]) : null,
+      lines_added: m && m[2] ? Number(m[2]) : null,
+      lines_removed: m && m[3] ? Number(m[3]) : null,
+    };
+    for (const id of dikenal.keys()) {
+      const hasil = await kirim("/api/sessions/activity", "POST", { session_id: id, events: [milestone] });
+      await log(hasil.ok ? "info" : "warn", `komit -> ${hasil.status} (${head.slice(0, 7)})`, { sessionId: id });
+    }
+  };
 
   const infoSesi = (event) => {
     const p = event?.properties ?? {};
@@ -136,13 +198,31 @@ export const PdcPresencePlugin = async ({ directory, client }) => {
           repo_full: repo,
           mode: s.mode,
         });
-        if (hasilPost.ok) dikenal.set(s.id, { repo_full: repo, mode: s.mode });
+        if (hasilPost.ok) {
+          dikenal.set(s.id, { repo_full: repo, mode: s.mode });
+          terakhir = s.id;
+        }
         await log(hasilPost.ok ? "info" : "warn", `POST /api/sessions -> ${hasilPost.status}`, { sessionId: s.id });
+        }
+        // file.edited = jejak metadata: antre path-nya saja (maks 50).
+        if (tipe === "file.edited") {
+          try {
+            const p = event?.properties ?? {};
+            const mentah =
+              p.file ?? p.path ?? p.filePath ?? p.filename ?? p.relativePath ?? p.info?.file ?? null;
+            if (typeof mentah === "string" && mentah && antreSunting.length < 50) {
+              antreSunting.push(mentah.slice(0, 500));
+            }
+          } catch {
+            /* abaikan */
+          }
+          return;
         }
         // idle/status = heartbeat (masih terbuka, menunggu input) — bukan tutup.
         // (session.idle deprecated di OpenCode baru, diganti session.status.)
         if (tipe === "session.idle" || tipe === "session.status") {
           const s = infoSesi(event);
+          if (s.id) terakhir = s.id;
           if (!s.id) {
             await log("warn", `${tipe} tanpa id sesi, dilewati`);
             return;

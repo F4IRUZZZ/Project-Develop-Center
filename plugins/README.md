@@ -18,6 +18,13 @@ tanpa perintah PDC pun tetap terlacak per repo.
 4. Buka sesi di repo itu → kartu repo di PDC tampil **AI aktif** <10 detik.
 5. Diam 30 menit pun tetap menyala (denyut interval tiap 60 dtk); tutup OpenCode → padam ≤~4 menit.
 
+## Jejak aktivitas (opsi A: metadata saja)
+
+- `file.edited` → path diantre, dikirim batch 30 dtk ke `POST /api/sessions/activity`.
+- Tiap denyut 60 dtk: cek `git rev-parse HEAD` → komit baru = milestone (sha + shortstat).
+- **Isi file tak pernah dibaca/dikirim** — hanya path, angka stat, sha. Kontrak privasi ini dikunci suite `verify-p`.
+- Tab Sesi menampilkan: badge `Bekerja` (<2 mnt sejak sunting) / `Siaga` (hening >5 mnt) / `Nonaktif`, file terakhir, komit terakhir.
+
 ## Cara kerja & batas
 
 - `session.created` → `POST /api/sessions` (buka) + sesi didaftarkan ke denyut.

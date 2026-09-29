@@ -68,13 +68,78 @@ export async function PATCH(req: NextRequest) {
 }
 
 // Riwayat sesi (filter opsional ?project_id=), terbaru dulu.
+// Diperkaya jejak metadata: file terakhir disentuh, komit terakhir, dan
+// status turunan (bekerja <2 mnt sejak sunting | siaga = buka tapi hening
+// | nonaktif = denyut mati >3 mnt / sudah ditutup).
 export async function GET(req: NextRequest) {
   const ctx = await sesiUser(req);
   if (isErr(ctx)) return NextResponse.json({ error: ctx.error }, { status: ctx.status });
 
+  const sql = db();
   const projectId = new URL(req.url).searchParams.get("project_id");
-  const rows = projectId
-    ? await db()`SELECT session_id, project_id, repo_full, mode, status, started_at, last_seen_at, ended_at FROM agent_sessions WHERE user_id = ${ctx.userId} AND project_id = ${projectId} ORDER BY last_seen_at DESC LIMIT 20`
-    : await db()`SELECT session_id, project_id, repo_full, mode, status, started_at, last_seen_at, ended_at FROM agent_sessions WHERE user_id = ${ctx.userId} ORDER BY last_seen_at DESC LIMIT 50`;
-  return NextResponse.json(rows);
+  const rows = (
+    projectId
+      ? await sql`SELECT session_id, project_id, repo_full, mode, status, started_at, last_seen_at, last_edit_at, ended_at FROM agent_sessions WHERE user_id = ${ctx.userId} AND project_id = ${projectId} ORDER BY last_seen_at DESC LIMIT 20`
+      : await sql`SELECT session_id, project_id, repo_full, mode, status, started_at, last_seen_at, last_edit_at, ended_at FROM agent_sessions WHERE user_id = ${ctx.userId} ORDER BY last_seen_at DESC LIMIT 50`
+  ) as Array<{
+    session_id: string;
+    project_id: string | null;
+    repo_full: string | null;
+    mode: string;
+    status: string;
+    started_at: string;
+    last_seen_at: string;
+    last_edit_at: string | null;
+    ended_at: string | null;
+  }>;
+
+  const ids = rows.map((r) => r.session_id);
+  const jejak =
+    ids.length === 0
+      ? []
+      : ((await sql`SELECT session_id, kind, file_path, files_changed, lines_added, lines_removed, commit_sha, created_at
+          FROM session_file_events WHERE user_id = ${ctx.userId} AND session_id = ANY(${ids})
+          ORDER BY created_at DESC LIMIT 200`) as Array<{
+          session_id: string;
+          kind: string;
+          file_path: string | null;
+          files_changed: number | null;
+          lines_added: number | null;
+          lines_removed: number | null;
+          commit_sha: string | null;
+          created_at: string;
+        }>);
+
+  const kini = Date.now();
+  const out = rows.map((r) => {
+    const ev = jejak.filter((j) => j.session_id === r.session_id);
+    const sunting = ev.filter((j) => j.kind !== "commit" && j.file_path).slice(0, 5);
+    const komit = ev.find((j) => j.kind === "commit") ?? null;
+    const lihatMs = kini - new Date(r.last_seen_at).getTime();
+    const suntingMs = r.last_edit_at ? kini - new Date(r.last_edit_at).getTime() : null;
+    const kerja =
+      r.ended_at || r.status !== "active" || lihatMs > 3 * 60 * 1000
+        ? "nonaktif"
+        : suntingMs !== null && suntingMs <= 2 * 60 * 1000
+          ? "bekerja"
+          : "siaga";
+    return {
+      ...r,
+      aktivitas: {
+        kerja,
+        hening_mnt: suntingMs === null ? null : Math.floor(suntingMs / 60000),
+        file_terakhir: sunting.map((j) => j.file_path as string),
+        komit_terakhir: komit
+          ? {
+              sha: komit.commit_sha,
+              files_changed: komit.files_changed,
+              lines_added: komit.lines_added,
+              lines_removed: komit.lines_removed,
+              waktu: komit.created_at,
+            }
+          : null,
+      },
+    };
+  });
+  return NextResponse.json(out);
 }

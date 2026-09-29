@@ -23,6 +23,18 @@ interface SesiRow {
   started_at: string;
   last_seen_at: string;
   ended_at: string | null;
+  aktivitas?: {
+    kerja: string;
+    hening_mnt: number | null;
+    file_terakhir: string[];
+    komit_terakhir: {
+      sha: string | null;
+      files_changed: number | null;
+      lines_added: number | null;
+      lines_removed: number | null;
+      waktu: string;
+    } | null;
+  };
 }
 
 interface TaskRow {
@@ -247,6 +259,28 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
               <div className="mt-1 font-mono text-[10.5px] text-muted-foreground">
                 mulai {new Date(s.started_at).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
               </div>
+              {s.aktivitas && (
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[10.5px] text-muted-foreground">
+                  <StatusBadge
+                    status={s.aktivitas.kerja === "bekerja" ? "working" : s.aktivitas.kerja === "siaga" ? "waiting" : "idle"}
+                    label={s.aktivitas.kerja === "bekerja" ? "Bekerja" : s.aktivitas.kerja === "siaga" ? `Siaga · hening ${s.aktivitas.hening_mnt ?? 0} mnt` : "Nonaktif"}
+                  />
+                  {s.aktivitas.file_terakhir.length > 0 && (
+                    <span className="truncate">
+                      {s.aktivitas.file_terakhir.slice(0, 3).join(", ")}
+                      {s.aktivitas.file_terakhir.length > 3 ? ` +${s.aktivitas.file_terakhir.length - 3}` : ""}
+                    </span>
+                  )}
+                  {s.aktivitas.komit_terakhir?.sha && (
+                    <span>
+                      komit {s.aktivitas.komit_terakhir.sha.slice(0, 7)}
+                      {s.aktivitas.komit_terakhir.files_changed !== null
+                        ? ` · ${s.aktivitas.komit_terakhir.files_changed} file +${s.aktivitas.komit_terakhir.lines_added ?? 0}-${s.aktivitas.komit_terakhir.lines_removed ?? 0}`
+                        : ""}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>
