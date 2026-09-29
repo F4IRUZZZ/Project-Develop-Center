@@ -12,7 +12,7 @@
 // crash terdeteksi via timeout 3 menit di flag sesiAktif dashboard (tak ada
 // event tutup-proses di OpenCode, jadi goodbye-message tak bisa diandalkan).
 
-export const PdcPresencePlugin = async ({ directory, client }) => {
+export const PdcPresencePlugin = async ({ directory, client, project }) => {
   const API = (process.env.PDC_API_URL || "http://localhost:3000").replace(/\/$/, "");
   const KEY = process.env.PDC_API_KEY || "";
   const MODE = process.env.PDC_MODE === "plan" ? "plan" : "build";
@@ -57,8 +57,55 @@ export const PdcPresencePlugin = async ({ directory, client }) => {
   const dikenal = new Map();
   const DENYUT_MS = 60000;
 
+  // Daftarkan sesi (baru maupun lanjutan/Continue) — POST idempoten.
+  // reopen=true hanya dari bukti hidup (event nyata / daftar sesi): membuka
+  // kembali baris yang sudah final. Denyut biasa TANPA flag ini.
+  const daftarkan = async (id, { lewat = "lazy", reopen = false } = {}) => {
+    if (!id || !KEY || dikenal.has(id)) return;
+    const repo = await repoFull();
+    const hasil = await kirim("/api/sessions", "POST", {
+      session_id: id,
+      repo_full: repo,
+      mode: MODE,
+      ...(reopen ? { reopen: true } : {}),
+    });
+    if (hasil.ok) {
+      dikenal.set(id, { repo_full: repo, mode: MODE });
+      terakhir = id;
+    }
+    await log(hasil.ok ? "info" : "warn", `lazy-register -> ${hasil.status} (${lewat})`, { sessionId: id });
+  };
+
+  // Rekonsiliasi: sesi resume yang NOL event tetap ketahuan via daftar sesi
+  // server OpenCode. Hanya yang se-direktori/proyek proses ini (tanpa
+  // pencocokan = lewati, anti salah atribusi). Gagal sekali → diam + warn.
+  let rekonsiliasiMati = false;
+  const rekonsiliasi = async () => {
+    if (!KEY || rekonsiliasiMati) return;
+    try {
+      const r = await client.session.list();
+      const daftar = Array.isArray(r) ? r : (r?.data ?? []);
+      if (!Array.isArray(daftar)) return;
+      for (const it of daftar) {
+        const id = it?.id ?? it?.sessionId ?? it?.sessionID ?? null;
+        if (!id || typeof id !== "string" || dikenal.has(id)) continue;
+        const cocok =
+          (typeof it?.directory === "string" && it.directory === directory) ||
+          (typeof it?.projectID === "string" && project && it.projectID === project.id) ||
+          (typeof it?.projectId === "string" && project && it.projectId === project.id);
+        if (!cocok) continue;
+        await daftarkan(id, { lewat: "rekonsiliasi", reopen: true });
+      }
+    } catch (e) {
+      rekonsiliasiMati = true;
+      await log("warn", `rekonsiliasi mati: ${String((e && e.message) || e).slice(0, 150)}`);
+    }
+  };
+
   const denyut = async () => {
-    if (!KEY || dikenal.size === 0) return;
+    if (!KEY) return;
+    await rekonsiliasi();
+    if (dikenal.size === 0) return;
     for (const [id, meta] of dikenal) {
       const hasil = await kirim("/api/sessions", "POST", {
         session_id: id,
@@ -137,19 +184,25 @@ export const PdcPresencePlugin = async ({ directory, client }) => {
     }
   };
 
+  // Cari ID sesi di berbagai bentuk payload. Urutan penting: kunci
+  // session* tepercaya di mana pun; .id polos HANYA dari info (created/
+  // updated/deleted) — .id milik message/part BUKAN id sesi, dilarang.
   const infoSesi = (event) => {
     const p = event?.properties ?? {};
-    const info = p?.info ?? {};
-    return {
-      id:
-        info.id ??
-        p.sessionId ??
-        p.sessionID ??
-        event?.sessionId ??
-        event?.sessionID ??
-        null,
-      mode: MODE,
+    const ambil = (o) => {
+      if (!o || typeof o !== "object") return null;
+      const v = o.sessionID ?? o.sessionId ?? o.session_id ?? null;
+      return typeof v === "string" && v ? v : null;
     };
+    const id =
+      ambil(p) ??
+      ambil(p.info) ??
+      ambil(p.message) ??
+      ambil(p.part) ??
+      ambil(p.session) ??
+      ambil(event) ??
+      (typeof p.info?.id === "string" && p.info.id ? p.info.id : null);
+    return { id, mode: MODE };
   };
 
   const repoFull = async () => {
@@ -182,8 +235,18 @@ export const PdcPresencePlugin = async ({ directory, client }) => {
         /* abaikan */
       }
       try {
+        // Registrasi malas: event ber-ID dari sesi tak dikenal (Continue/
+        // resume tak memancarkan created) = bukti hidup → daftarkan +
+        // buka-kembali. Dikecualikan deleted/error (cabang tutup mengurusnya).
+        if (tipe !== "session.deleted" && tipe !== "session.error") {
+          const awal = infoSesi(event).id;
+          if (awal && !dikenal.has(awal) && KEY) {
+            await daftarkan(awal, { lewat: tipe, reopen: true });
+          }
+        }
         if (tipe === "session.created") {
           const s = infoSesi(event);
+          if (s.id && dikenal.has(s.id)) return; // sudah via lazy-register
           if (!s.id) {
             await log("warn", "session.created tanpa id, dilewati");
             return;
