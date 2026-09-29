@@ -18,6 +18,18 @@ tanpa perintah PDC pun tetap terlacak per repo.
 4. Buka sesi di repo itu → kartu repo di PDC tampil **AI aktif** <10 detik.
 5. Diam 30 menit pun tetap menyala (denyut interval tiap 60 dtk); tutup OpenCode → padam ≤~4 menit.
 
+## Sesi lanjutan (Continue/resume)
+
+- Resume tak memancarkan `session.created` — plugin mendaftarkan malas: event
+  ber-ID apa pun (`status/idle/updated/file.edited/message.*`) dari sesi tak
+  dikenal → POST `{reopen: true}` + catat ke denyut. Server membuka kembali
+  baris final + menulis feed "Sesi AI dilanjutkan". Denyut biasa tanpa flag
+  tak pernah membuka ulang (anti-reopen-palsu).
+- Rekonsiliasi tiap denyut via `client.session.list()`: sesi resume NOL event
+  tetap ketahuan (hanya yang se-direktori/proyek; tanpa cocok = lewati).
+- Batas: resume yang nol event selamanya + bukan di daftar tak terlihat —
+  tidak ada yang bisa diamati.
+
 ## Jejak aktivitas (opsi A: metadata saja)
 
 - `file.edited` → path diantre, dikirim batch 30 dtk ke `POST /api/sessions/activity`.

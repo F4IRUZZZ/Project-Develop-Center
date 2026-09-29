@@ -27,6 +27,9 @@ cek("GET diperkaya aktivitas", api.includes("aktivitas") && api.includes("bekerj
 const plug = readFileSync(join(root, "plugins/pdc-presence.js"), "utf8");
 cek("plugin file.edited batch", plug.includes("file.edited") && plug.includes("/api/sessions/activity"));
 cek("plugin deteksi komit", plug.includes("rev-parse") && plug.includes("shortstat"));
+cek("plugin lazy-register + reopen", plug.includes("lazy-register") && plug.includes("reopen"));
+cek("plugin rekonsiliasi session.list", plug.includes("session.list") && plug.includes("rekonsiliasi"));
+cek("POST reopen + feed dilanjutkan", api.includes("reopen") && api.includes("Sesi AI dilanjutkan"));
 cek("plugin tak baca isi file (privasi)",
   !plug.includes("readFile") && !plug.includes("Bun.file") && !plug.includes("readFileSync"));
 
@@ -44,7 +47,7 @@ cek("kartu chip 2 tingkat", card.includes("AI bekerja") && card.includes("AI akt
 const tipe = readFileSync(join(root, "lib/types.ts"), "utf8");
 cek("tipe sesiKerja", tipe.includes("sesiKerja"));
 
-cek("feed dibuka anti-duplikat", api.includes("Sesi AI dibuka") && api.includes("SELECT 1 FROM agent_sessions"));
+cek("feed dibuka anti-duplikat", api.includes("Sesi AI dibuka") && api.includes("SELECT status, ended_at FROM agent_sessions"));
 cek("feed tutup", api.includes("Sesi AI selesai"));
 cek("feed komit", actIsi.includes("AI mengomit") && actIsi.includes("activity_log"));
 

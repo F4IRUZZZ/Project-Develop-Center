@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
   const ctx = await sesiUser(req);
   if (isErr(ctx)) return NextResponse.json({ error: ctx.error }, { status: ctx.status });
 
-  let body: { session_id?: string; repo_full?: string; project_id?: string; mode?: string };
+  let body: { session_id?: string; repo_full?: string; project_id?: string; mode?: string; reopen?: boolean };
   try {
     body = await req.json();
   } catch {
@@ -17,6 +17,9 @@ export async function POST(req: NextRequest) {
   const sessionId = body.session_id?.trim() ?? "";
   if (!sessionId) return NextResponse.json({ error: "session_id wajib" }, { status: 400 });
   const mode = body.mode === "plan" ? "plan" : "build";
+  // reopen=true HANYA dari bukti hidup (lazy-register plugin): mengaktifkan
+  // kembali baris final. Denyut biasa tanpa flag tak pernah membuka ulang.
+  const bukaUlang = body.reopen === true;
 
   const sql = db();
   let projectId: string | null = body.project_id?.trim() || null;
@@ -25,20 +28,30 @@ export async function POST(req: NextRequest) {
     projectId = ((cari[0] as { id?: string } | undefined)?.id ?? null) as string | null;
   }
 
-  // Feed "dibuka" hanya untuk sesi benar-benar baru (denyut 60 dtk memakai
-  // POST yang sama — tanpa penjaga ini feed kebanjiran duplikat).
-  const sudah = await sql`SELECT 1 FROM agent_sessions WHERE session_id = ${sessionId} LIMIT 1`;
+  // Penjaga feed: "dibuka" hanya baris baru; "dilanjutkan" hanya reopen atas
+  // baris final (denyut 60 dtk memakai POST yang sama — tanpa ini feed banjir).
+  const lama = (await sql`SELECT status, ended_at FROM agent_sessions WHERE session_id = ${sessionId} LIMIT 1`) as Array<{
+    status: string;
+    ended_at: string | null;
+  }>;
+  const final = lama.length > 0 && (lama[0].status !== "active" || lama[0].ended_at !== null);
 
   await sql`
     INSERT INTO agent_sessions (session_id, user_id, project_id, repo_full, mode, status, last_seen_at)
     VALUES (${sessionId}, ${ctx.userId}, ${projectId}, ${body.repo_full?.trim() ?? null}, ${mode}, 'active', now())
     ON CONFLICT (session_id) DO UPDATE SET
       last_seen_at = now(),
-      status = CASE WHEN agent_sessions.status = 'active' THEN 'active' ELSE agent_sessions.status END
+      status = CASE WHEN ${bukaUlang} THEN 'active' WHEN agent_sessions.status = 'active' THEN 'active' ELSE agent_sessions.status END,
+      ended_at = CASE WHEN ${bukaUlang} THEN NULL ELSE agent_sessions.ended_at END
   `;
-  if (sudah.length === 0 && projectId) {
-    await sql`INSERT INTO activity_log (id, user_id, project_id, type, message)
-      VALUES (${buatId("act")}, ${ctx.userId}, ${projectId}, 'info', ${`Sesi AI dibuka (${mode}).`})`;
+  if (projectId) {
+    if (lama.length === 0) {
+      await sql`INSERT INTO activity_log (id, user_id, project_id, type, message)
+        VALUES (${buatId("act")}, ${ctx.userId}, ${projectId}, 'info', ${`Sesi AI dibuka (${mode}).`})`;
+    } else if (bukaUlang && final) {
+      await sql`INSERT INTO activity_log (id, user_id, project_id, type, message)
+        VALUES (${buatId("act")}, ${ctx.userId}, ${projectId}, 'info', ${`Sesi AI dilanjutkan (${mode}).`})`;
+    }
   }
   return NextResponse.json({ ok: true }, { status: 201 });
 }
