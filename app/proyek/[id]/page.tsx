@@ -14,7 +14,7 @@ import type { QueuedCommand } from "@/lib/tasks";
 import type { ActivityEvent } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-type Tab = "tugas" | "perintah" | "aktivitas" | "sesi";
+type Tab = "tugas" | "perintah" | "aktivitas" | "sesi" | "ringkasan";
 
 interface SesiRow {
   session_id: string;
@@ -184,7 +184,7 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
       </div>
 
       <div className="mb-4 mt-6 flex gap-2">
-        {(["tugas", "perintah", "aktivitas", "sesi"] as Tab[]).map((t) => (
+        {(["tugas", "perintah", "aktivitas", "sesi", "ringkasan"] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -290,6 +290,42 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
                     ? ` · ${Math.max(0, Math.round((Date.now() - new Date(s.ringkasan_waktu).getTime()) / 60000))} mnt lalu`
                     : ""}
                 </p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab === "ringkasan" && (
+        <div className="rounded-2xl border border-border bg-card p-[18px]">
+          {sesi.length === 0 && (
+            <p className="text-[13px] text-muted-foreground">Belum ada sesi tercatat.</p>
+          )}
+          {sesi.slice(0, 10).every((s) => !s.ringkasan_terakhir) && sesi.length > 0 && (
+            <p className="mb-2 text-[13px] text-muted-foreground">
+              Belum ada ringkasan. Ringkasan ditulis di akhir tiap giliran jawaban agent.
+            </p>
+          )}
+          {sesi.slice(0, 10).map((s) => (
+            <div key={s.session_id} className="border-b border-border py-2.5 last:border-b-0">
+              <div className="flex items-center justify-between gap-2">
+                <div className="font-mono text-[11px] text-muted-foreground">
+                  {s.session_id.slice(0, 8)}… · {s.mode}
+                </div>
+                <StatusBadge
+                  status={s.status === "active" && Date.now() - new Date(s.last_seen_at).getTime() <= 3 * 60 * 1000 ? "working" : s.status === "error" ? "failed" : "idle"}
+                  label={s.ended_at ? "Selesai" : Date.now() - new Date(s.last_seen_at).getTime() > 3 * 60 * 1000 ? "Nonaktif" : "Aktif"}
+                />
+              </div>
+              {s.ringkasan_terakhir ? (
+                <p className="mt-1 text-[13px] leading-relaxed">
+                  {s.ringkasan_terakhir}
+                  {s.ringkasan_waktu
+                    ? <span className="font-mono text-[10.5px] text-muted-foreground"> · {Math.max(0, Math.round((Date.now() - new Date(s.ringkasan_waktu).getTime()) / 60000))} mnt lalu</span>
+                    : null}
+                </p>
+              ) : (
+                <p className="mt-1 font-mono text-[10.5px] text-muted-foreground">tanpa ringkasan</p>
               )}
             </div>
           ))}

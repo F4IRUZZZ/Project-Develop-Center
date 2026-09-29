@@ -67,6 +67,7 @@ cek("plugin ringkasan per-giliran", plug.includes("message.updated") && plug.inc
 const dash2 = readFileSync(join(root, "app/api/dashboard/route.ts"), "utf8");
 cek("dashboard sesiRingkasan + tab Terakhir",
   dash2.includes("sesiRingkasan") && card.includes("sesiRingkasan") && detail.includes("Terakhir:"));
+cek("tab Ringkasan", detail.includes('"ringkasan"') && detail.includes("Belum ada ringkasan"));
 
 if (gagal > 0) {
   console.log(`\nP-CEK: ${gagal} gagal`);
