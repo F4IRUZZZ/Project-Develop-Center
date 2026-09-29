@@ -62,6 +62,7 @@
 | 2026-09-29 | Sesi lanjutan (#55/#56): lazy-register + reopen + rekonsiliasi session.list | LANJUT-OK + 25/25 suite + tsc + build |
 | 2026-09-29 | Visibilitas sesi (#57/#58): seksi Sedang Aktif + feed anti-dupe + tanpa klaim mode | DUPE-OK + 25/25 suite + tsc + build |
 | 2026-09-29 | Stat AI Bekerja (#59/#60): union sesi-bekerja + task-jalan | STAT-OK + 25/25 suite + tsc + build |
+| 2026-09-29 | Opsi B ringkasan kerja (#61/#62): per-giliran teredaksi, semua repo | RINGKAS-OK + 25/25 suite + tsc + build |
 | 2026-09-28 | Audit-3 ringan (PR, tombol mati + skeleton + deps + image + tema + dead code)    | AUDIT3-CEK ALL-OK + 22 suite hijau + tsc + eslint nol + build     |
 | 2026-09-28 | Audit-2 ketahanan (PR, eslint nol + LIMIT + timeout + dedup)                     | AUDIT2-CEK ALL-OK + 21 suite hijau + tsc + build + replay 1 baris |
 | 2026-09-28 | Audit-1 remediasi (PR, provider-keys + hapus akun + M1/M3/M5)                    | AUDIT1-CEK ALL-OK + 19 suite hijau + tsc + build + 401-gate       |
