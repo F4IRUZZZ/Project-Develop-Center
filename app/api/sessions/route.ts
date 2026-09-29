@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
-import { isErr, sesiUser } from "@/lib/server-auth";
+import { buatId, isErr, sesiUser } from "@/lib/server-auth";
 
 // Daftarkan/segarkan sesi AI (dipanggil plugin OpenCode, auth Bearer key mesin).
 // Upsert by session_id: buka sesi baru atau segarkan yang hidup.
@@ -25,6 +25,10 @@ export async function POST(req: NextRequest) {
     projectId = ((cari[0] as { id?: string } | undefined)?.id ?? null) as string | null;
   }
 
+  // Feed "dibuka" hanya untuk sesi benar-benar baru (denyut 60 dtk memakai
+  // POST yang sama — tanpa penjaga ini feed kebanjiran duplikat).
+  const sudah = await sql`SELECT 1 FROM agent_sessions WHERE session_id = ${sessionId} LIMIT 1`;
+
   await sql`
     INSERT INTO agent_sessions (session_id, user_id, project_id, repo_full, mode, status, last_seen_at)
     VALUES (${sessionId}, ${ctx.userId}, ${projectId}, ${body.repo_full?.trim() ?? null}, ${mode}, 'active', now())
@@ -32,6 +36,10 @@ export async function POST(req: NextRequest) {
       last_seen_at = now(),
       status = CASE WHEN agent_sessions.status = 'active' THEN 'active' ELSE agent_sessions.status END
   `;
+  if (sudah.length === 0 && projectId) {
+    await sql`INSERT INTO activity_log (id, user_id, project_id, type, message)
+      VALUES (${buatId("act")}, ${ctx.userId}, ${projectId}, 'info', ${`Sesi AI dibuka (${mode}).`})`;
+  }
   return NextResponse.json({ ok: true }, { status: 201 });
 }
 
@@ -57,8 +65,15 @@ export async function PATCH(req: NextRequest) {
   const sql = db();
   if (body.status === "error" || body.status === "selesai") {
     const akhir = body.status === "error" ? "error" : "selesai";
-    const tutup = await sql`UPDATE agent_sessions SET status = ${akhir}, ended_at = now(), last_seen_at = now() WHERE session_id = ${sessionId} AND user_id = ${ctx.userId} RETURNING session_id`;
+    const tutup = (await sql`UPDATE agent_sessions SET status = ${akhir}, ended_at = now(), last_seen_at = now() WHERE session_id = ${sessionId} AND user_id = ${ctx.userId} RETURNING session_id, project_id`) as Array<{
+      session_id: string;
+      project_id: string | null;
+    }>;
     if (tutup.length === 0) return NextResponse.json({ error: "Sesi tidak ketemu" }, { status: 404 });
+    if (tutup[0].project_id) {
+      await sql`INSERT INTO activity_log (id, user_id, project_id, type, message)
+        VALUES (${buatId("act")}, ${ctx.userId}, ${tutup[0].project_id}, ${akhir === "error" ? "error" : "info"}, ${akhir === "error" ? "Sesi AI error." : "Sesi AI selesai."})`;
+    }
     return NextResponse.json({ ok: true });
   }
 

@@ -33,6 +33,19 @@ cek("plugin tak baca isi file (privasi)",
 const detail = readFileSync(join(root, "app/proyek/[id]/page.tsx"), "utf8");
 cek("UI panel aktivitas", detail.includes("aktivitas.kerja") && detail.includes("Siaga") && detail.includes("komit"));
 
+const dash = readFileSync(join(root, "app/api/dashboard/route.ts"), "utf8");
+cek("dashboard sesiKerja agregat", dash.includes("sesiKerja") && dash.includes("GROUP BY project_id"));
+
+const card = readFileSync(join(root, "components/dashboard/ProjectCard.tsx"), "utf8");
+cek("kartu chip 2 tingkat", card.includes("AI bekerja") && card.includes("AI aktif") && card.includes("sesiKerja"));
+
+const tipe = readFileSync(join(root, "lib/types.ts"), "utf8");
+cek("tipe sesiKerja", tipe.includes("sesiKerja"));
+
+cek("feed dibuka anti-duplikat", api.includes("Sesi AI dibuka") && api.includes("SELECT 1 FROM agent_sessions"));
+cek("feed tutup", api.includes("Sesi AI selesai"));
+cek("feed komit", actIsi.includes("AI mengomit") && actIsi.includes("activity_log"));
+
 if (gagal > 0) {
   console.log(`\nP-CEK: ${gagal} gagal`);
   process.exit(1);
