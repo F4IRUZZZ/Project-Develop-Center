@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
-import { buatId, isErr, sesiUser } from "@/lib/server-auth";
+import { isErr, sesiUser } from "@/lib/server-auth";
 
 // Daftarkan/segarkan sesi AI (dipanggil plugin OpenCode, auth Bearer key mesin).
 // Upsert by session_id: buka sesi baru atau segarkan yang hidup.
@@ -44,13 +44,19 @@ export async function POST(req: NextRequest) {
       status = CASE WHEN ${bukaUlang} THEN 'active' WHEN agent_sessions.status = 'active' THEN 'active' ELSE agent_sessions.status END,
       ended_at = CASE WHEN ${bukaUlang} THEN NULL ELSE agent_sessions.ended_at END
   `;
+  // ID feed deterministik + DO NOTHING: kebal race check-then-insert
+  // (dua event konkuren tak lagi ganda). Pesan tanpa klaim mode — mode
+  // env tak mencerminkan mode aktual TUI (kolom mode tetap untuk tab).
   if (projectId) {
     if (lama.length === 0) {
       await sql`INSERT INTO activity_log (id, user_id, project_id, type, message)
-        VALUES (${buatId("act")}, ${ctx.userId}, ${projectId}, 'info', ${`Sesi AI dibuka (${mode}).`})`;
+        VALUES (${`act-buka-${sessionId}`}, ${ctx.userId}, ${projectId}, 'info', 'Sesi AI dibuka.')
+        ON CONFLICT (id) DO NOTHING`;
     } else if (bukaUlang && final) {
+      const menit = Math.floor(Date.now() / 60000);
       await sql`INSERT INTO activity_log (id, user_id, project_id, type, message)
-        VALUES (${buatId("act")}, ${ctx.userId}, ${projectId}, 'info', ${`Sesi AI dilanjutkan (${mode}).`})`;
+        VALUES (${`act-lanjut-${sessionId}-${menit}`}, ${ctx.userId}, ${projectId}, 'info', 'Sesi AI dilanjutkan.')
+        ON CONFLICT (id) DO NOTHING`;
     }
   }
   return NextResponse.json({ ok: true }, { status: 201 });
@@ -85,7 +91,8 @@ export async function PATCH(req: NextRequest) {
     if (tutup.length === 0) return NextResponse.json({ error: "Sesi tidak ketemu" }, { status: 404 });
     if (tutup[0].project_id) {
       await sql`INSERT INTO activity_log (id, user_id, project_id, type, message)
-        VALUES (${buatId("act")}, ${ctx.userId}, ${tutup[0].project_id}, ${akhir === "error" ? "error" : "info"}, ${akhir === "error" ? "Sesi AI error." : "Sesi AI selesai."})`;
+        VALUES (${`act-tutup-${sessionId}-${akhir}`}, ${ctx.userId}, ${tutup[0].project_id}, ${akhir === "error" ? "error" : "info"}, ${akhir === "error" ? "Sesi AI error." : "Sesi AI selesai."})
+        ON CONFLICT (id) DO NOTHING`;
     }
     return NextResponse.json({ ok: true });
   }

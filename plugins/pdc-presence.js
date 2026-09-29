@@ -15,7 +15,10 @@
 export const PdcPresencePlugin = async ({ directory, client, project }) => {
   const API = (process.env.PDC_API_URL || "http://localhost:3000").replace(/\/$/, "");
   const KEY = process.env.PDC_API_KEY || "";
-  const MODE = process.env.PDC_MODE === "plan" ? "plan" : "build";
+  // Env eksplisit menang; bila tak diset, coba baca mode dari event (TUI bisa
+  // pindah plan/build kapan saja — env statis tak mencerminkannya).
+  const ENV_MODE = process.env.PDC_MODE === "plan" || process.env.PDC_MODE === "build" ? process.env.PDC_MODE : null;
+  const MODE = ENV_MODE ?? "build";
 
   const log = async (level, message, extra) => {
     try {
@@ -60,17 +63,17 @@ export const PdcPresencePlugin = async ({ directory, client, project }) => {
   // Daftarkan sesi (baru maupun lanjutan/Continue) — POST idempoten.
   // reopen=true hanya dari bukti hidup (event nyata / daftar sesi): membuka
   // kembali baris yang sudah final. Denyut biasa TANPA flag ini.
-  const daftarkan = async (id, { lewat = "lazy", reopen = false } = {}) => {
+  const daftarkan = async (id, { lewat = "lazy", reopen = false, mode = MODE } = {}) => {
     if (!id || !KEY || dikenal.has(id)) return;
     const repo = await repoFull();
     const hasil = await kirim("/api/sessions", "POST", {
       session_id: id,
       repo_full: repo,
-      mode: MODE,
+      mode,
       ...(reopen ? { reopen: true } : {}),
     });
     if (hasil.ok) {
-      dikenal.set(id, { repo_full: repo, mode: MODE });
+      dikenal.set(id, { repo_full: repo, mode });
       terakhir = id;
     }
     await log(hasil.ok ? "info" : "warn", `lazy-register -> ${hasil.status} (${lewat})`, { sessionId: id });
@@ -202,7 +205,17 @@ export const PdcPresencePlugin = async ({ directory, client, project }) => {
       ambil(p.session) ??
       ambil(event) ??
       (typeof p.info?.id === "string" && p.info.id ? p.info.id : null);
-    return { id, mode: MODE };
+    let mode = MODE;
+    if (!ENV_MODE) {
+      for (const o of [p, p?.info, p?.message]) {
+        const m = o?.mode ?? o?.sessionMode;
+        if (m === "plan" || m === "build") {
+          mode = m;
+          break;
+        }
+      }
+    }
+    return { id, mode };
   };
 
   const repoFull = async () => {
@@ -239,9 +252,9 @@ export const PdcPresencePlugin = async ({ directory, client, project }) => {
         // resume tak memancarkan created) = bukti hidup → daftarkan +
         // buka-kembali. Dikecualikan deleted/error (cabang tutup mengurusnya).
         if (tipe !== "session.deleted" && tipe !== "session.error") {
-          const awal = infoSesi(event).id;
-          if (awal && !dikenal.has(awal) && KEY) {
-            await daftarkan(awal, { lewat: tipe, reopen: true });
+          const sAwal = infoSesi(event);
+          if (sAwal.id && !dikenal.has(sAwal.id) && KEY) {
+            await daftarkan(sAwal.id, { lewat: tipe, reopen: true, mode: sAwal.mode });
           }
         }
         if (tipe === "session.created") {

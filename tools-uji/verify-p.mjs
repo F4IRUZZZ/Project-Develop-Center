@@ -51,6 +51,16 @@ cek("feed dibuka anti-duplikat", api.includes("Sesi AI dibuka") && api.includes(
 cek("feed tutup", api.includes("Sesi AI selesai"));
 cek("feed komit", actIsi.includes("AI mengomit") && actIsi.includes("activity_log"));
 
+const beranda = readFileSync(join(root, "app/page.tsx"), "utf8");
+cek("beranda seksi Sedang Aktif", beranda.includes("Sedang Aktif") && beranda.includes("sesiAktif") && beranda.includes("sesiKerja"));
+
+const ruteSesi = readFileSync(join(root, "app/api/sessions/route.ts"), "utf8");
+cek("feed ID deterministik anti-race",
+  ruteSesi.includes("act-buka-") && ruteSesi.includes("act-lanjut-") && ruteSesi.includes("act-tutup-") &&
+  actIsi.includes("act-komit-") && ruteSesi.includes("ON CONFLICT (id) DO NOTHING"));
+cek("feed tanpa klaim mode", !ruteSesi.includes("Sesi AI dibuka (") && !ruteSesi.includes("dilanjutkan ("));
+cek("plugin mode defensif", plug.includes("ENV_MODE") && plug.includes("sessionMode"));
+
 if (gagal > 0) {
   console.log(`\nP-CEK: ${gagal} gagal`);
   process.exit(1);
