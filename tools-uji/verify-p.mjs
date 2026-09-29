@@ -32,6 +32,8 @@ cek("plugin tak baca isi file (privasi)",
 
 const detail = readFileSync(join(root, "app/proyek/[id]/page.tsx"), "utf8");
 cek("UI panel aktivitas", detail.includes("aktivitas.kerja") && detail.includes("Siaga") && detail.includes("komit"));
+cek("UI label Selesai rapi", !detail.includes("Selesai (${s.status})"));
+cek("plugin path relatif", plug.includes("relative(directory"));
 
 const dash = readFileSync(join(root, "app/api/dashboard/route.ts"), "utf8");
 cek("dashboard sesiKerja agregat", dash.includes("sesiKerja") && dash.includes("GROUP BY project_id"));
