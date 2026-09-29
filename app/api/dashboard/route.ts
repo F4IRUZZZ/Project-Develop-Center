@@ -55,6 +55,24 @@ export async function GET(req: NextRequest) {
   `) as unknown as Array<{ project_id: string | null }>;
   const sesiSet = new Set(sesi.map((r) => r.project_id));
 
+  // Tingkat kerja per proyek: bekerja (sunting <2 mnt) vs siaga (denyut
+  // segar tapi hening). Satu query agregat, ambang sama dengan tab Sesi.
+  const kerjaRows = (await sql`
+    SELECT project_id, MAX(last_edit_at) AS sunting
+    FROM agent_sessions
+    WHERE user_id = ${ctx.userId} AND status = 'active'
+      AND last_seen_at > now() - interval '3 minutes'
+      AND project_id IS NOT NULL
+    GROUP BY project_id
+  `) as unknown as Array<{ project_id: string; sunting: string | null }>;
+  const kini = Date.now();
+  const kerjaMap = new Map(
+    kerjaRows.map((r) => [
+      r.project_id,
+      r.sunting && kini - new Date(r.sunting).getTime() <= 2 * 60 * 1000 ? "bekerja" : "siaga",
+    ] as const),
+  );
+
   const out: Project[] = projects.map((p) => {
     const id = String(p.id);
     const t = perProyek.get(id);
@@ -86,6 +104,7 @@ export async function GET(req: NextRequest) {
       branch: (t?.git_branch ?? (p.default_branch as string | null) ?? undefined) as string | undefined,
       isPrivate: (p.is_private as boolean | null) ?? undefined,
       sesiAktif: sesiSet.has(id),
+      sesiKerja: (kerjaMap.get(id) ?? null) as Project["sesiKerja"],
       actions: (status === "waiting" ? [] : jalanSet.has(id) ? (["command", "stop"] as Project["actions"]) : (["command"] as Project["actions"])),
     };
   });

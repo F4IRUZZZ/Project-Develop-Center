@@ -37,14 +37,24 @@ export function ProjectCard({ project, readOnly, onCommand, onStop, onVisibility
                 {project.repoName}
               </Link>
               <PendingBadge projectId={project.id} />
-              {project.sesiAktif && (
+              {project.sesiKerja === "bekerja" ? (
                 <span
-                  title="Sesi AI aktif di repo ini"
-                  className="ml-1.5 inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-500"
+                  title="AI sedang menyunting kode di repo ini"
+                  className="ml-1.5 inline-flex items-center gap-1 rounded-full bg-sky-500/10 px-2 py-0.5 text-[10px] font-medium text-sky-500"
                 >
-                  <span className="h-[6px] w-[6px] animate-pulse rounded-full bg-emerald-500" />
-                  AI aktif
+                  <span className="h-[6px] w-[6px] animate-pulse rounded-full bg-sky-500" />
+                  AI bekerja
                 </span>
+              ) : (
+                project.sesiAktif && (
+                  <span
+                    title="Sesi AI aktif di repo ini"
+                    className="ml-1.5 inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-500"
+                  >
+                    <span className="h-[6px] w-[6px] animate-pulse rounded-full bg-emerald-500" />
+                    AI aktif
+                  </span>
+                )
               )}
             </div>
             <div className="font-mono text-[11px] text-muted-foreground">{project.repoFull}</div>
