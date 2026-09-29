@@ -30,6 +30,15 @@ tanpa perintah PDC pun tetap terlacak per repo.
 - Batas: resume yang nol event selamanya + bukan di daftar tak terlihat —
   tidak ada yang bisa diamati.
 
+## Ringkasan kerja (opsi B: prosa teredaksi, semua repo)
+
+- `message.updated` (role asisten eksplisit) → teks diredaksi (buang blok
+  kode + cap 500) → dikirim per-giliran saat idle/status via kind `ringkasan`.
+- Server meredaksi lapis kedua + simpan latest-only (`ringkasan_terakhir`,
+  tanpa baris event/feed). Tampil di tab Sesi + tooltip chip kartu.
+- Batas: regex bukan kedap — kolom ini retensi DB sendiri, jangan
+  share/invoice isinya. Delta part tanpa role diabaikan (risiko potongan).
+
 ## Jejak aktivitas (opsi A: metadata saja)
 
 - `file.edited` → path diantre, dikirim batch 30 dtk ke `POST /api/sessions/activity`.

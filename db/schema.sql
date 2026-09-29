@@ -94,6 +94,9 @@ CREATE TABLE IF NOT EXISTS webhook_deliveries (
 -- Presence: sesi AI per repo (dilaporkan plugin OpenCode, bukan LLM).
 -- ended_at NULL = belum ditutup eksplisit; last_seen basi >3 mnt = nonaktif (display).
 -- last_edit_at = sunting file terakhir (jejak metadata, tanpa isi konten).
+-- ringkasan_terakhir = teks balasan asisten giliran terakhir, latest-only,
+-- sudah diredaksi (tanpa blok kode, cap 500). Berlaku semua repo (retensi
+-- DB sendiri; redaksi regex bukan kedap — jangan share/invoice isinya).
 CREATE TABLE IF NOT EXISTS agent_sessions (
   session_id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -104,6 +107,8 @@ CREATE TABLE IF NOT EXISTS agent_sessions (
   started_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   last_seen_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   last_edit_at TIMESTAMPTZ,
+  ringkasan_terakhir TEXT,
+  ringkasan_waktu TIMESTAMPTZ,
   ended_at TIMESTAMPTZ
 );
 

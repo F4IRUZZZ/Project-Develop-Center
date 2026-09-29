@@ -15,6 +15,7 @@ export interface Project {
   isPrivate?: boolean;
   sesiAktif?: boolean;
   sesiKerja?: "bekerja" | "siaga" | null;
+  sesiRingkasan?: string | null;
   actions: Array<"command" | "stop">;
 }
 

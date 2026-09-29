@@ -22,6 +22,8 @@ interface SesiRow {
   status: string;
   started_at: string;
   last_seen_at: string;
+  ringkasan_terakhir: string | null;
+  ringkasan_waktu: string | null;
   ended_at: string | null;
   aktivitas?: {
     kerja: string;
@@ -280,6 +282,14 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
                     </span>
                   )}
                 </div>
+              )}
+              {s.ringkasan_terakhir && (
+                <p className="mt-1 truncate text-[12px] text-foreground/80" title={s.ringkasan_terakhir}>
+                  Terakhir: {s.ringkasan_terakhir}
+                  {s.ringkasan_waktu
+                    ? ` · ${Math.max(0, Math.round((Date.now() - new Date(s.ringkasan_waktu).getTime()) / 60000))} mnt lalu`
+                    : ""}
+                </p>
               )}
             </div>
           ))}
