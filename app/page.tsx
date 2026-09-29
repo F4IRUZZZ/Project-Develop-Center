@@ -68,13 +68,16 @@ export default function Home() {
 
   const semua = live ?? mockProjects;
   const kataKunci = searchQuery.trim().toLowerCase();
-  const perhatian = (live ?? []).filter(
-    (p) =>
-      PERHATIAN.has(p.status) &&
-      (!kataKunci ||
-        p.repoName.toLowerCase().includes(kataKunci) ||
-        p.repoFull.toLowerCase().includes(kataKunci))
-  );
+  const cocokCari = (p: Project) =>
+    !kataKunci ||
+    p.repoName.toLowerCase().includes(kataKunci) ||
+    p.repoFull.toLowerCase().includes(kataKunci);
+  const perhatian = (live ?? []).filter((p) => PERHATIAN.has(p.status) && cocokCari(p));
+  // Repo dengan sesi AI hidup (bekerja dulu), hormati pencarian. Data sudah
+  // ada di `live` (sesiAktif/sesiKerja dari /api/dashboard, refresh 10 dtk).
+  const aktif = (live ?? [])
+    .filter((p) => p.sesiAktif && cocokCari(p))
+    .sort((a, b) => (a.sesiKerja === "bekerja" ? 0 : 1) - (b.sesiKerja === "bekerja" ? 0 : 1));
 
   return (
     <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-6 p-4 sm:p-6 xl:flex-row">
@@ -90,6 +93,16 @@ export default function Home() {
               aiBekerja={angka?.aiBekerja}
               tugasSelesai={angka?.tugasSelesai}
             />
+            <div className="mb-6">
+              <Dashboard
+                projects={aktif}
+                judul="Sedang Aktif"
+                readOnly
+                sembunyiStats
+                sembunyiAksiHeader
+                teksKosong="Tidak ada sesi AI aktif di repo mana pun."
+              />
+            </div>
             <Dashboard
               projects={perhatian}
               judul="Perlu Perhatian"

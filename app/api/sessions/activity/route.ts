@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
-import { buatId, isErr, sesiUser } from "@/lib/server-auth";
+import { isErr, sesiUser } from "@/lib/server-auth";
 
 // Jejak aktivitas sesi (dipanggil plugin OpenCode, auth Bearer key mesin).
 // METADATA SAJA: path file + angka stat + sha komit. Isi file/pesan DILARANG
@@ -66,14 +66,16 @@ export async function POST(req: NextRequest) {
     const pid = sesi[0]?.project_id ?? null;
     if (pid) {
       for (const k of komits) {
-        const sha = (k.commit_sha as string).slice(0, 7);
+        const penuh = (k.commit_sha as string).slice(0, 40);
+        const sha = penuh.slice(0, 7);
         const f = typeof k.files_changed === "number" ? k.files_changed : null;
         const a = typeof k.lines_added === "number" ? k.lines_added : 0;
         const r = typeof k.lines_removed === "number" ? k.lines_removed : 0;
         const pesan =
           f === null ? `AI mengomit ${sha}.` : `AI mengomit ${sha} · ${f} file +${a}-${r}.`;
         await sql`INSERT INTO activity_log (id, user_id, project_id, type, message)
-          VALUES (${buatId("act")}, ${ctx.userId}, ${pid}, 'commit', ${pesan})`;
+          VALUES (${`act-komit-${penuh}`}, ${ctx.userId}, ${pid}, 'commit', ${pesan})
+          ON CONFLICT (id) DO NOTHING`;
       }
     }
   }
