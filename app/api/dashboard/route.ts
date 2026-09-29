@@ -73,6 +73,20 @@ export async function GET(req: NextRequest) {
     ] as const),
   );
 
+  // Ringkasan terbaru per proyek (untuk tooltip chip kartu; null bila tak ada).
+  const ringkasRows = (await sql`
+    SELECT project_id, ringkasan_terakhir AS ringkasan
+    FROM agent_sessions
+    WHERE user_id = ${ctx.userId} AND status = 'active'
+      AND last_seen_at > now() - interval '3 minutes'
+      AND ringkasan_terakhir IS NOT NULL
+    ORDER BY ringkasan_waktu DESC
+  `) as unknown as Array<{ project_id: string | null; ringkasan: string }>;
+  const ringkasMap = new Map<string, string>();
+  for (const r of ringkasRows) {
+    if (r.project_id && !ringkasMap.has(r.project_id)) ringkasMap.set(r.project_id, r.ringkasan);
+  }
+
   const out: Project[] = projects.map((p) => {
     const id = String(p.id);
     const t = perProyek.get(id);
@@ -105,6 +119,7 @@ export async function GET(req: NextRequest) {
       isPrivate: (p.is_private as boolean | null) ?? undefined,
       sesiAktif: sesiSet.has(id),
       sesiKerja: (kerjaMap.get(id) ?? null) as Project["sesiKerja"],
+      sesiRingkasan: ringkasMap.get(id) ?? null,
       actions: (status === "waiting" ? [] : jalanSet.has(id) ? (["command", "stop"] as Project["actions"]) : (["command"] as Project["actions"])),
     };
   });

@@ -12,7 +12,19 @@ type Masuk = {
   lines_added?: number;
   lines_removed?: number;
   commit_sha?: string;
+  teks?: string;
 };
+
+// Redaksi sisi server (lapis kedua; plugin sudah meredaksi duluan): buang
+// blok kode, rapatkan whitespace, cap 500. Regex bukan kedap — kontrak
+// privasi mengandalkan ini + kepercayaan DB sendiri (lihat skema).
+function redaksi(teks: string): string {
+  return teks
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 500);
+}
 
 const BATAS_EVENT = 50;
 
@@ -40,6 +52,15 @@ export async function POST(req: NextRequest) {
   let adaSunting = false;
   let masuk = 0;
   for (const e of body.events.slice(0, BATAS_EVENT)) {
+    // Ringkasan per-giliran: latest-only, tak jadi baris event, tak masuk feed.
+    if (e?.kind === "ringkasan") {
+      const mentah = typeof e?.teks === "string" ? e.teks.slice(0, 2000) : "";
+      const bersih = redaksi(mentah);
+      if (bersih) {
+        await sql`UPDATE agent_sessions SET ringkasan_terakhir = ${bersih}, ringkasan_waktu = now(), last_seen_at = now() WHERE session_id = ${sessionId}`;
+      }
+      continue;
+    }
     const kind = e?.kind === "commit" ? "commit" : "edit";
     const path = typeof e?.file_path === "string" ? e.file_path.slice(0, 500) : null;
     const sha = typeof e?.commit_sha === "string" ? e.commit_sha.slice(0, 40) : null;

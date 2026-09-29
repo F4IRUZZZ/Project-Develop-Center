@@ -126,6 +126,49 @@ export const PdcPresencePlugin = async ({ directory, client, project }) => {
   }, DENYUT_MS);
   if (typeof denyutTimer.unref === "function") denyutTimer.unref();
 
+  // Ringkasan per-giliran (opsi B): teks balasan asisten terakhir, diredaksi
+  // (buang blok kode + cap 500), dikirim saat idle/status (akhir giliran).
+  // Hanya objek ber-role asisten eksplisit (delta part tanpa role diabaikan —
+  // risiko potongan tak lengkap). Server meredaksi lapis kedua.
+  let antreRingkasan = null;
+  const redaksi = (teks) =>
+    String(teks)
+      .replace(/```[\s\S]*?```/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 500);
+  const teksAsisten = (event) => {
+    try {
+      const p = event?.properties ?? {};
+      const pesan = [p.message, p];
+      for (const m of pesan) {
+        if (!m || typeof m !== "object" || m.role !== "assistant") continue;
+        const bagian = [];
+        const kumpul = (o) => {
+          if (!o || typeof o !== "object") return;
+          if (typeof o.text === "string" && o.text.trim()) bagian.push(o.text);
+          if (Array.isArray(o.parts)) o.parts.forEach(kumpul);
+        };
+        kumpul(m);
+        const semua = redaksi(bagian.join("\n"));
+        if (semua.length >= 20) return semua;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  };
+  const siramRingkasan = async (sessionId) => {
+    if (!KEY || !antreRingkasan || !dikenal.has(sessionId)) return;
+    const teks = antreRingkasan;
+    antreRingkasan = null;
+    const hasil = await kirim("/api/sessions/activity", "POST", {
+      session_id: sessionId,
+      events: [{ kind: "ringkasan", teks }],
+    });
+    await log(hasil.ok ? "info" : "warn", `ringkasan -> ${hasil.status}`, { sessionId });
+  };
+
   // Jejak metadata (opsi A): antre path suntingan, flush batch tiap 30 dtk.
   // HANYA path + waktu yang dikirim — isi file tak pernah dibaca/diirim.
   const antreSunting = [];
@@ -323,6 +366,12 @@ export const PdcPresencePlugin = async ({ directory, client, project }) => {
         await log(hasilPatch.ok ? "info" : "warn", `PATCH /api/sessions -> ${hasilPatch.status} (${tipe})`, {
           sessionId: s.id,
         });
+        await siramRingkasan(s.id);
+        }
+        if (tipe === "message.updated") {
+          const teks = teksAsisten(event);
+          if (teks) antreRingkasan = teks;
+          return;
         }
         if (tipe === "session.error" || tipe === "session.deleted") {
           // Tutup sejati: error (butuh perhatian) atau hapus eksplisit.

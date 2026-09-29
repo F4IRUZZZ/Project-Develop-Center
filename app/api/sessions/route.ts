@@ -114,8 +114,8 @@ export async function GET(req: NextRequest) {
   const projectId = new URL(req.url).searchParams.get("project_id");
   const rows = (
     projectId
-      ? await sql`SELECT session_id, project_id, repo_full, mode, status, started_at, last_seen_at, last_edit_at, ended_at FROM agent_sessions WHERE user_id = ${ctx.userId} AND project_id = ${projectId} ORDER BY last_seen_at DESC LIMIT 20`
-      : await sql`SELECT session_id, project_id, repo_full, mode, status, started_at, last_seen_at, last_edit_at, ended_at FROM agent_sessions WHERE user_id = ${ctx.userId} ORDER BY last_seen_at DESC LIMIT 50`
+      ? await sql`SELECT session_id, project_id, repo_full, mode, status, started_at, last_seen_at, last_edit_at, ringkasan_terakhir, ringkasan_waktu, ended_at FROM agent_sessions WHERE user_id = ${ctx.userId} AND project_id = ${projectId} ORDER BY last_seen_at DESC LIMIT 20`
+      : await sql`SELECT session_id, project_id, repo_full, mode, status, started_at, last_seen_at, last_edit_at, ringkasan_terakhir, ringkasan_waktu, ended_at FROM agent_sessions WHERE user_id = ${ctx.userId} ORDER BY last_seen_at DESC LIMIT 50`
   ) as Array<{
     session_id: string;
     project_id: string | null;
@@ -125,6 +125,8 @@ export async function GET(req: NextRequest) {
     started_at: string;
     last_seen_at: string;
     last_edit_at: string | null;
+    ringkasan_terakhir: string | null;
+    ringkasan_waktu: string | null;
     ended_at: string | null;
   }>;
 
