@@ -126,42 +126,56 @@ export const PdcPresencePlugin = async ({ directory, client, project }) => {
   }, DENYUT_MS);
   if (typeof denyutTimer.unref === "function") denyutTimer.unref();
 
-  // Ringkasan per-giliran (opsi B): teks balasan asisten terakhir, diredaksi
-  // (buang blok kode + cap 500), dikirim saat idle/status (akhir giliran).
-  // Hanya objek ber-role asisten eksplisit (delta part tanpa role diabaikan —
-  // risiko potongan tak lengkap). Server meredaksi lapis kedua.
-  let antreRingkasan = null;
+  // Ringkasan per-giliran (opsi B): teks balasan asisten, diredaksi (buang
+  // blok kode + cap 500), dikirim saat idle/status (akhir giliran).
+  // Fakta skema resmi: message.updated HANYA bawa info (tanpa teks); teks
+  // ada di message.part.updated (TextPart, TANPA role). Peran didapat dari
+  // peta messageID->role yang dibangun dari message.updated. Part bertipe
+  // reasoning/synthetic/ignored dan teks user DITOLAK. Server redaksi lapis 2.
+  const peranPesan = new Map(); // messageID -> 'assistant' | 'user'
+  const teksPerPesan = new Map(); // sessionID -> Map(partID -> text)
   const redaksi = (teks) =>
     String(teks)
       .replace(/```[\s\S]*?```/g, " ")
       .replace(/\s+/g, " ")
       .trim()
       .slice(0, 500);
-  const teksAsisten = (event) => {
+  const catatPeran = (event) => {
     try {
-      const p = event?.properties ?? {};
-      const pesan = [p.message, p];
-      for (const m of pesan) {
-        if (!m || typeof m !== "object" || m.role !== "assistant") continue;
-        const bagian = [];
-        const kumpul = (o) => {
-          if (!o || typeof o !== "object") return;
-          if (typeof o.text === "string" && o.text.trim()) bagian.push(o.text);
-          if (Array.isArray(o.parts)) o.parts.forEach(kumpul);
-        };
-        kumpul(m);
-        const semua = redaksi(bagian.join("\n"));
-        if (semua.length >= 20) return semua;
+      const info = event?.properties?.info;
+      if (info && typeof info.id === "string" && (info.role === "assistant" || info.role === "user")) {
+        peranPesan.set(info.id, info.role);
+        if (peranPesan.size > 200) {
+          const pertama = peranPesan.keys().next().value;
+          peranPesan.delete(pertama);
+        }
       }
-      return null;
     } catch {
-      return null;
+      /* abaikan */
+    }
+  };
+  const catatPart = (event) => {
+    try {
+      const part = event?.properties?.part;
+      if (!part || typeof part !== "object" || part.type !== "text") return;
+      if (part.synthetic || part.ignored) return;
+      if (typeof part.text !== "string" || !part.text.trim()) return;
+      if (typeof part.sessionID !== "string" || !part.sessionID) return;
+      if (typeof part.messageID !== "string" || !part.messageID) return;
+      if (peranPesan.get(part.messageID) === "user") return; // teks user dilarang
+      if (!teksPerPesan.has(part.sessionID)) teksPerPesan.set(part.sessionID, new Map());
+      teksPerPesan.get(part.sessionID).set(part.id ?? part.messageID, part.text);
+    } catch {
+      /* abaikan */
     }
   };
   const siramRingkasan = async (sessionId) => {
-    if (!KEY || !antreRingkasan || !dikenal.has(sessionId)) return;
-    const teks = antreRingkasan;
-    antreRingkasan = null;
+    if (!KEY || !dikenal.has(sessionId)) return;
+    const per = teksPerPesan.get(sessionId);
+    teksPerPesan.delete(sessionId);
+    if (!per || per.size === 0) return;
+    const teks = redaksi([...per.values()].join("\n"));
+    if (teks.length < 20) return;
     const hasil = await kirim("/api/sessions/activity", "POST", {
       session_id: sessionId,
       events: [{ kind: "ringkasan", teks }],
@@ -369,8 +383,11 @@ export const PdcPresencePlugin = async ({ directory, client, project }) => {
         await siramRingkasan(s.id);
         }
         if (tipe === "message.updated") {
-          const teks = teksAsisten(event);
-          if (teks) antreRingkasan = teks;
+          catatPeran(event);
+          return;
+        }
+        if (tipe === "message.part.updated") {
+          catatPart(event);
           return;
         }
         if (tipe === "session.error" || tipe === "session.deleted") {
