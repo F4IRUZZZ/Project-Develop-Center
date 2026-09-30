@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Activity,
   Bell,
   FolderGit2,
   History,
@@ -21,6 +22,7 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/", badge: null as string | null },
   { label: "Proyek", icon: FolderGit2, href: "/proyek", badge: null as string | null },
+  { label: "Sesi", icon: Activity, href: "/sesi", badge: null as string | null },
   { label: "Riwayat", icon: History, href: "/riwayat", badge: null as string | null },
   { label: "Notifikasi", icon: Bell, href: "/notifikasi", badge: "live" },
   { label: "Pengaturan", icon: Settings, href: "/pengaturan", badge: null as string | null },

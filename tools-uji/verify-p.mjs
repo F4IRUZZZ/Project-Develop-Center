@@ -70,6 +70,17 @@ cek("dashboard sesiRingkasan + tab Terakhir",
   dash2.includes("sesiRingkasan") && card.includes("sesiRingkasan") && detail.includes("Terakhir:"));
 cek("tab Ringkasan", detail.includes('"ringkasan"') && detail.includes("Belum ada ringkasan"));
 
+cek("DELETE sesi + tombol + modal", api.includes("export async function DELETE") && detail.includes("TombolHapusSesi") && detail.includes("ConfirmModal") && detail.includes("galatHapus"));
+cek("helper sesiSegar bersama", readFileSync(join(root, "lib/sesi.ts"), "utf8").includes("sesiSegar") && detail.includes("sesiSegar"));
+const sesiPage = join(root, "app/sesi/page.tsx");
+cek("halaman Sesi global", existsSync(sesiPage));
+const sesiIsi = existsSync(sesiPage) ? readFileSync(sesiPage, "utf8") : "";
+cek("sesi global filter+hapus+refresh", sesiIsi.includes('"aktif"') && sesiIsi.includes("TombolHapusSesi") && sesiIsi.includes("setInterval"));
+const side = readFileSync(join(root, "components/shell/Sidebar.tsx"), "utf8");
+const bnav = readFileSync(join(root, "components/shell/BottomNav.tsx"), "utf8");
+cek("nav Sesi", side.includes('"/sesi"') && bnav.includes('"/sesi"'));
+cek("scroll-tipis tab proyek", detail.includes("scroll-tipis max-h-[420px]"));
+
 if (gagal > 0) {
   console.log(`\nP-CEK: ${gagal} gagal`);
   process.exit(1);

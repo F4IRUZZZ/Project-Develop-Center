@@ -4,6 +4,8 @@ import { use, useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { ArrowLeft, FolderGit2, Terminal } from "lucide-react";
+import { TombolHapusSesi } from "@/components/sesi/TombolHapusSesi";
+import { sesiSegar } from "@/lib/sesi";
 import { LoginCard } from "@/components/dashboard/LoginCard";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { CommandModal } from "@/components/command/CommandModal";
@@ -59,6 +61,8 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
   const [modalOpen, setModalOpen] = useState(false);
   const [pullOpen, setPullOpen] = useState(false);
   const [tanyaStop, setTanyaStop] = useState(false);
+  const [tanyaHapusSesi, setTanyaHapusSesi] = useState<string | null>(null);
+  const [galatHapusSesi, setGalatHapusSesi] = useState(false);
 
   const muat = useCallback(async () => {
     try {
@@ -102,6 +106,27 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
       body: JSON.stringify({ project_id: id }),
     }).catch(() => {});
     setTanyaStop(false);
+    await muat();
+  };
+
+  const hapusSesi = async () => {
+    if (!tanyaHapusSesi) return;
+    try {
+      const res = await fetch("/api/sessions", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ session_id: tanyaHapusSesi }),
+      });
+      if (!res.ok) {
+        setGalatHapusSesi(true);
+        return;
+      }
+    } catch {
+      setGalatHapusSesi(true);
+      return;
+    }
+    setTanyaHapusSesi(null);
+    setGalatHapusSesi(false);
     await muat();
   };
 
@@ -229,7 +254,7 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
       )}
 
       {tab === "aktivitas" && (
-        <div className="rounded-2xl border border-border bg-card p-[18px]">
+        <div className="scroll-tipis max-h-[420px] overflow-y-auto rounded-2xl border border-border bg-card p-[18px]">
           {feed.length === 0 && <p className="text-[13px] text-muted-foreground">Belum ada aktivitas.</p>}
           {feed.map((e) => (
             <div key={e.id} className="border-b border-border py-2.5 last:border-b-0">
@@ -241,7 +266,7 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
       )}
 
       {tab === "sesi" && (
-        <div className="rounded-2xl border border-border bg-card p-[18px]">
+        <div className="scroll-tipis max-h-[420px] overflow-y-auto rounded-2xl border border-border bg-card p-[18px]">
           {sesi.length === 0 && (
             <p className="text-[13px] text-muted-foreground">
               Belum ada sesi tercatat. Pasang plugin pdc-presence di repo ini agar sesi OpenCode terlacak otomatis.
@@ -253,10 +278,13 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
                 <div className="font-mono text-[11px] text-muted-foreground">
                   {s.session_id.slice(0, 8)}… · {s.mode}
                 </div>
-                <StatusBadge
-                  status={s.status === "active" && Date.now() - new Date(s.last_seen_at).getTime() <= 3 * 60 * 1000 ? "working" : s.status === "error" ? "failed" : "idle"}
-                  label={s.ended_at ? "Selesai" : Date.now() - new Date(s.last_seen_at).getTime() > 3 * 60 * 1000 ? "Nonaktif" : "Aktif"}
-                />
+                <div className="flex shrink-0 items-center gap-1">
+                  <StatusBadge
+                    status={sesiSegar(s) ? "working" : s.status === "error" ? "failed" : "idle"}
+                    label={s.ended_at ? "Selesai" : !sesiSegar(s) ? "Nonaktif" : "Aktif"}
+                  />
+                  <TombolHapusSesi onHapus={() => { setGalatHapusSesi(false); setTanyaHapusSesi(s.session_id); }} />
+                </div>
               </div>
               <div className="mt-1 font-mono text-[10.5px] text-muted-foreground">
                 mulai {new Date(s.started_at).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
@@ -297,7 +325,7 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
       )}
 
       {tab === "ringkasan" && (
-        <div className="rounded-2xl border border-border bg-card p-[18px]">
+        <div className="scroll-tipis max-h-[420px] overflow-y-auto rounded-2xl border border-border bg-card p-[18px]">
           {sesi.length === 0 && (
             <p className="text-[13px] text-muted-foreground">Belum ada sesi tercatat.</p>
           )}
@@ -312,10 +340,13 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
                 <div className="font-mono text-[11px] text-muted-foreground">
                   {s.session_id.slice(0, 8)}… · {s.mode}
                 </div>
-                <StatusBadge
-                  status={s.status === "active" && Date.now() - new Date(s.last_seen_at).getTime() <= 3 * 60 * 1000 ? "working" : s.status === "error" ? "failed" : "idle"}
-                  label={s.ended_at ? "Selesai" : Date.now() - new Date(s.last_seen_at).getTime() > 3 * 60 * 1000 ? "Nonaktif" : "Aktif"}
-                />
+                <div className="flex shrink-0 items-center gap-1">
+                  <StatusBadge
+                    status={sesiSegar(s) ? "working" : s.status === "error" ? "failed" : "idle"}
+                    label={s.ended_at ? "Selesai" : !sesiSegar(s) ? "Nonaktif" : "Aktif"}
+                  />
+                  <TombolHapusSesi onHapus={() => { setGalatHapusSesi(false); setTanyaHapusSesi(s.session_id); }} />
+                </div>
               </div>
               {s.ringkasan_terakhir ? (
                 <p className="mt-1 text-[13px] leading-relaxed">
@@ -348,6 +379,15 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
         danger
         onKonfirmasi={() => void stop()}
         onBatal={() => setTanyaStop(false)}
+      />
+      <ConfirmModal
+        open={tanyaHapusSesi !== null}
+        judul="Hapus sesi ini?"
+        pesan={galatHapusSesi ? "Gagal menghapus (server menolak). Coba lagi." : `Sesi ${tanyaHapusSesi?.slice(0, 8)}… dihapus dari daftar (jejak file ikut terhapus; feed riwayat tetap).`}
+        labelKonfirmasi="Ya, hapus"
+        danger
+        onKonfirmasi={() => void hapusSesi()}
+        onBatal={() => { setTanyaHapusSesi(null); setGalatHapusSesi(false); }}
       />
     </div>
   );
