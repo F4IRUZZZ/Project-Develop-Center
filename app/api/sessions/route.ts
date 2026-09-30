@@ -102,6 +102,26 @@ export async function PATCH(req: NextRequest) {
   return NextResponse.json({ ok: true });
 }
 
+// Hapus 1 sesi milik user (jejak file ikut via CASCADE; feed riwayat abadi
+// dan tetap). Auth key mesin ATAU sesi web (sesiUser menerima keduanya).
+export async function DELETE(req: NextRequest) {
+  const ctx = await sesiUser(req);
+  if (isErr(ctx)) return NextResponse.json({ error: ctx.error }, { status: ctx.status });
+
+  let body: { session_id?: string };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Body JSON tidak valid" }, { status: 400 });
+  }
+  const sessionId = body.session_id?.trim() ?? "";
+  if (!sessionId) return NextResponse.json({ error: "session_id wajib" }, { status: 400 });
+
+  const rows = await db()`DELETE FROM agent_sessions WHERE session_id = ${sessionId} AND user_id = ${ctx.userId} RETURNING session_id`;
+  if (rows.length === 0) return NextResponse.json({ error: "Sesi tidak ketemu" }, { status: 404 });
+  return NextResponse.json({ ok: true });
+}
+
 // Riwayat sesi (filter opsional ?project_id=), terbaru dulu.
 // Diperkaya jejak metadata: file terakhir disentuh, komit terakhir, dan
 // status turunan (bekerja <2 mnt sejak sunting | siaga = buka tapi hening

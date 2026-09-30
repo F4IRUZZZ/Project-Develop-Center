@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, FolderGit2, History, LayoutDashboard, Settings } from "lucide-react";
+import { Activity, Bell, FolderGit2, History, LayoutDashboard, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NotifBadge } from "./NotifBadge";
@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 const ITEMS = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/" },
   { label: "Proyek", icon: FolderGit2, href: "/proyek" },
+  { label: "Sesi", icon: Activity, href: "/sesi" },
   { label: "Riwayat", icon: History, href: "/riwayat" },
   { label: "Notifikasi", icon: Bell, href: "/notifikasi", live: true },
   { label: "Pengaturan", icon: Settings, href: "/pengaturan" },
