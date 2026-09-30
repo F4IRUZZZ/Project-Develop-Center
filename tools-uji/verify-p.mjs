@@ -64,6 +64,7 @@ cek("plugin mode defensif", plug.includes("ENV_MODE") && plug.includes("sessionM
 cek("skema ringkasan", schema.includes("ringkasan_terakhir") && schema.includes("ringkasan_waktu"));
 cek("activity kind ringkasan + redaksi", actIsi.includes('kind === "ringkasan"') && actIsi.includes("function redaksi"));
 cek("plugin ringkasan per-giliran", plug.includes("message.updated") && plug.includes("siramRingkasan"));
+cek("plugin ringkasan via part+peran", plug.includes("message.part.updated") && plug.includes("peranPesan") && plug.includes('"text"'));
 const dash2 = readFileSync(join(root, "app/api/dashboard/route.ts"), "utf8");
 cek("dashboard sesiRingkasan + tab Terakhir",
   dash2.includes("sesiRingkasan") && card.includes("sesiRingkasan") && detail.includes("Terakhir:"));
