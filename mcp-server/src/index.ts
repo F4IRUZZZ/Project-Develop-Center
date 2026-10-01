@@ -2,8 +2,14 @@ import { McpServer } from "@modelcontextprotocol/server";
 import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
 import { z } from "zod";
 
-const API = (process.env.PDC_API_URL ?? "http://localhost:3000").replace(/\/$/, "");
+// Opsi B (AGENTS §6): default = production. Env eksplisit untuk dev lokal.
+// Tanpa ini, instalasi tanpa env menembak laptop port 3000 lalu gagal diam.
+const API = (process.env.PDC_API_URL ?? "https://project-develop-center.vercel.app").replace(/\/$/, "");
 const KEY = process.env.PDC_API_KEY ?? "";
+
+if (!process.env.PDC_API_URL) {
+  console.error("[pdc] PDC_API_URL tak diset, pakai production default. Set eksplisit untuk dev lokal.");
+}
 
 if (!KEY) {
   console.error("[pdc] PDC_API_KEY kosong. Buat di webapp: Pengaturan -> Buat key baru.");
@@ -28,14 +34,15 @@ async function api(path: string, method = "GET", body?: unknown) {
   return data;
 }
 
-async function taskIdUntuk(commandId: string): Promise<string | null> {
-  const rows = (await api(`/api/tasks?command_id=${encodeURIComponent(commandId)}`)) as Array<{ id: string }>;
-  return rows[0]?.id ?? null;
-}
-
-async function projectUntuk(commandId: string): Promise<string> {
-  const cmds = (await api("/api/commands")) as Array<Record<string, unknown>>;
-  return String(cmds.find((c) => c.id === commandId)?.project_id ?? "");
+// Satu panggilan untuk id + project_id task (baris tasks memuat keduanya),
+// gantikan pola lama 2 panggilan (tasks + scan semua /api/commands).
+async function tugasUntuk(commandId: string): Promise<{ id: string; project_id: string } | null> {
+  const rows = (await api(`/api/tasks?command_id=${encodeURIComponent(commandId)}`)) as Array<{
+    id: string;
+    project_id: string;
+  }>;
+  const r = rows[0];
+  return r ? { id: r.id, project_id: String(r.project_id ?? "") } : null;
 }
 
 const server = new McpServer({ name: "project-develop-center", version: "0.1.0" });
@@ -47,7 +54,10 @@ server.registerTool(
     inputSchema: { project_id: z.string().optional().describe("Filter per proyek, kosongkan untuk semua") },
   },
   async ({ project_id }) => {
-    const semua = (await api("/api/commands")) as Array<Record<string, unknown>>;
+    // Filter server (hemat) + saring ulang client (aman bila server lama
+    // belum kenal ?status= — abaikan param tak dikenal).
+    const q = `/api/commands?status=pending${project_id ? `&project_id=${encodeURIComponent(project_id)}` : ""}`;
+    const semua = (await api(q)) as Array<Record<string, unknown>>;
     const pending = semua.filter(
       (c) => c.status === "pending" && (!project_id || c.project_id === project_id)
     );
@@ -67,10 +77,9 @@ server.registerTool(
   },
   async ({ command_id, message, progress_percent }) => {
     await api(`/api/commands/${command_id}`, "PATCH", { status: "processing" });
-    const taskId = await taskIdUntuk(command_id);
-    if (taskId) await api(`/api/tasks/${taskId}`, "PATCH", { status: "working", progress: progress_percent ?? 45 });
-    const projectId = await projectUntuk(command_id);
-    if (projectId) await api("/api/activity", "POST", { project_id: projectId, type: "progress", message });
+    const t = await tugasUntuk(command_id);
+    if (t) await api(`/api/tasks/${t.id}`, "PATCH", { status: "working", progress: progress_percent ?? 45 });
+    if (t?.project_id) await api("/api/activity", "POST", { project_id: t.project_id, type: "progress", message });
     return { content: [{ type: "text", text: "Progress tercatat di PDC." }] };
   }
 );
@@ -87,10 +96,10 @@ server.registerTool(
   },
   async ({ command_id, summary, git_branch }) => {
     await api(`/api/commands/${command_id}`, "PATCH", { status: "completed", result: summary });
-    const taskId = await taskIdUntuk(command_id);
-    if (taskId)
-      await api(`/api/tasks/${taskId}`, "PATCH", { status: "completed", progress: 100, result_summary: summary });
-    const projectId = await projectUntuk(command_id);
+    const t = await tugasUntuk(command_id);
+    if (t)
+      await api(`/api/tasks/${t.id}`, "PATCH", { status: "completed", progress: 100, result_summary: summary });
+    const projectId = t?.project_id ?? "";
     if (projectId)
       // Kontrak dengan /api/notifications: pesan selesai WAJIB berprefix
       // "Selesai:" agar masuk filter notifikasi (P3). Jangan ubah kalimat
@@ -115,10 +124,9 @@ server.registerTool(
   },
   async ({ command_id, error_message }) => {
     await api(`/api/commands/${command_id}`, "PATCH", { status: "failed", result: error_message });
-    const taskId = await taskIdUntuk(command_id);
-    if (taskId) await api(`/api/tasks/${taskId}`, "PATCH", { status: "failed", result_summary: error_message });
-    const projectId = await projectUntuk(command_id);
-    if (projectId) await api("/api/activity", "POST", { project_id: projectId, type: "error", message: error_message });
+    const t = await tugasUntuk(command_id);
+    if (t) await api(`/api/tasks/${t.id}`, "PATCH", { status: "failed", result_summary: error_message });
+    if (t?.project_id) await api("/api/activity", "POST", { project_id: t.project_id, type: "error", message: error_message });
     return { content: [{ type: "text", text: "Error tercatat di PDC." }] };
   }
 );
@@ -143,6 +151,9 @@ server.registerTool(
     inputSchema: { project_id: z.string() },
   },
   async ({ project_id }) => {
+    // Utang disadari (P5): ambil semua lalu find. Dipanggil jarang
+    // (introspeksi), scope ?project_id= dashboard ditunda agar respons
+    // Project[] + agregat sesi tak regresi.
     const semua = (await api("/api/dashboard")) as Array<Record<string, unknown>>;
     const p = semua.find((x) => x.id === project_id);
     if (!p) throw new Error(`Proyek ${project_id} tidak ketemu di dashboard`);

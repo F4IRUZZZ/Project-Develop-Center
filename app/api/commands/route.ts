@@ -15,10 +15,29 @@ function baris(r: Record<string, unknown>): QueuedCommand {
   };
 }
 
+// Filter opsional ?status= (allowlist) + ?project_id= untuk MCP bridge (P5).
+// Backward-compatible: tanpa param = perilaku lama (semua, LIMIT 100).
+const BOLEH_STATUS = new Set(["pending", "processing", "completed", "failed"]);
+
 export async function GET(req: NextRequest) {
   const ctx = await sesiUser(req);
   if (isErr(ctx)) return NextResponse.json({ error: ctx.error }, { status: ctx.status });
-  const rows = await db()`SELECT * FROM command_queue WHERE user_id = ${ctx.userId} ORDER BY created_at DESC LIMIT 100`;
+
+  const params = new URL(req.url).searchParams;
+  const status = params.get("status");
+  const projectId = params.get("project_id");
+  if (status && !BOLEH_STATUS.has(status)) {
+    return NextResponse.json({ error: "status harus pending|processing|completed|failed" }, { status: 400 });
+  }
+
+  const rows =
+    status && projectId
+      ? await db()`SELECT * FROM command_queue WHERE user_id = ${ctx.userId} AND status = ${status} AND project_id = ${projectId} ORDER BY created_at DESC LIMIT 100`
+      : status
+        ? await db()`SELECT * FROM command_queue WHERE user_id = ${ctx.userId} AND status = ${status} ORDER BY created_at DESC LIMIT 100`
+        : projectId
+          ? await db()`SELECT * FROM command_queue WHERE user_id = ${ctx.userId} AND project_id = ${projectId} ORDER BY created_at DESC LIMIT 100`
+          : await db()`SELECT * FROM command_queue WHERE user_id = ${ctx.userId} ORDER BY created_at DESC LIMIT 100`;
   return NextResponse.json((rows as Record<string, unknown>[]).map(baris));
 }
 

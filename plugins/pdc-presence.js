@@ -2,8 +2,9 @@
 // Taruh di: <repo>/.opencode/plugins/pdc-presence.js  (per repo)
 // VERSI_PLUGIN: naikkan tiap template berubah (halaman Status bandingkan).
 const VERSI_PLUGIN = "2026.10.01";
-// Butuh env di mesin: PDC_API_URL (default http://localhost:3000),
-// PDC_API_KEY (buat di webapp PDC > Pengaturan), opsional PDC_MODE (plan/build).
+// Butuh env di mesin: PDC_API_URL (default production; set eksplisit
+// untuk dev lokal), PDC_API_KEY (buat di webapp PDC > Pengaturan),
+// opsional PDC_MODE (plan/build).
 //
 // Cara kerja: session.created -> POST (buka sesi); tiap 60 detik POST ulang
 // (denyut interval — selama proses hidup, sesi dianggap aktif walau user diam);
@@ -15,7 +16,7 @@ const VERSI_PLUGIN = "2026.10.01";
 // event tutup-proses di OpenCode, jadi goodbye-message tak bisa diandalkan).
 
 export const PdcPresencePlugin = async ({ directory, client, project }) => {
-  const API = (process.env.PDC_API_URL || "http://localhost:3000").replace(/\/$/, "");
+  const API = (process.env.PDC_API_URL || "https://project-develop-center.vercel.app").replace(/\/$/, "");
   const KEY = process.env.PDC_API_KEY || "";
   // Env eksplisit menang; bila tak diset, coba baca mode dari event (TUI bisa
   // pindah plan/build kapan saja — env statis tak mencerminkannya).

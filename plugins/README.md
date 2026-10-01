@@ -11,7 +11,7 @@ tanpa perintah PDC pun tetap terlacak per repo.
    <repo>/.opencode/plugins/pdc-presence.js   <- dari plugins/pdc-presence.js repo ini
    ```
 2. Pastikan env mesin (bukan di file!):
-   - `PDC_API_URL` — default `http://localhost:3000`; isi URL webapp PDC (mis. production) bila sesi tidak di mesin dev.
+   - `PDC_API_URL` — default production (`https://project-develop-center.vercel.app`); isi `http://localhost:3000` hanya untuk dev lokal.
    - `PDC_API_KEY` — key mesin (buat di webapp PDC > Pengaturan). **Jangan taruh key di file plugin.**
    - `PDC_MODE` — opsional, `plan` bila sesi itu dipakai untuk rencana saja.
 3. Restart total OpenCode (semua instance) agar plugin dimuat.
