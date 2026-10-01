@@ -65,6 +65,7 @@
 | 2026-09-29 | Opsi B ringkasan kerja (#61/#62): per-giliran teredaksi, semua repo                             | RINGKAS-OK + 25/25 suite + tsc + build                            |
 | 2026-09-29 | Tab Ringkasan (#63/#64): akses utama ringkasan sejajar Sesi (merge langsung, instruksi khusus) | P-CEK + tsc + build + 24 suite |
 | 2026-09-30 | Cap ringkasan 1000 + ellipsis (#69/#70) | CAP-OK + 25/25 suite + tsc + build |
+| 2026-10-01 | Halaman Status (#71/#72): deploy + bridge + DB + plugin per repo | STATUS-OK + 25/25 suite + tsc + build |
 | 2026-09-30 | Rapi UI + delete + Sesi global (#67/#68): scroll-tipis tab, DELETE API, halaman /sesi, code-review bersih | HAPUS-OK + 25/25 suite + tsc + build |
 | 2026-09-28 | Audit-3 ringan (PR, tombol mati + skeleton + deps + image + tema + dead code)                   | AUDIT3-CEK ALL-OK + 22 suite hijau + tsc + eslint nol + build     |
 | 2026-09-28 | Audit-2 ketahanan (PR, eslint nol + LIMIT + timeout + dedup)                                    | AUDIT2-CEK ALL-OK + 21 suite hijau + tsc + build + replay 1 baris |
