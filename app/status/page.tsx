@@ -132,7 +132,10 @@ export default function Status() {
                         {r.plugin_version ?? "tanpa versi"} · {waktuRelatif(r.terakhir)}
                       </div>
                     </div>
-                    <StatusBadge status={r.basi ? "waiting" : "completed"} label={r.basi ? "Basi" : "Terkini"} />
+                    <StatusBadge
+                      status={!r.terakhir ? "idle" : r.basi ? "waiting" : "completed"}
+                      label={!r.terakhir ? "Belum pernah" : r.basi ? "Basi" : "Terkini"}
+                    />
                   </div>
                 ))}
               </div>
