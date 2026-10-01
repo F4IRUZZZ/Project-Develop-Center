@@ -4,6 +4,7 @@ import { useEffect, useSyncExternalStore } from "react";
 import { useSession } from "next-auth/react";
 import {
   EVENT_QUEUE,
+  KUNCI_QUEUE,
   bacaQueue,
   bersihkanSelesai,
   enqueue as enqueueLokal,
@@ -78,6 +79,54 @@ export async function bersihkanAntrian(sumber: Sumber): Promise<boolean> {
   return true;
 }
 
+let sudahMigrasi = false;
+let infoMigrasi: string | null = null;
+
+export function bacaInfoMigrasi(): string | null {
+  return infoMigrasi;
+}
+
+export function tutupInfoMigrasi() {
+  infoMigrasi = null;
+  siar();
+}
+
+// Migrasi sekali saat login: pindahkan item pending/processing lokal
+// ke POST /api/commands agar tidak hilang saat ganti sumber.
+// Kontrak QueuedCommand tidak berubah (PRD §10); item 404 (proyek asing)
+// dibiarkan di lokal agar tidak ada data loss.
+export async function migrasiLokalKeApi(): Promise<number> {
+  if (typeof window === "undefined") return 0;
+  const lokal = bacaQueue().filter((c) => c.status === "pending" || c.status === "processing");
+  if (lokal.length === 0) return 0;
+  const terpindah: string[] = [];
+  for (const c of lokal) {
+    const teks = c.command_text?.trim() ?? "";
+    if (!c.project_id || !teks) continue;
+    try {
+      const res = await fetch("/api/commands", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ project_id: c.project_id, command_text: teks }),
+      });
+      if (res.ok) terpindah.push(c.id);
+    } catch {
+      // Jaringan gagal: biarkan di lokal, coba lagi saat login berikutnya.
+    }
+  }
+  if (terpindah.length > 0) {
+    try {
+      const sisa = bacaQueue().filter((c) => !terpindah.includes(c.id));
+      window.localStorage.setItem(KUNCI_QUEUE, JSON.stringify(sisa));
+    } catch {
+      // localStorage penuh/diblokir: abaikan, server sudah terima.
+    }
+    infoMigrasi = `${terpindah.length} perintah lokal dipindah ke server.`;
+    siar();
+  }
+  return terpindah.length;
+}
+
 function mulai(sumber: Sumber) {
   if (interval) {
     clearInterval(interval);
@@ -109,7 +158,24 @@ export function sumberDariStatus(status: string): Sumber {
 export function useQueue(projectId?: string) {
   const { status } = useSession();
   useEffect(() => {
-    mulai(sumberDariStatus(status));
+    let batal = false;
+    if (sumberDariStatus(status) === "api") {
+      if (!sudahMigrasi) {
+        sudahMigrasi = true;
+        void migrasiLokalKeApi().finally(() => {
+          if (!batal) mulai("api");
+        });
+      } else {
+        mulai("api");
+      }
+    } else {
+      sudahMigrasi = false;
+      infoMigrasi = null;
+      mulai("lokal");
+    }
+    return () => {
+      batal = true;
+    };
   }, [status]);
 
   const semua = useSyncExternalStore(langganan, () => cache, () => []);
@@ -117,5 +183,6 @@ export function useQueue(projectId?: string) {
     (c) =>
       (!projectId || c.project_id === projectId) && (c.status === "pending" || c.status === "processing")
   ).length;
-  return { antrian: projectId ? semua.filter((c) => c.project_id === projectId) : semua, pending };
+  const sumber = sumberDariStatus(status);
+  return { antrian: projectId ? semua.filter((c) => c.project_id === projectId) : semua, pending, sumber };
 }
