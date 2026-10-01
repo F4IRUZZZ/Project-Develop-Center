@@ -61,6 +61,10 @@ CREATE TABLE IF NOT EXISTS tasks (
 CREATE INDEX IF NOT EXISTS idx_tasks_project
   ON tasks (project_id, created_at DESC);
 
+-- P2: sweep stuck (working basi per user).
+CREATE INDEX IF NOT EXISTS idx_tasks_stuck
+  ON tasks (user_id, status, updated_at);
+
 CREATE TABLE IF NOT EXISTS activity_log (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
