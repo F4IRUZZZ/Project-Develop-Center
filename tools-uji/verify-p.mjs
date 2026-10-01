@@ -77,6 +77,13 @@ cek("halaman Status 4 seksi", existsSync(stPage) && readFileSync(stPage, "utf8")
 const sideSt = readFileSync(join(root, "components/shell/Sidebar.tsx"), "utf8");
 const bnavSt = readFileSync(join(root, "components/shell/BottomNav.tsx"), "utf8");
 cek("nav Status", sideSt.includes('"/status"') && bnavSt.includes('"/status"'));
+
+const ping = join(root, "app/api/plugin-ping/route.ts");
+cek("endpoint plugin-ping", existsSync(ping));
+const pingIsi = existsSync(ping) ? readFileSync(ping, "utf8") : "";
+cek("ping tanpa sesi/feed", pingIsi.includes("repo_health") && !pingIsi.includes("agent_sessions") && !pingIsi.includes("activity_log"));
+cek("ping saat init", plug.includes("/api/plugin-ping") && plug.includes("VERSI_PLUGIN"));
+cek("label Belum-pernah vs Basi", readFileSync(join(root, "app/status/page.tsx"), "utf8").includes("Belum pernah"));
 cek("plugin ringkasan per-giliran", plug.includes("message.updated") && plug.includes("siramRingkasan"));
 cek("plugin ringkasan via part+peran", plug.includes("message.part.updated") && plug.includes("peranPesan") && plug.includes('"text"'));
 const dash2 = readFileSync(join(root, "app/api/dashboard/route.ts"), "utf8");

@@ -297,6 +297,22 @@ export const PdcPresencePlugin = async ({ directory, client, project }) => {
     return null;
   };
 
+  // Ping kesehatan sekali saat muat (tanpa sesi): halaman Status tahu salinan
+  // ini ada + versinya, walau belum ada sesi dibuka. Gagal diam-diam.
+  // (Di sini karena butuh repoFull + kirim yang didefinisikan di atas.)
+  try {
+    if (KEY) {
+      const repoAwal = await repoFull();
+      if (repoAwal) {
+        kirim("/api/plugin-ping", "POST", { repo_full: repoAwal, plugin_version: VERSI_PLUGIN })
+          .then((h) => log(h.ok ? "info" : "warn", `ping -> ${h.status}`, {}))
+          .catch(() => {});
+      }
+    }
+  } catch {
+    /* abaikan */
+  }
+
   return {
     event: async ({ event }) => {
       const tipe = (() => {
