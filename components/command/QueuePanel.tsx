@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Inbox, Trash2 } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { bersihkanAntrian, sumberDariStatus, useQueue } from "@/lib/queue";
+import { bersihkanAntrian, bacaInfoMigrasi, sumberDariStatus, tutupInfoMigrasi, useQueue } from "@/lib/queue";
 import type { QueuedCommand } from "@/lib/tasks";
 import { cn } from "@/lib/utils";
 
@@ -44,7 +44,8 @@ function waktuRelatif(iso: string): string {
 
 export function QueuePanel() {
   const { status } = useSession();
-  const { antrian } = useQueue();
+  const { antrian, sumber } = useQueue();
+  const infoMigrasi = bacaInfoMigrasi();
   const selesai = antrian.filter((c) => c.status === "completed" || c.status === "failed").length;
   const [gagalHapus, setGagalHapus] = useState(false);
   const namaProyek = useNamaProyek();
@@ -56,6 +57,12 @@ export function QueuePanel() {
           <Inbox className="h-4 w-4 text-muted-foreground" />
           Antrian Perintah
           <span className="font-mono text-xs font-normal text-muted-foreground">({antrian.length})</span>
+          <span
+            title={sumber === "api" ? "Tersimpan di server, terbawa antar perangkat" : "Mode lokal: tersimpan di browser ini saja"}
+            className="rounded-full border border-border px-2 py-0.5 text-[10.5px] font-medium text-muted-foreground"
+          >
+            {sumber === "api" ? "Server" : "Lokal"}
+          </span>
         </div>
         {selesai > 0 && (
           <button
@@ -73,6 +80,23 @@ export function QueuePanel() {
         <p className="mb-3 rounded-[9px] border border-red-500/30 bg-red-500/10 px-3 py-2 text-[13px] text-red-500">
           Gagal membersihkan. Coba lagi.
         </p>
+      )}
+      {sumber === "lokal" && antrian.length > 0 && (
+        <p className="mb-3 rounded-[9px] border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[12.5px] text-amber-600 dark:text-amber-400">
+          Mode lokal — perintah hanya di browser ini. Login untuk memindah ke server.
+        </p>
+      )}
+      {infoMigrasi && (
+        <div className="mb-3 flex items-center justify-between gap-2 rounded-[9px] border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-[12.5px] text-emerald-600 dark:text-emerald-400">
+          <span>{infoMigrasi}</span>
+          <button
+            onClick={tutupInfoMigrasi}
+            aria-label="Tutup info migrasi"
+            className="shrink-0 rounded-md px-1.5 py-0.5 hover:bg-emerald-500/20"
+          >
+            Tutup
+          </button>
+        </div>
       )}
 
       {antrian.length === 0 ? (
