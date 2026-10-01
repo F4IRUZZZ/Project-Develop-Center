@@ -64,6 +64,19 @@ cek("plugin mode defensif", plug.includes("ENV_MODE") && plug.includes("sessionM
 cek("skema ringkasan", schema.includes("ringkasan_terakhir") && schema.includes("ringkasan_waktu"));
 cek("activity kind ringkasan + redaksi", actIsi.includes('kind === "ringkasan"') && actIsi.includes("function redaksi"));
 cek("cap ringkasan 1000 + ellipsis", actIsi.includes("BATAS_RINGKASAN = 1000") && plug.includes("BATAS_RINGKASAN = 1000"));
+
+const stRoute = join(root, "app/api/status/route.ts");
+cek("route status ada", existsSync(stRoute));
+const stIsi = existsSync(stRoute) ? readFileSync(stRoute, "utf8") : "";
+cek("status read-only + versi cocok",
+  stIsi.includes("export async function GET") && !stIsi.includes("export async function POST") &&
+  stIsi.includes('VERSI_PLUGIN_TERKINI = "2026.10.01"') && plug.includes('VERSI_PLUGIN = "2026.10.01"'));
+cek("tabel repo_health", schema.includes("CREATE TABLE IF NOT EXISTS repo_health"));
+const stPage = join(root, "app/status/page.tsx");
+cek("halaman Status 4 seksi", existsSync(stPage) && readFileSync(stPage, "utf8").includes("Plugin per Repo"));
+const sideSt = readFileSync(join(root, "components/shell/Sidebar.tsx"), "utf8");
+const bnavSt = readFileSync(join(root, "components/shell/BottomNav.tsx"), "utf8");
+cek("nav Status", sideSt.includes('"/status"') && bnavSt.includes('"/status"'));
 cek("plugin ringkasan per-giliran", plug.includes("message.updated") && plug.includes("siramRingkasan"));
 cek("plugin ringkasan via part+peran", plug.includes("message.part.updated") && plug.includes("peranPesan") && plug.includes('"text"'));
 const dash2 = readFileSync(join(root, "app/api/dashboard/route.ts"), "utf8");

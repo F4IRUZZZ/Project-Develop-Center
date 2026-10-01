@@ -133,6 +133,16 @@ CREATE TABLE IF NOT EXISTS session_file_events (
 CREATE INDEX IF NOT EXISTS idx_session_file_events_sesi
   ON session_file_events (session_id, created_at DESC);
 
+-- Kesehatan plugin per repo (untuk halaman Status): versi salinan template
+-- yang melapor + kapan terakhir. Versi basi = di bawah VERSI_PLUGIN_TERKINI.
+CREATE TABLE IF NOT EXISTS repo_health (
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  repo_full TEXT NOT NULL,
+  plugin_version TEXT,
+  last_seen_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (user_id, repo_full)
+);
+
 -- D4: API keys untuk MCP bridge (hash, bukan secret mentah).
 
 CREATE TABLE IF NOT EXISTS api_keys (

@@ -1,5 +1,7 @@
 // pdc-presence — plugin OpenCode: laporkan lifecycle sesi ke PDC.
 // Taruh di: <repo>/.opencode/plugins/pdc-presence.js  (per repo)
+// VERSI_PLUGIN: naikkan tiap template berubah (halaman Status bandingkan).
+const VERSI_PLUGIN = "2026.10.01";
 // Butuh env di mesin: PDC_API_URL (default http://localhost:3000),
 // PDC_API_KEY (buat di webapp PDC > Pengaturan), opsional PDC_MODE (plan/build).
 //
@@ -70,6 +72,7 @@ export const PdcPresencePlugin = async ({ directory, client, project }) => {
       session_id: id,
       repo_full: repo,
       mode,
+      plugin_version: VERSI_PLUGIN,
       ...(reopen ? { reopen: true } : {}),
     });
     if (hasil.ok) {
@@ -114,6 +117,7 @@ export const PdcPresencePlugin = async ({ directory, client, project }) => {
         session_id: id,
         repo_full: meta.repo_full,
         mode: meta.mode,
+        plugin_version: VERSI_PLUGIN,
       });
       await log(hasil.ok ? "info" : "warn", `denyut -> ${hasil.status}`, { sessionId: id });
     }
@@ -333,6 +337,7 @@ export const PdcPresencePlugin = async ({ directory, client, project }) => {
           session_id: s.id,
           repo_full: repo,
           mode: s.mode,
+          plugin_version: VERSI_PLUGIN,
         });
         if (hasilPost.ok) {
           dikenal.set(s.id, { repo_full: repo, mode: s.mode });
