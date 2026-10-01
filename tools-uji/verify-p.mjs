@@ -63,6 +63,7 @@ cek("plugin mode defensif", plug.includes("ENV_MODE") && plug.includes("sessionM
 
 cek("skema ringkasan", schema.includes("ringkasan_terakhir") && schema.includes("ringkasan_waktu"));
 cek("activity kind ringkasan + redaksi", actIsi.includes('kind === "ringkasan"') && actIsi.includes("function redaksi"));
+cek("cap ringkasan 1000 + ellipsis", actIsi.includes("BATAS_RINGKASAN = 1000") && plug.includes("BATAS_RINGKASAN = 1000"));
 cek("plugin ringkasan per-giliran", plug.includes("message.updated") && plug.includes("siramRingkasan"));
 cek("plugin ringkasan via part+peran", plug.includes("message.part.updated") && plug.includes("peranPesan") && plug.includes('"text"'));
 const dash2 = readFileSync(join(root, "app/api/dashboard/route.ts"), "utf8");

@@ -127,19 +127,22 @@ export const PdcPresencePlugin = async ({ directory, client, project }) => {
   if (typeof denyutTimer.unref === "function") denyutTimer.unref();
 
   // Ringkasan per-giliran (opsi B): teks balasan asisten, diredaksi (buang
-  // blok kode + cap 500), dikirim saat idle/status (akhir giliran).
+  // blok kode + cap 1000 + ellipsis bila terpotong), dikirim saat
+  // idle/status (akhir giliran).
   // Fakta skema resmi: message.updated HANYA bawa info (tanpa teks); teks
   // ada di message.part.updated (TextPart, TANPA role). Peran didapat dari
   // peta messageID->role yang dibangun dari message.updated. Part bertipe
   // reasoning/synthetic/ignored dan teks user DITOLAK. Server redaksi lapis 2.
   const peranPesan = new Map(); // messageID -> 'assistant' | 'user'
   const teksPerPesan = new Map(); // sessionID -> Map(partID -> text)
-  const redaksi = (teks) =>
-    String(teks)
+  const BATAS_RINGKASAN = 1000;
+  const redaksi = (teks) => {
+    const bersih = String(teks)
       .replace(/```[\s\S]*?```/g, " ")
       .replace(/\s+/g, " ")
-      .trim()
-      .slice(0, 500);
+      .trim();
+    return bersih.length > BATAS_RINGKASAN ? bersih.slice(0, BATAS_RINGKASAN - 1) + "…" : bersih;
+  };
   const catatPeran = (event) => {
     try {
       const info = event?.properties?.info;
