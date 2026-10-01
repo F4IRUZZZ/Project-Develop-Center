@@ -21,7 +21,8 @@ for (const f of [
 
 const feed = readFileSync(join(root, "components/activity/ActivityFeed.tsx"), "utf8");
 cek("feed judul", feed.includes("Activity Feed"));
-cek("feed pakai mock", feed.includes("activityFeed"));
+cek("feed tanpa mock (jujur, P4)", !feed.includes("activityFeed") && !feed.includes("mockFeed"));
+cek("feed empty-state", feed.includes("Belum ada aktivitas"));
 
 const modal = readFileSync(join(root, "components/command/CommandModal.tsx"), "utf8");
 cek("modal judul", modal.includes("Kirim Perintah ke AI"));

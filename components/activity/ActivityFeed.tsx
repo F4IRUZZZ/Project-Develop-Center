@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { Check, GitCommitHorizontal, GitPullRequest, RefreshCw, Rss } from "lucide-react";
-import { activityFeed as mockFeed } from "@/lib/mock";
 import type { ActivityEvent } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -54,7 +53,8 @@ export function ActivityFeed() {
     };
   }, [status]);
 
-  const items = live ?? mockFeed;
+  // Jujur: tanpa data = daftar kosong + empty-state, bukan mock.
+  const items: ActivityEvent[] = live ?? [];
 
   return (
     <div className="rounded-2xl border border-border bg-card p-[18px]">

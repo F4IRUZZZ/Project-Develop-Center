@@ -28,9 +28,13 @@ export async function GET(req: NextRequest) {
 
   if (mentah) return NextResponse.json(rows);
 
+  // Kontrak dengan MCP/P3: info "Selesai:" = success (ikon hijau).
   const out: ActivityEvent[] = rows.map((r, i) => ({
     id: String(r.id ?? i),
-    type: NADA[String(r.type)] ?? "idle",
+    type:
+      String(r.type) === "info" && String(r.message).startsWith("Selesai:")
+        ? "success"
+        : (NADA[String(r.type)] ?? "idle"),
     message: String(r.message),
     projectName: String(r.repo_name ?? ""),
     time: new Date(r.created_at as string).toISOString(),
