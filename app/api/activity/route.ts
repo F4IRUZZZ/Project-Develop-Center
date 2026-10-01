@@ -21,9 +21,10 @@ export async function GET(req: NextRequest) {
 
   const projectId = new URL(req.url).searchParams.get("project_id");
   const mentah = new URL(req.url).searchParams.get("format") === "mentah";
+  // LEFT JOIN agar aktivitas yatim (proyek dihapus/nonaktif) tetap terlihat.
   const rows = (await (projectId
-    ? db()`SELECT a.*, p.repo_name FROM activity_log a JOIN projects p ON p.id = a.project_id WHERE a.user_id = ${ctx.userId} AND a.project_id = ${projectId} ORDER BY a.created_at DESC LIMIT 20`
-    : db()`SELECT a.*, p.repo_name FROM activity_log a JOIN projects p ON p.id = a.project_id WHERE a.user_id = ${ctx.userId} ORDER BY a.created_at DESC LIMIT 20`)) as Record<string, unknown>[];
+    ? db()`SELECT a.*, p.repo_name FROM activity_log a LEFT JOIN projects p ON p.id = a.project_id WHERE a.user_id = ${ctx.userId} AND a.project_id = ${projectId} ORDER BY a.created_at DESC LIMIT 20`
+    : db()`SELECT a.*, p.repo_name FROM activity_log a LEFT JOIN projects p ON p.id = a.project_id WHERE a.user_id = ${ctx.userId} ORDER BY a.created_at DESC LIMIT 20`)) as Record<string, unknown>[];
 
   if (mentah) return NextResponse.json(rows);
 

@@ -1,5 +1,5 @@
-// Notifikasi turunan (E2): tanpa tabel baru, dibaca dari activity_log mentah
-// via /api/activity?format=mentah. Penting = tipe pr/error 24 jam terakhir.
+// Notifikasi turunan (E2, diperluas P3): tanpa tabel baru, via
+// /api/notifications. Penting = pr/error + info "Selesai:" 24 jam terakhir.
 export const EVENT_NOTIF = "pdc-notif";
 
 export function siarNotifikasi() {

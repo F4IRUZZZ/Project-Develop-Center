@@ -40,7 +40,7 @@ interface IssueEvent {
 export async function tulisActivity(
   userId: string,
   projectId: string,
-  type: "commit" | "pr" | "issue",
+  type: "commit" | "pr" | "issue" | "error" | "info",
   message: string
 ) {
   await db()`INSERT INTO activity_log (id, user_id, project_id, type, message) VALUES (${buatId("act")}, ${userId}, ${projectId}, ${type}, ${message})`;
