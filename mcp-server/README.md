@@ -22,7 +22,7 @@ Tambahkan ke settings OpenCode (`mcpServers`):
       "command": "node",
       "args": ["D:\\Project Developments\\GITHUB\\Project-Develop-Center\\mcp-server\\dist\\index.js"],
       "env": {
-        "PDC_API_URL": "http://localhost:3000",
+        "PDC_API_URL": "https://project-develop-center.vercel.app",
         "PDC_API_KEY": "pdc_... (buat di webapp: Pengaturan -> Buat key baru)"
       }
     }
@@ -33,7 +33,8 @@ Tambahkan ke settings OpenCode (`mcpServers`):
 Jalankan manual (debug):
 
 ```bash
-PDC_API_URL=http://localhost:3000 PDC_API_KEY=pdc_... npm start
+PDC_API_KEY=pdc_... npm start
+# Dev lokal saja: PDC_API_URL=http://localhost:3000 PDC_API_KEY=pdc_... npm start
 ```
 
 ## Tools (8)
