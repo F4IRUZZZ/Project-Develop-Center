@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { isErr, sesiUser } from "@/lib/server-auth";
 import { syncProjects } from "@/lib/sync";
+import { sapuStuck } from "@/lib/stuck-sweep";
 import { TANDA_STOP } from "@/lib/tasks";
 import type { AIStatus, Project } from "@/lib/types";
 
@@ -21,6 +22,15 @@ export async function GET(req: NextRequest) {
   if (isErr(ctx)) return NextResponse.json({ error: ctx.error }, { status: ctx.status });
 
   const sql = db();
+
+  // P2: sweep stuck oportunistik (best-effort) agar status stuck tertulis
+  // di DB, bukan cuma display. Gagal = diam, respons tetap jalan.
+  try {
+    await sapuStuck(ctx.userId);
+  } catch {
+    // Abaikan: fallback display-level di bawah tetap tampilkan stuck.
+  }
+
   let projects = (await sql`SELECT * FROM projects WHERE user_id = ${ctx.userId} AND is_active = true ORDER BY updated_at DESC`) as Record<string, unknown>[];
 
   if (projects.length === 0) {
