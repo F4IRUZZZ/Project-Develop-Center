@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { BellOff, CheckCheck, GitPullRequest, TriangleAlert } from "lucide-react";
+import { BellOff, CheckCheck, CircleCheck, GitPullRequest, TriangleAlert } from "lucide-react";
 import { LoginCard } from "@/components/dashboard/LoginCard";
 import { fetchNotifikasi, siarNotifikasi, tandaiDibaca, type Notifikasi } from "@/lib/notifikasi";
 import { cn } from "@/lib/utils";
@@ -58,7 +58,7 @@ export default function Notifikasi() {
           </button>
         )}
       </div>
-      <p className="mb-6 text-[13px] text-muted-foreground">PR dan error 24 jam terakhir dari semua proyek.</p>
+      <p className="mb-6 text-[13px] text-muted-foreground">PR, error, dan penyelesaian AI 24 jam terakhir dari semua proyek.</p>
 
       {!items ? (
         <p className="font-mono text-xs text-muted-foreground">Memuat…</p>
@@ -74,6 +74,7 @@ export default function Notifikasi() {
         <div className="scroll-tipis max-h-[520px] overflow-y-auto rounded-2xl border border-border bg-card p-[18px]">
           {items.map((e) => {
             const pr = e.type === "pr";
+            const selesai = e.type === "info";
             return (
               <div
                 key={e.id}
@@ -85,10 +86,20 @@ export default function Notifikasi() {
                 <div
                   className={cn(
                     "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg",
-                    pr ? "bg-amber-500/10 text-amber-500" : "bg-muted text-muted-foreground"
+                    pr
+                      ? "bg-amber-500/10 text-amber-500"
+                      : selesai
+                        ? "bg-emerald-500/10 text-emerald-500"
+                        : "bg-muted text-muted-foreground"
                   )}
                 >
-                  {pr ? <GitPullRequest className="h-3.5 w-3.5" /> : <TriangleAlert className="h-3.5 w-3.5" />}
+                  {pr ? (
+                    <GitPullRequest className="h-3.5 w-3.5" />
+                  ) : selesai ? (
+                    <CircleCheck className="h-3.5 w-3.5" />
+                  ) : (
+                    <TriangleAlert className="h-3.5 w-3.5" />
+                  )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="text-[12.5px] leading-snug">

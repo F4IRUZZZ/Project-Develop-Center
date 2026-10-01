@@ -92,6 +92,9 @@ server.registerTool(
       await api(`/api/tasks/${taskId}`, "PATCH", { status: "completed", progress: 100, result_summary: summary });
     const projectId = await projectUntuk(command_id);
     if (projectId)
+      // Kontrak dengan /api/notifications: pesan selesai WAJIB berprefix
+      // "Selesai:" agar masuk filter notifikasi (P3). Jangan ubah kalimat
+      // tanpa selaraskan filter di app/api/notifications/route.ts.
       await api("/api/activity", "POST", {
         project_id: projectId,
         type: "info",
