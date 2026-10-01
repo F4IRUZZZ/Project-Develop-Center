@@ -16,14 +16,16 @@ type Masuk = {
 };
 
 // Redaksi sisi server (lapis kedua; plugin sudah meredaksi duluan): buang
-// blok kode, rapatkan whitespace, cap 500. Regex bukan kedap — kontrak
-// privasi mengandalkan ini + kepercayaan DB sendiri (lihat skema).
+// blok kode, rapatkan whitespace, cap 1000 + ellipsis bila terpotong.
+// Regex bukan kedap — kontrak privasi mengandalkan ini + kepercayaan DB
+// sendiri (lihat skema).
+const BATAS_RINGKASAN = 1000;
 function redaksi(teks: string): string {
-  return teks
+  const bersih = teks
     .replace(/```[\s\S]*?```/g, " ")
     .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, 500);
+    .trim();
+  return bersih.length > BATAS_RINGKASAN ? bersih.slice(0, BATAS_RINGKASAN - 1) + "…" : bersih;
 }
 
 const BATAS_EVENT = 50;

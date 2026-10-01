@@ -33,7 +33,7 @@ tanpa perintah PDC pun tetap terlacak per repo.
 ## Ringkasan kerja (opsi B: prosa teredaksi, semua repo)
 
 - `message.updated` (info.id→role) + `message.part.updated` (TextPart) →
-  teks asisten diredaksi (buang blok kode + cap 500) → dikirim per-giliran
+  teks asisten diredaksi (buang blok kode + cap 1000 + ellipsis) → dikirim per-giliran
   saat idle/status via kind `ringkasan`. Fakta skema: message.updated tanpa
   teks; part tanpa role (peran dari peta); reasoning/synthetic/teks-user
   ditolak.
