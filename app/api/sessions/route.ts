@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
   const ctx = await sesiUser(req);
   if (isErr(ctx)) return NextResponse.json({ error: ctx.error }, { status: ctx.status });
 
-  let body: { session_id?: string; repo_full?: string; project_id?: string; mode?: string; reopen?: boolean };
+  let body: { session_id?: string; repo_full?: string; project_id?: string; mode?: string; reopen?: boolean; plugin_version?: string };
   try {
     body = await req.json();
   } catch {
@@ -44,6 +44,20 @@ export async function POST(req: NextRequest) {
       status = CASE WHEN ${bukaUlang} THEN 'active' WHEN agent_sessions.status = 'active' THEN 'active' ELSE agent_sessions.status END,
       ended_at = CASE WHEN ${bukaUlang} THEN NULL ELSE agent_sessions.ended_at END
   `;
+  // Kesehatan plugin per repo (halaman Status): versi tak disediakan salinan
+  // lama → pertahankan yang ada; last_seen selalu segar saat ada laporan.
+  const repoBersih = body.repo_full?.trim() || null;
+  const verBersih = typeof body.plugin_version === "string" && body.plugin_version ? body.plugin_version.slice(0, 20) : null;
+  if (repoBersih) {
+    await sql`
+      INSERT INTO repo_health (user_id, repo_full, plugin_version, last_seen_at)
+      VALUES (${ctx.userId}, ${repoBersih}, ${verBersih}, now())
+      ON CONFLICT (user_id, repo_full) DO UPDATE SET
+        last_seen_at = now(),
+        plugin_version = COALESCE(${verBersih}, repo_health.plugin_version)
+    `;
+  }
+
   // ID feed deterministik + DO NOTHING: kebal race check-then-insert
   // (dua event konkuren tak lagi ganda). Pesan tanpa klaim mode — mode
   // env tak mencerminkan mode aktual TUI (kolom mode tetap untuk tab).
