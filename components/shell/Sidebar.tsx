@@ -133,12 +133,12 @@ export function Sidebar() {
     >
       <div className={cn("flex items-center gap-2.5 px-1.5 pb-[22px]", ciut && "flex-col justify-center px-0")}>
         <Image
-          src="/logo-pdc.svg"
+          src="/logo-pdc-dark.svg"
           alt="Logo PDC"
           width={34}
           height={34}
-          // Ubin gradasi agar P putih terbaca di tema terang maupun gelap.
-          className="h-[34px] w-[34px] shrink-0 rounded-[10px] bg-gradient-to-br from-primary to-violet-500 p-[3px] shadow-[0_4px_12px_rgba(99,102,241,0.35)]"
+          // Varian ubin gelap: hexagon + P putih terbaca di terang maupun gelap.
+          className="h-[34px] w-[34px] shrink-0 rounded-[10px] shadow-[0_4px_12px_rgba(99,102,241,0.35)]"
         />
         {!ciut && (
           <div className="min-w-0 flex-1">
