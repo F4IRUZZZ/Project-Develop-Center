@@ -37,6 +37,12 @@ const pengaturan = readFileSync(join(root, "app/pengaturan/page.tsx"), "utf8");
 cek("N1 seksi Profil", pengaturan.includes("Profil") || pengaturan.includes("profil"));
 cek("N1 seksi Tampilan/Tema", pengaturan.includes("Tampilan") || pengaturan.includes("tema"));
 cek("N1 Danger Zone / Cabut", pengaturan.includes("Danger") || pengaturan.includes("danger") || pengaturan.includes("Cabut"));
+cek("hapus permanen key dicabut", pengaturan.includes("permanen=1") && pengaturan.includes("Bersihkan"));
+cek("tanpa confirm() di pengaturan", !pengaturan.includes("window.confirm") && !pengaturan.includes("window.alert"));
+
+const delKey = readFileSync(join(root, "app/api/keys/[id]/route.ts"), "utf8");
+cek("DELETE permanen hanya revoked", delKey.includes("permanen") && delKey.includes("409"));
+cek("cabut lunak default utuh", delKey.includes("revoked = true"));
 
 if (gagal > 0) {
   console.log(`\nN-CEK: ${gagal} gagal`);
