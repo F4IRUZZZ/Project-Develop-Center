@@ -30,23 +30,13 @@ export function Topbar() {
   const pathname = usePathname();
   const [buka, setBuka] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  // DEBUG SEMENTARA (#123): jejak tap drawer tampil di layar. HAPUS setelah vonis.
-  const [dbg, setDbg] = useState<string[]>([]);
-  const catat = (s: string) => setDbg((d) => [...d.slice(-3), `${new Date().toLocaleTimeString("id-ID")}.${String(Date.now() % 1000).padStart(3, "0")} ${s}`]);
   const nama = session?.user?.name ?? session?.user?.email ?? "?";
   const inisial = nama.slice(0, 2).toUpperCase();
 
   useEffect(() => {
     if (!buka) return;
     const fn = (e: MouseEvent) => {
-      const t = e.target as Node | null;
-      const tag = t instanceof Element ? `<${t.tagName.toLowerCase()}>` : "?";
-      if (ref.current && t && !ref.current.contains(t)) {
-        catat(`luar ${tag} -> tutup`);
-        setBuka(false);
-      } else {
-        catat(`dalam ${tag} -> aman`);
-      }
+      if (ref.current && !ref.current.contains(e.target as Node)) setBuka(false);
     };
     const esc = (e: KeyboardEvent) => {
       if (e.key === "Escape") setBuka(false);
@@ -65,10 +55,7 @@ export function Topbar() {
         {/* nav drawer WAJIB di dalam div ref (#121): tap item tak boleh dianggap klik-luar */}
         <div ref={ref} className="shrink-0 lg:hidden">
           <button
-            onClick={() => {
-              catat("tombol hamburger");
-              setBuka((v) => !v);
-            }}
+            onClick={() => setBuka((v) => !v)}
             title={teks("menu.navigasi")}
             aria-label={teks("menu.navigasi")}
             aria-expanded={buka}
@@ -84,10 +71,7 @@ export function Topbar() {
                   <Link
                     key={item.kunci}
                     href={item.href}
-                    onClick={() => {
-                      catat(`tap ${item.href}`);
-                      setBuka(false);
-                    }}
+                    onClick={() => setBuka(false)}
                     className={cn(
                       "flex items-center gap-2.5 rounded-[9px] px-2.5 py-2.5 text-[13.5px] font-medium transition-colors",
                       aktif ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -130,19 +114,6 @@ export function Topbar() {
           )}
         </div>
       </div>
-      {dbg.length > 0 && (
-        <div className="fixed inset-x-2 bottom-2 z-[9998] rounded-[10px] border border-amber-500/50 bg-black/85 p-2 font-mono text-[10px] leading-relaxed text-amber-200 lg:hidden">
-          <div className="flex items-center justify-between">
-            <span>DBG route={pathname}</span>
-            <button onClick={() => setDbg([])} className="rounded bg-amber-500/20 px-2 py-0.5">
-              clear
-            </button>
-          </div>
-          {dbg.map((d, i) => (
-            <div key={i}>{d}</div>
-          ))}
-        </div>
-      )}
     </header>
   );
 }
