@@ -2,6 +2,7 @@
 // ke client). 1 query: contributionsCollection (total + kalender streak)
 // + repositories (stars + agregat bahasa). Cache memori 1 jam per user.
 import { tokenGitHub } from "./server-auth";
+import { pesan, type LangApi } from "./galat-api";
 import { hitungStreak, type Hari, type InfoStreak } from "./streak";
 
 const GQL = "https://api.github.com/graphql";
@@ -55,12 +56,12 @@ query($dari: DateTime!) {
   }
 }`;
 
-export async function statsGitHub(userId: string): Promise<StatsGitHub> {
+export async function statsGitHub(userId: string, lang: LangApi = "id"): Promise<StatsGitHub> {
   const lawas = cache.get(userId);
   if (lawas && Date.now() - lawas.at < TTL_MS) return lawas.data;
 
   const token = await tokenGitHub(userId);
-  if (!token) throw new Error("Token GitHub tidak tersedia, login ulang");
+  if (!token) throw new Error(pesan("tokenGithub", lang));
 
   const dari = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString();
   const res = await fetch(GQL, {

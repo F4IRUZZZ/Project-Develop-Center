@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { isErr, sesiUser, tokenGitHub } from "@/lib/server-auth";
+import { galat } from "@/lib/galat-api";
 
 // Status sistem read-only (halaman /status, auth sesi web): deploy production,
 // bridge MCP->production, database, dan kesehatan plugin per repo. Tanpa aksi,
@@ -65,7 +66,7 @@ export async function GET(req: NextRequest) {
     }>;
     const pdc = projs.find((p) => /\/Project-Develop-Center$/i.test(p.repo_full ?? ""));
     if (!pdc?.repo_full) {
-      deployCatatan = "Repo PDC tidak terdaftar sebagai proyek.";
+      deployCatatan = galat(req, "statusRepoTakTerdaftar");
     } else {
       const kunci = `${ctx.userId}:${pdc.repo_full}`;
       const kena = deployCache.get(kunci);
@@ -74,17 +75,17 @@ export async function GET(req: NextRequest) {
       } else {
         const token = await tokenGitHub(ctx.userId);
         if (!token) {
-          deployCatatan = "Token GitHub tidak tersedia, login ulang.";
+          deployCatatan = galat(req, "tokenGithub");
         } else {
           const d = await deployTerakhir(token, pdc.repo_full);
           deploy = d ? { repo: pdc.repo_full, ...d } : null;
-          if (!deploy) deployCatatan = "Deploy production tidak terbaca.";
+          if (!deploy) deployCatatan = galat(req, "statusDeployTakTerbaca");
           deployCache.set(kunci, { saat: Date.now(), data: deploy });
         }
       }
     }
   } catch {
-    deployCatatan = "Gagal membaca deploy.";
+    deployCatatan = galat(req, "statusGagalDeploy");
   }
 
   // Bridge: root production hidup + latensi (tanpa auth).
@@ -114,7 +115,7 @@ export async function GET(req: NextRequest) {
       galat: null,
     };
   } catch (e) {
-    basisdata = { latencyMs: null, sesi: 0, event: 0, feed: 0, galat: "Gagal membaca database." };
+    basisdata = { latencyMs: null, sesi: 0, event: 0, feed: 0, galat: galat(req, "statusGagalDb") };
   }
 
   // Plugin per repo: proyek terdaftar LEFT JOIN kesehatan (belum melapor = null).

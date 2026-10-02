@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { enkrip } from "@/lib/crypto";
 import { isErr, sesiUser } from "@/lib/server-auth";
+import { galat } from "@/lib/galat-api";
 
 const PROVIDERS = new Set(["openai", "anthropic", "github_pat"]);
 
@@ -23,15 +24,15 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Body JSON tidak valid" }, { status: 400 });
+    return NextResponse.json({ error: galat(req, "bodyInvalid") }, { status: 400 });
   }
   const provider = body.provider?.trim().toLowerCase() ?? "";
   const key = body.key?.trim() ?? "";
   if (!PROVIDERS.has(provider)) {
-    return NextResponse.json({ error: "provider harus openai|anthropic|github_pat" }, { status: 400 });
+    return NextResponse.json({ error: galat(req, "provDaftar") }, { status: 400 });
   }
   if (key.length < 8) {
-    return NextResponse.json({ error: "key minimal 8 karakter" }, { status: 400 });
+    return NextResponse.json({ error: galat(req, "provMin8") }, { status: 400 });
   }
 
   await db()`

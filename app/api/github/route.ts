@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { isErr, sesiUser, tokenGitHub } from "@/lib/server-auth";
+import { galat } from "@/lib/galat-api";
 
 async function gh(token: string, path: string) {
   const res = await fetch(`https://api.github.com${path}`, {
@@ -16,14 +17,14 @@ export async function GET(req: NextRequest) {
   if (isErr(ctx)) return NextResponse.json({ error: ctx.error }, { status: ctx.status });
 
   const projectId = new URL(req.url).searchParams.get("project_id");
-  if (!projectId) return NextResponse.json({ error: "project_id wajib" }, { status: 400 });
+  if (!projectId) return NextResponse.json({ error: galat(req, "proyekIdWajib") }, { status: 400 });
 
   const proj = await db()`SELECT repo_full, repo_url, default_branch FROM projects WHERE id = ${projectId} AND user_id = ${ctx.userId}`;
   const row = proj[0] as { repo_full: string; repo_url: string | null; default_branch: string | null } | undefined;
-  if (!row) return NextResponse.json({ error: "Proyek tidak ketemu" }, { status: 404 });
+  if (!row) return NextResponse.json({ error: galat(req, "proyekHilang") }, { status: 404 });
 
   const token = await tokenGitHub(ctx.userId);
-  if (!token) return NextResponse.json({ error: "Token GitHub tidak tersedia, login ulang" }, { status: 401 });
+  if (!token) return NextResponse.json({ error: galat(req, "tokenGithub") }, { status: 401 });
 
   try {
     const [repo, pulls, issues] = await Promise.all([

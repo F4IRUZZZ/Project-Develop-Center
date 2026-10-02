@@ -32,7 +32,7 @@ cek("panel resolve nama via API", panel.includes("/api/projects") && !panel.incl
 
 // M3 — tolak project asing
 const cmd = readFileSync(join(root, "app/api/commands/route.ts"), "utf8");
-cek("validasi proyek 404", cmd.includes("tidak ketemu, sync dulu") && !cmd.includes("WHERE NOT EXISTS"));
+cek("validasi proyek 404 (kamus)", cmd.includes("proyekSyncDulu") && !cmd.includes("WHERE NOT EXISTS"));
 
 // M5 — route warisan hilang
 cek("api/repos dihapus", !existsSync(join(root, "app/api/repos/route.ts")));

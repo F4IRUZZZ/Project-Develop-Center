@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { isErr, sesiUser } from "@/lib/server-auth";
+import { galat } from "@/lib/galat-api";
 
 // Tandai dibaca: satu activity atau semua.
 export async function POST(req: NextRequest) {
@@ -11,7 +12,7 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Body JSON tidak valid" }, { status: 400 });
+    return NextResponse.json({ error: galat(req, "bodyInvalid") }, { status: 400 });
   }
 
   const sql = db();
@@ -27,7 +28,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (!body.activity_id?.trim()) {
-    return NextResponse.json({ error: "activity_id / semua wajib" }, { status: 400 });
+    return NextResponse.json({ error: galat(req, "notifReadWajib") }, { status: 400 });
   }
   await sql`INSERT INTO notification_reads (activity_id, user_id) VALUES (${body.activity_id.trim()}, ${ctx.userId}) ON CONFLICT DO NOTHING`;
   return NextResponse.json({ ok: true });

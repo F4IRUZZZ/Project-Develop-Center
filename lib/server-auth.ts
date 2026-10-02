@@ -3,6 +3,7 @@ import { getToken } from "next-auth/jwt";
 import { db, dbSiap } from "@/lib/db";
 import { dekrip, enkrip } from "@/lib/crypto";
 import { bacaBearer, verifikasiApiKey } from "@/lib/api-key";
+import { galat } from "@/lib/galat-api";
 import { buatId } from "@/lib/id";
 
 export interface Ctx {
@@ -20,19 +21,19 @@ export function isErr(x: Ctx | ApiError): x is ApiError {
 
 // Auth via sesi JWT (browser) ATAU Bearer API key (MCP bridge, D4).
 export async function sesiUser(req: NextRequest): Promise<Ctx | ApiError> {
-  if (!dbSiap()) return { error: "Database belum dikonfigurasi", status: 503 };
+  if (!dbSiap()) return { error: galat(req, "dbBelum"), status: 503 };
 
   const bearer = bacaBearer(req);
   if (bearer) {
     const userId = await verifikasiApiKey(bearer);
-    if (!userId) return { error: "API key tidak valid / dicabut", status: 401 };
+    if (!userId) return { error: galat(req, "keyInvalid"), status: 401 };
     const ada = await db()`SELECT id FROM users WHERE id = ${userId}`;
-    if (ada.length === 0) return { error: "Akun belum pernah login via web", status: 401 };
+    if (ada.length === 0) return { error: galat(req, "akunBelumLogin"), status: 401 };
     return { userId };
   }
 
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-  if (!token?.sub) return { error: "Belum login GitHub", status: 401 };
+  if (!token?.sub) return { error: galat(req, "belumLogin"), status: 401 };
 
   const userId = `u_${token.sub}`;
   const username =

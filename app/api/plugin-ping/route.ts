@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { isErr, sesiUser } from "@/lib/server-auth";
+import { galat } from "@/lib/galat-api";
 
 // Ping kesehatan plugin (dipanggil sekali saat plugin dimuat, auth Bearer key
 // mesin). Tanpa sesi, tanpa feed — murni "salinan ini ada + versinya ini".
@@ -12,10 +13,10 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Body JSON tidak valid" }, { status: 400 });
+    return NextResponse.json({ error: galat(req, "bodyInvalid") }, { status: 400 });
   }
   const repo = body.repo_full?.trim() || null;
-  if (!repo) return NextResponse.json({ error: "repo_full wajib" }, { status: 400 });
+  if (!repo) return NextResponse.json({ error: galat(req, "repoFullWajib") }, { status: 400 });
   const ver =
     typeof body.plugin_version === "string" && body.plugin_version
       ? body.plugin_version.slice(0, 20)

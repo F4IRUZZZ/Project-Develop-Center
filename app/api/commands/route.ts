@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { buatId, isErr, sesiUser } from "@/lib/server-auth";
+import { galat } from "@/lib/galat-api";
 import type { QueuedCommand } from "@/lib/tasks";
 
 function baris(r: Record<string, unknown>): QueuedCommand {
@@ -27,7 +28,7 @@ export async function GET(req: NextRequest) {
   const status = params.get("status");
   const projectId = params.get("project_id");
   if (status && !BOLEH_STATUS.has(status)) {
-    return NextResponse.json({ error: "status harus pending|processing|completed|failed" }, { status: 400 });
+    return NextResponse.json({ error: galat(req, "cmdStatusQuad") }, { status: 400 });
   }
 
   const rows =
@@ -49,12 +50,12 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Body JSON tidak valid" }, { status: 400 });
+    return NextResponse.json({ error: galat(req, "bodyInvalid") }, { status: 400 });
   }
   const projectId = body.project_id?.trim() ?? "";
   const text = body.command_text?.trim() ?? "";
   if (!projectId || !text) {
-    return NextResponse.json({ error: "project_id + command_text wajib" }, { status: 400 });
+    return NextResponse.json({ error: galat(req, "cmdProjTextWajib") }, { status: 400 });
   }
 
   const id = buatId("cmd");
@@ -63,7 +64,7 @@ export async function POST(req: NextRequest) {
   // Tolak project_id asing agar tabel projects tak tercemar baris placeholder.
   const cekProyek = await sql`SELECT id FROM projects WHERE id = ${projectId} AND user_id = ${ctx.userId}`;
   if (cekProyek.length === 0) {
-    return NextResponse.json({ error: "Proyek tidak ketemu, sync dulu" }, { status: 404 });
+    return NextResponse.json({ error: galat(req, "proyekSyncDulu") }, { status: 404 });
   }
   await sql`INSERT INTO command_queue (id, user_id, project_id, command_text, status) VALUES (${id}, ${ctx.userId}, ${projectId}, ${text}, 'pending')`;
   await sql`INSERT INTO tasks (id, user_id, project_id, command_id, title, status, progress) VALUES (${taskId}, ${ctx.userId}, ${projectId}, ${id}, ${text}, 'working', 0)`;

@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { isErr, sesiUser } from "@/lib/server-auth";
+import { galat, langApi } from "@/lib/galat-api";
 import { statsGitHub } from "@/lib/github-stats";
 
 // Statistik GitHub user (streak + bahasa + angka). Token tetap server-side;
@@ -9,11 +10,14 @@ export async function GET(req: NextRequest) {
   if (isErr(ctx)) return NextResponse.json({ error: ctx.error }, { status: ctx.status });
 
   try {
-    const data = await statsGitHub(ctx.userId);
+    const data = await statsGitHub(ctx.userId, langApi(req));
     return NextResponse.json(data, { headers: { "Cache-Control": "private, max-age=3600" } });
   } catch (e) {
-    const pesan = e instanceof Error ? e.message : "Gagal mengambil statistik GitHub";
-    const status = pesan.includes("login ulang") ? 401 : 502;
-    return NextResponse.json({ error: pesan }, { status });
+    const tokenMsg = galat(req, "tokenGithub");
+    const isToken = e instanceof Error && e.message === tokenMsg;
+    return NextResponse.json(
+      { error: isToken ? tokenMsg : galat(req, "statsGagal") },
+      { status: isToken ? 401 : 502 }
+    );
   }
 }
