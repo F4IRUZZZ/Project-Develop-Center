@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { fetchNotifikasi, EVENT_NOTIF } from "@/lib/notifikasi";
 import { cn } from "@/lib/utils";
 
-// Badge notifikasi live, dipakai Sidebar + BottomNav.
+// Badge notifikasi live, dipakai Sidebar + drawer Topbar.
 export function NotifBadge({ className }: { className?: string }) {
   const { status } = useSession();
   const [n, setN] = useState(0);

@@ -32,7 +32,7 @@ const shell = readFileSync(join(root, "components/shell/AppShell.tsx"), "utf8");
 cek("provider di AppShell", shell.includes("BahasaProvider"));
 for (const [f, kunci] of [
   ["components/shell/Sidebar.tsx", "nav.proyek"],
-  ["components/shell/BottomNav.tsx", "nav.statistik"],
+  ["components/shell/Topbar.tsx", "menu.navigasi"],
   ["components/shell/SearchBox.tsx", "search.placeholder"],
   ["components/shell/UserMenu.tsx", "user.keluar"],
   ["components/shell/LoginLanding.tsx", "landing.sambut"],

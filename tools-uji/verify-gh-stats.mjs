@@ -33,8 +33,8 @@ cek("halaman gate login", hal.includes("LoginCard"));
 
 const side = readFileSync(join(root, "components/shell/Sidebar.tsx"), "utf8");
 cek("nav sidebar Statistik", side.includes('"/statistik"') && side.includes("ChartColumn"));
-const bottom = readFileSync(join(root, "components/shell/BottomNav.tsx"), "utf8");
-cek("nav HP Statistik", bottom.includes('"/statistik"'));
+const drawer = readFileSync(join(root, "components/shell/Topbar.tsx"), "utf8");
+cek("nav HP Statistik", drawer.includes('"/statistik"'));
 
 // Uji unit streak dengan fixture (bukan assert string).
 const fx = [

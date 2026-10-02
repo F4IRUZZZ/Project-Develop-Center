@@ -151,7 +151,7 @@ export default function Pengaturan() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-2xl p-4 sm:p-6 pb-20">
+    <div className="mx-auto w-full max-w-2xl p-4 sm:p-6">
       <h2 className="mb-1 text-[17px] font-semibold tracking-tight">{teks("atur.judul")}</h2>
       <p className="mb-6 text-[13px] text-muted-foreground">{teks("atur.sub")}</p>
       {gagalSimpan && (

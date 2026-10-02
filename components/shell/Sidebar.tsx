@@ -142,8 +142,7 @@ export function Sidebar() {
         />
         {!ciut && (
           <div className="min-w-0 flex-1">
-            <div className="truncate text-[15px] font-semibold tracking-tight">Develop Center</div>
-            <div className="text-[11px] font-medium text-muted-foreground">Project</div>
+            <div className="truncate text-[15px] font-semibold tracking-tight">PDC</div>
           </div>
         )}
         <button
