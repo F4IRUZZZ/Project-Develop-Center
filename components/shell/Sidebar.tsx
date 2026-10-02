@@ -3,6 +3,8 @@
 import {
   Activity,
   Bell,
+  ChevronsLeft,
+  ChevronsRight,
   FolderGit2,
   HeartPulse,
   History,
@@ -18,6 +20,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { NotifBadge } from "./NotifBadge";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { bacaCiut, simpanCiut } from "@/lib/sidebar";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -30,14 +33,14 @@ const NAV = [
   { label: "Pengaturan", icon: Settings, href: "/pengaturan", badge: null as string | null },
 ];
 
-function UserBox() {
+function UserBox({ ciut }: { ciut?: boolean }) {
   const { data: session, status } = useSession();
   const [tanyaKeluar, setTanyaKeluar] = useState(false);
 
   if (status === "loading") {
     return (
       <div className="mt-auto border-t border-border px-2 pt-2.5 font-mono text-[11px] text-muted-foreground">
-        Memuat sesi…
+        {ciut ? "…" : "Memuat sesi…"}
       </div>
     );
   }
@@ -47,9 +50,11 @@ function UserBox() {
       <div className="mt-auto border-t border-border px-2 pt-2.5">
         <button
           onClick={() => signIn("github")}
+          title="Login GitHub"
+          aria-label="Login GitHub"
           className="flex w-full items-center justify-center gap-1.5 rounded-[9px] bg-primary px-0 py-2 text-xs font-medium text-white transition-colors hover:bg-[#5457E5]"
         >
-          <LogIn className="h-3.5 w-3.5" /> Login GitHub
+          <LogIn className="h-3.5 w-3.5" /> {!ciut && "Login GitHub"}
         </button>
       </div>
     );
@@ -60,21 +65,26 @@ function UserBox() {
 
   return (
     <div className="mt-auto border-t border-border px-2 pt-2.5">
-      <div className="flex items-center gap-2.5">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted text-xs font-semibold text-muted-foreground">
+      <div className={cn("flex items-center gap-2.5", ciut && "justify-center")}>
+        <div
+          title={nama}
+          className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted text-xs font-semibold text-muted-foreground"
+        >
           {session.user.image ? (
             <Image src={session.user.image} alt={nama} width={32} height={32} className="h-full w-full object-cover" />
           ) : (
             inisial
           )}
         </div>
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-[13px] font-medium">{nama}</div>
-          <div className="flex items-center gap-1.5 text-[11px] text-emerald-500">
-            <span className="h-[7px] w-[7px] rounded-full bg-emerald-500" />
-            Connected
+        {!ciut && (
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-[13px] font-medium">{nama}</div>
+            <div className="flex items-center gap-1.5 text-[11px] text-emerald-500">
+              <span className="h-[7px] w-[7px] rounded-full bg-emerald-500" />
+              Connected
+            </div>
           </div>
-        </div>
+        )}
         <button
           onClick={() => setTanyaKeluar(true)}
           title="Keluar"
@@ -98,33 +108,65 @@ function UserBox() {
 
 export function Sidebar() {
   const pathname = usePathname();
+  const [ciut, setCiut] = useState<boolean>(() => bacaCiut());
+  const jungkit = () => {
+    setCiut((c) => {
+      simpanCiut(!c);
+      return !c;
+    });
+  };
+
   return (
-    <aside className="hidden w-[232px] shrink-0 flex-col border-r border-border bg-card px-3.5 py-[18px] lg:flex">
-      <div className="flex items-center gap-2.5 px-1.5 pb-[22px]">
+    <aside
+      className={cn(
+        "hidden shrink-0 flex-col border-r border-border bg-card py-[18px] transition-[width] lg:flex",
+        ciut ? "w-[68px] px-2.5" : "w-[232px] px-3.5"
+      )}
+    >
+      <div className={cn("flex items-center gap-2.5 px-1.5 pb-[22px]", ciut && "flex-col justify-center px-0")}>
         <Image
           src="/logo-pdc.svg"
           alt="Logo PDC"
           width={34}
           height={34}
-          className="h-[34px] w-[34px] rounded-[10px] shadow-[0_4px_12px_rgba(99,102,241,0.35)]"
+          className="h-[34px] w-[34px] shrink-0 rounded-[10px] shadow-[0_4px_12px_rgba(99,102,241,0.35)]"
         />
-        <div>
-          <div className="text-[15px] font-semibold tracking-tight">Develop Center</div>
-          <div className="text-[11px] font-medium text-muted-foreground">Project</div>
-        </div>
+        {!ciut && (
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-[15px] font-semibold tracking-tight">Develop Center</div>
+            <div className="text-[11px] font-medium text-muted-foreground">Project</div>
+          </div>
+        )}
+        <button
+          onClick={jungkit}
+          title={ciut ? "Bentangkan sidebar" : "Ciutkan sidebar"}
+          aria-label={ciut ? "Bentangkan sidebar" : "Ciutkan sidebar"}
+          aria-expanded={!ciut}
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          {ciut ? <ChevronsRight className="h-4 w-4" /> : <ChevronsLeft className="h-4 w-4" />}
+        </button>
       </div>
 
-      <div className="px-2 pb-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
-        Menu
-      </div>
+      {!ciut && (
+        <div className="px-2 pb-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+          Menu
+        </div>
+      )}
       <nav>
         {NAV.map((item) => {
           const aktif = item.href ? pathname === item.href : item.label === "Dashboard" && pathname === "/";
           const cls = cn(
             "mb-0.5 flex cursor-pointer items-center gap-2.5 rounded-[9px] px-2.5 py-2 text-[13.5px] font-medium transition-colors",
+            ciut && "justify-center px-0",
             aktif ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
           );
-          const isi = (
+          const isi = ciut ? (
+            <span className="relative flex items-center justify-center">
+              <item.icon className="h-[18px] w-[18px]" strokeWidth={1.75} />
+              {item.badge === "live" && <NotifBadge className="absolute -right-2.5 -top-2" />}
+            </span>
+          ) : (
             <>
               <item.icon className="h-[18px] w-[18px]" strokeWidth={1.75} />
               {item.label}
@@ -140,18 +182,18 @@ export function Sidebar() {
             </>
           );
           return item.href ? (
-            <Link key={item.label} href={item.href} className={cls}>
+            <Link key={item.label} href={item.href} className={cls} title={ciut ? item.label : undefined}>
               {isi}
             </Link>
           ) : (
-            <div key={item.label} className={cls}>
+            <div key={item.label} className={cls} title={ciut ? item.label : undefined}>
               {isi}
             </div>
           );
         })}
       </nav>
 
-      <UserBox />
+      <UserBox ciut={ciut} />
     </aside>
   );
 }
