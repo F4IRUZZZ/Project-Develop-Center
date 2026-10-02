@@ -95,6 +95,19 @@ export default function Pengaturan() {
     tutupModal();
   };
 
+  const prosesHapus = async (id: string) => {
+    await fetch(`/api/keys/${id}?permanen=1`, { method: "DELETE" });
+    muat();
+    tutupModal();
+  };
+
+  const prosesBersihkanDicabut = async () => {
+    const revokedKeys = keys.filter((k) => k.revoked);
+    await Promise.all(revokedKeys.map((k) => fetch(`/api/keys/${k.id}?permanen=1`, { method: "DELETE" })));
+    muat();
+    tutupModal();
+  };
+
   const simpanGithubToken = () => {
     simpanProvider("github_pat", "Token GitHub", githubToken, () => setGithubToken(""));
   };
@@ -325,10 +338,25 @@ export default function Pengaturan() {
                   {k.revoked ? "dicabut" : k.last_used_at ? `dipakai ${k.last_used_at.slice(0, 16).replace("T", " ")}` : "belum dipakai"}
                 </div>
               </div>
-              {!k.revoked && (
+              {!k.revoked ? (
                 <button
                   onClick={() => triggerModal("Cabut Key?", `Yakin ingin mencabut akses untuk key '${k.name}'?`, () => prosesCabut(k.id))}
                   title="Cabut key"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] text-muted-foreground hover:bg-red-500/10 hover:text-red-500"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              ) : (
+                <button
+                  onClick={() =>
+                    triggerModal(
+                      "Hapus Permanen?",
+                      `Key '${k.name}' yang sudah dicabut akan dihapus dari daftar dan tidak bisa dikembalikan.`,
+                      () => prosesHapus(k.id),
+                      "Ya, hapus"
+                    )
+                  }
+                  title="Hapus permanen"
                   className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] text-muted-foreground hover:bg-red-500/10 hover:text-red-500"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -364,6 +392,25 @@ export default function Pengaturan() {
               className="rounded-[9px] bg-red-500/10 px-4 py-2 text-[12px] font-medium text-red-600 hover:bg-red-500 hover:text-white disabled:opacity-50 disabled:hover:bg-red-500/10 disabled:hover:text-red-600 transition-colors"
             >
               Cabut Semua
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between border-t border-red-500/10 pt-3">
+            <div>
+              <div className="text-[13px] font-medium text-foreground">Bersihkan Key yang Dicabut</div>
+              <div className="text-[12px] text-muted-foreground">Menghapus permanen semua key yang sudah dicabut dari daftar.</div>
+            </div>
+            <button
+              onClick={() => triggerModal(
+                "Bersihkan Key Dicabut?",
+                "Semua key yang sudah dicabut akan dihapus permanen dari daftar. Key aktif tidak tersentuh.",
+                prosesBersihkanDicabut,
+                "Ya, bersihkan"
+              )}
+              disabled={keys.filter((k) => k.revoked).length === 0}
+              className="rounded-[9px] bg-red-500/10 px-4 py-2 text-[12px] font-medium text-red-600 hover:bg-red-500 hover:text-white disabled:opacity-50 disabled:hover:bg-red-500/10 disabled:hover:text-red-600 transition-colors"
+            >
+              Bersihkan
             </button>
           </div>
 
