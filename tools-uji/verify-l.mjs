@@ -10,19 +10,22 @@ function cek(nama, ok, detail = "") {
 }
 
 cek("components/shell/NotifBadge.tsx", existsSync(join(root, "components/shell/NotifBadge.tsx")));
-cek("components/shell/BottomNav.tsx", existsSync(join(root, "components/shell/BottomNav.tsx")));
+cek("BottomNav dihapus", !existsSync(join(root, "components/shell/BottomNav.tsx")));
 
-const nav = readFileSync(join(root, "components/shell/BottomNav.tsx"), "utf8");
-cek("item menu (kamus)", ["nav.dashboard", "nav.proyek", "nav.riwayat", "nav.notifikasi", "nav.pengaturan"].every((s) => nav.includes(s)));
-cek("hanya HP (lg:hidden)", nav.includes("lg:hidden"));
-cek("badge dipakai bersama", nav.includes("NotifBadge"));
+const nav = readFileSync(join(root, "components/shell/Topbar.tsx"), "utf8");
+cek("hamburger HP (lg:hidden)", nav.includes("menu.navigasi") && nav.includes("lg:hidden"));
+cek("drawer 8 menu (kamus)", ["nav.dashboard", "nav.proyek", "nav.sesi", "nav.status", "nav.riwayat", "nav.statistik", "nav.notifikasi", "nav.pengaturan"].every((s) => nav.includes(s)));
+cek("drawer tutup cerdas", nav.includes("setBuka(false)") && nav.includes("Escape"));
+cek("badge ikut drawer", nav.includes("NotifBadge"));
+cek("brand PDC HP", nav.includes(">PDC<"));
 
 const shell = readFileSync(join(root, "components/shell/AppShell.tsx"), "utf8");
-cek("shell render BottomNav", shell.includes("BottomNav"));
-cek("konten padding bawah HP", shell.includes("pb-20"));
+cek("shell tanpa BottomNav", !shell.includes("BottomNav"));
+cek("tanpa padding bar HP", !shell.includes("pb-20"));
 
 const sidebar = readFileSync(join(root, "components/shell/Sidebar.tsx"), "utf8");
 cek("sidebar pakai badge bersama", sidebar.includes("./NotifBadge") || sidebar.includes("NotifBadge"));
+cek("brand PDC singkat", sidebar.includes(">PDC<") && !sidebar.includes("Develop Center"));
 
 if (gagal > 0) {
   console.log(`\nL-CEK: ${gagal} gagal`);

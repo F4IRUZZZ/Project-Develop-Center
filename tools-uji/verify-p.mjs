@@ -75,8 +75,8 @@ cek("tabel repo_health", schema.includes("CREATE TABLE IF NOT EXISTS repo_health
 const stPage = join(root, "app/status/page.tsx");
 cek("halaman Status 4 seksi (kamus)", existsSync(stPage) && readFileSync(stPage, "utf8").includes("status.pluginJudul"));
 const sideSt = readFileSync(join(root, "components/shell/Sidebar.tsx"), "utf8");
-const bnavSt = readFileSync(join(root, "components/shell/BottomNav.tsx"), "utf8");
-cek("nav Status", sideSt.includes('"/status"') && bnavSt.includes('"/status"'));
+const topSt = readFileSync(join(root, "components/shell/Topbar.tsx"), "utf8");
+cek("nav Status", sideSt.includes('"/status"') && topSt.includes('"/status"'));
 
 const ping = join(root, "app/api/plugin-ping/route.ts");
 cek("endpoint plugin-ping", existsSync(ping));
@@ -98,8 +98,8 @@ cek("halaman Sesi global", existsSync(sesiPage));
 const sesiIsi = existsSync(sesiPage) ? readFileSync(sesiPage, "utf8") : "";
 cek("sesi global filter+hapus+refresh", sesiIsi.includes('"aktif"') && sesiIsi.includes("TombolHapusSesi") && sesiIsi.includes("setInterval"));
 const side = readFileSync(join(root, "components/shell/Sidebar.tsx"), "utf8");
-const bnav = readFileSync(join(root, "components/shell/BottomNav.tsx"), "utf8");
-cek("nav Sesi", side.includes('"/sesi"') && bnav.includes('"/sesi"'));
+const topSesi = readFileSync(join(root, "components/shell/Topbar.tsx"), "utf8");
+cek("nav Sesi", side.includes('"/sesi"') && topSesi.includes('"/sesi"'));
 cek("scroll-tipis tab proyek", detail.includes("scroll-tipis max-h-[420px]"));
 
 if (gagal > 0) {

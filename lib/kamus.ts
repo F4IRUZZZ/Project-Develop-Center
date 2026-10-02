@@ -30,6 +30,7 @@ const KAMUS = {
   "nav.notifikasi": { id: "Notifikasi", en: "Notifications" },
   "nav.pengaturan": { id: "Pengaturan", en: "Settings" },
   "shell.menu": { id: "Menu", en: "Menu" },
+  "menu.navigasi": { id: "Menu navigasi", en: "Navigation menu" },
   "shell.muatSesi": { id: "Memuat sesi…", en: "Loading session…" },
   "shell.ciutkan": { id: "Ciutkan sidebar", en: "Collapse sidebar" },
   "shell.bentangkan": { id: "Bentangkan sidebar", en: "Expand sidebar" },

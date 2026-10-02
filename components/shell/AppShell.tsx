@@ -2,7 +2,6 @@
 
 import { useSession } from "next-auth/react";
 import { BahasaProvider, useBahasa } from "./BahasaProvider";
-import { BottomNav } from "./BottomNav";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
 import { LoginLanding } from "./LoginLanding";
@@ -30,9 +29,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <Sidebar />
           <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
             <Topbar />
-            <div className="flex-1 overflow-auto pb-20 lg:pb-0">{children}</div>
+            <div className="flex-1 overflow-auto">{children}</div>
           </div>
-          <BottomNav />
         </div>
       )}
     </BahasaProvider>
