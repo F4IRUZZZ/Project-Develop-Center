@@ -44,6 +44,12 @@ for (const [f, kunci] of [
 }
 const atur = readFileSync(join(root, "app/pengaturan/page.tsx"), "utf8");
 cek("picker di Pengaturan", atur.includes("PemilihBahasa"));
+const halNotif = readFileSync(join(root, "app/notifikasi/page.tsx"), "utf8");
+cek(
+  "notifikasi pakai kamus",
+  halNotif.includes("useBahasa") && halNotif.includes("notif.kosongJudul") && halNotif.includes("notif.tandaiSemua")
+);
+cek("waktuRelatif ikut locale", halNotif.includes("en-US") && halNotif.includes("notif.jamLalu"));
 for (const [f, kunci] of [
   ["components/dashboard/Stats.tsx", "dash.proyekAktif"],
   ["components/dashboard/ProjectCard.tsx", "kartu.perintah"],
