@@ -18,6 +18,11 @@ cek("sidebar 232px", sidebar.includes("w-[232px]"));
 cek("nav Dashboard", sidebar.includes("Dashboard"));
 cek("nav Notifikasi badge live (E2)", sidebar.includes("NotifBadge") && !sidebar.includes('badge: "2"'));
 cek("user box session-aware (D2)", sidebar.includes("UserBox") && sidebar.includes("useSession"));
+cek("toggle ciut/bentang", sidebar.includes("ChevronsLeft") && sidebar.includes("ChevronsRight") && sidebar.includes("aria-expanded"));
+cek("lebar ciut 68px", sidebar.includes("w-[68px]"));
+cek("pilihan persisten", sidebar.includes("bacaCiut") && sidebar.includes("simpanCiut"));
+cek("lib sidebar SSR-aman", readFileSync(join(root, "lib/sidebar.ts"), "utf8").includes('typeof window === "undefined"'));
+cek("badge live ikut ciut", sidebar.includes("absolute -right-2.5 -top-2"));
 
 const topbar = readFileSync(join(root, "components/shell/Topbar.tsx"), "utf8");
 cek("topbar 58px", topbar.includes("h-[58px]"));
