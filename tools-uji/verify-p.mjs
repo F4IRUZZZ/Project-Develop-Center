@@ -70,7 +70,7 @@ cek("route status ada", existsSync(stRoute));
 const stIsi = existsSync(stRoute) ? readFileSync(stRoute, "utf8") : "";
 cek("status read-only + versi cocok",
   stIsi.includes("export async function GET") && !stIsi.includes("export async function POST") &&
-  stIsi.includes('VERSI_PLUGIN_TERKINI = "2026.10.01"') && plug.includes('VERSI_PLUGIN = "2026.10.01"'));
+  stIsi.includes('VERSI_PLUGIN_TERKINI = "2026.10.02"') && plug.includes('VERSI_PLUGIN = "2026.10.02"'));
 cek("tabel repo_health", schema.includes("CREATE TABLE IF NOT EXISTS repo_health"));
 const stPage = join(root, "app/status/page.tsx");
 cek("halaman Status 4 seksi", existsSync(stPage) && readFileSync(stPage, "utf8").includes("Plugin per Repo"));

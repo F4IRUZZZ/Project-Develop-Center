@@ -28,8 +28,11 @@ cek("flag sesiAktif 3 mnt", dash.includes("sesiAktif") && dash.includes("3 minut
 const card = readFileSync(join(root, "components/dashboard/ProjectCard.tsx"), "utf8");
 cek("indikator AI aktif (kamus)", card.includes("kartu.aiAktif") && card.includes("animate-pulse"));
 
+cek("backfill repo/project #99", api.includes("COALESCE") && api.includes("EXCLUDED.repo_full"));
+
 const plug = readFileSync(join(root, "plugins/pdc-presence.js"), "utf8");
 cek("plugin session.created/idle/error", plug.includes("session.created") && plug.includes("session.idle") && plug.includes("session.error"));
+cek("repo gagal bersuara + retry denyut #99", plug.includes("repo tak ter-resolve") && plug.includes("repo pulih saat denyut"));
 cek("plugin denyut interval + deleted", plug.includes("setInterval") && plug.includes("60000") && plug.includes("session.deleted"));
 cek("plugin tanpa key mentah", !plug.includes("pdc_") || plug.includes("process.env.PDC_API_KEY"));
 

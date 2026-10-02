@@ -1,7 +1,7 @@
 // pdc-presence — plugin OpenCode: laporkan lifecycle sesi ke PDC.
 // Taruh di: <repo>/.opencode/plugins/pdc-presence.js  (per repo)
 // VERSI_PLUGIN: naikkan tiap template berubah (halaman Status bandingkan).
-const VERSI_PLUGIN = "2026.10.01";
+const VERSI_PLUGIN = "2026.10.02";
 // Butuh env di mesin: PDC_API_URL (default production; set eksplisit
 // untuk dev lokal), PDC_API_KEY (buat di webapp PDC > Pengaturan),
 // opsional PDC_MODE (plan/build).
@@ -68,7 +68,7 @@ export const PdcPresencePlugin = async ({ directory, client, project }) => {
   // kembali baris yang sudah final. Denyut biasa TANPA flag ini.
   const daftarkan = async (id, { lewat = "lazy", reopen = false, mode = MODE } = {}) => {
     if (!id || !KEY || dikenal.has(id)) return;
-    const repo = await repoFull();
+    const repo = await repoFull(`daftar:${lewat}`);
     const hasil = await kirim("/api/sessions", "POST", {
       session_id: id,
       repo_full: repo,
@@ -113,6 +113,18 @@ export const PdcPresencePlugin = async ({ directory, client, project }) => {
     if (!KEY) return;
     await rekonsiliasi();
     if (dikenal.size === 0) return;
+    // Retry #99: sesi yang terdaftar buta-repo coba resolve lagi tiap
+    // denyut; begitu dapat, meta diperbarui dan POST di bawah membawa
+    // repo (server backfill project_id bila masih kosong).
+    for (const [id, meta] of dikenal) {
+      if (!meta.repo_full) {
+        const r = await repoFull("denyut");
+        if (r) {
+          meta.repo_full = r;
+          await log("info", `repo pulih saat denyut: ${r}`, { sessionId: id });
+        }
+      }
+    }
     for (const [id, meta] of dikenal) {
       const hasil = await kirim("/api/sessions", "POST", {
         session_id: id,
@@ -283,19 +295,25 @@ export const PdcPresencePlugin = async ({ directory, client, project }) => {
     return { id, mode };
   };
 
-  const repoFull = async () => {
+  // Resolusi repo via git remote. Gagal = null + warn BERSUARA (tandai)
+  // agar sesi-buta-proyek (#99) langsung ketahuan dari log — jangan
+  // pernah gagal diam-diam lagi. URL non-GitHub = null wajar (tanpa warn).
+  const repoFull = async (tandai) => {
+    let url = null;
     try {
       const { execFileSync } = await import("node:child_process");
-      const url = execFileSync("git", ["-C", directory, "config", "--get", "remote.origin.url"], {
+      url = execFileSync("git", ["-C", directory, "config", "--get", "remote.origin.url"], {
         encoding: "utf8",
         timeout: 5000,
       }).trim();
-      const m = url.match(/github\.com[/:]([^/]+\/[^/]+?)(?:\.git)?$/);
-      if (m) return m[1];
-    } catch {
-      /* abaikan */
+    } catch (e) {
+      if (tandai) {
+        await log("warn", `repo tak ter-resolve (${tandai}): dir=${directory} err=${String((e && e.message) || e).slice(0, 150)}`, {});
+      }
+      return null;
     }
-    return null;
+    const m = (url || "").match(/github\.com[/:]([^/]+\/[^/]+?)(?:\.git)?$/);
+    return m ? m[1] : null;
   };
 
   // Ping kesehatan sekali saat muat (tanpa sesi): halaman Status tahu salinan
@@ -349,7 +367,7 @@ export const PdcPresencePlugin = async ({ directory, client, project }) => {
             await log("warn", "PDC_API_KEY kosong, lewati lapor (set env User PDC_API_KEY)");
             return;
           }
-        const repo = await repoFull();
+        const repo = await repoFull("created");
         const hasilPost = await kirim("/api/sessions", "POST", {
           session_id: s.id,
           repo_full: repo,
