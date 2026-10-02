@@ -65,7 +65,7 @@ export default function Statistik() {
             <div>
               <div className="text-[26px] font-bold text-primary">{data.streak.total}</div>
               <div className="mt-1 text-[12.5px] font-medium">{teks("stat.total")}</div>
-              <div className="mt-0.5 font-mono text-[10.5px] text-muted-foreground">
+              <div className="mt-0.5 font-mono text-[10.5px] text-muted-foreground" suppressHydrationWarning>
                 {fmtTanggal(data.streak.mulai, lang)} - {fmtTanggal(data.streak.sampai, lang)}
               </div>
             </div>
@@ -75,7 +75,7 @@ export default function Statistik() {
                 {data.streak.kini}
               </div>
               <div className="mt-1 text-[12.5px] font-medium">{teks("stat.kini")}</div>
-              <div className="mt-0.5 font-mono text-[10.5px] text-muted-foreground">
+              <div className="mt-0.5 font-mono text-[10.5px] text-muted-foreground" suppressHydrationWarning>
                 {data.streak.kini > 0
                   ? `${fmtTanggal(data.streak.kiniMulai, lang)} - ${fmtTanggal(data.streak.kiniSampai, lang)}`
                   : teks("stat.belumMulai")}
@@ -84,7 +84,7 @@ export default function Statistik() {
             <div>
               <div className="text-[26px] font-bold text-primary">{data.streak.terpanjang}</div>
               <div className="mt-1 text-[12.5px] font-medium">{teks("stat.terpanjang")}</div>
-              <div className="mt-0.5 font-mono text-[10.5px] text-muted-foreground">
+              <div className="mt-0.5 font-mono text-[10.5px] text-muted-foreground" suppressHydrationWarning>
                 {data.streak.terpanjang > 0
                   ? `${fmtTanggal(data.streak.panjangMulai, lang)} - ${fmtTanggal(data.streak.panjangSampai, lang)}`
                   : "—"}

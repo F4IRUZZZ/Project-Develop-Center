@@ -295,7 +295,7 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
                   <TombolHapusSesi onHapus={() => { setGalatHapusSesi(false); setTanyaHapusSesi(s.session_id); }} />
                 </div>
               </div>
-              <div className="mt-1 font-mono text-[10.5px] text-muted-foreground">
+              <div className="mt-1 font-mono text-[10.5px] text-muted-foreground" suppressHydrationWarning>
                 {teks("pro.mulaiLabel")}{new Date(s.started_at).toLocaleString(lang === "en" ? "en-US" : "id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
               </div>
               {s.aktivitas && (
@@ -327,7 +327,7 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
                 </div>
               )}
               {s.ringkasan_terakhir && (
-                <p className="mt-1 truncate text-[12px] text-foreground/80" title={s.ringkasan_terakhir}>
+                <p className="mt-1 truncate text-[12px] text-foreground/80" title={s.ringkasan_terakhir} suppressHydrationWarning>
                   {teks("pro.terakhirLabel")}{s.ringkasan_terakhir}
                   {s.ringkasan_waktu
                     ? ` · ${Math.max(0, Math.round((Date.now() - new Date(s.ringkasan_waktu).getTime()) / 60000))} ${teks("notif.mntLalu")}`
@@ -365,7 +365,7 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
                 <p className="mt-1 text-[13px] leading-relaxed">
                   {s.ringkasan_terakhir}
                   {s.ringkasan_waktu
-                    ? <span className="font-mono text-[10.5px] text-muted-foreground"> · {Math.max(0, Math.round((Date.now() - new Date(s.ringkasan_waktu).getTime()) / 60000))} {teks("notif.mntLalu")}</span>
+                    ? <span className="font-mono text-[10.5px] text-muted-foreground" suppressHydrationWarning> · {Math.max(0, Math.round((Date.now() - new Date(s.ringkasan_waktu).getTime()) / 60000))} {teks("notif.mntLalu")}</span>
                     : null}
                 </p>
               ) : (

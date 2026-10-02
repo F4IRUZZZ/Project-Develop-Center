@@ -15,6 +15,7 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Project Develop Center",
   description: "Satu dashboard untuk melihat, mengelola, dan mengarahkan AI agent di proyek GitHub.",
+  icons: { icon: "/icon.svg", apple: "/apple-icon.png" },
 };
 
 import { AppShell } from "@/components/shell/AppShell";

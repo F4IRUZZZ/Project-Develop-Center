@@ -119,7 +119,7 @@ export function QueuePanel() {
                   {teks(LABEL[c.status])}
                 </span>
               </div>
-              <div className="mt-1 font-mono text-[10.5px] text-muted-foreground">
+              <div className="mt-1 font-mono text-[10.5px] text-muted-foreground" suppressHydrationWarning>
                 {waktuRelatif(c.created_at, lang, teks)}
                 {c.result ? ` · ${c.result}` : ""}
               </div>

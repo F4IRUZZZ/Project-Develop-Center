@@ -154,7 +154,7 @@ export default function Riwayat() {
                   {c.status}
                 </span>
               </div>
-              <div className="mt-1 font-mono text-[10.5px] text-muted-foreground">
+              <div className="mt-1 font-mono text-[10.5px] text-muted-foreground" suppressHydrationWarning>
                 {new Date(c.created_at).toLocaleString(lang === "en" ? "en-US" : "id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
                 {c.result ? ` · ${c.result}` : ""}
               </div>
