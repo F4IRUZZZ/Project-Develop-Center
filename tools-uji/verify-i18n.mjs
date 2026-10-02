@@ -50,6 +50,16 @@ cek(
   halNotif.includes("useBahasa") && halNotif.includes("notif.kosongJudul") && halNotif.includes("notif.tandaiSemua")
 );
 cek("waktuRelatif ikut locale", halNotif.includes("en-US") && halNotif.includes("notif.jamLalu"));
+for (const [f, kunci] of [
+  ["app/proyek/page.tsx", "pro.kosongCari"],
+  ["app/proyek/[id]/page.tsx", "pro.kosongSesiPlugin"],
+  ["app/sesi/page.tsx", "sesi.filterAktif"],
+  ["app/status/page.tsx", "status.pluginJudul"],
+  ["components/sesi/TombolHapusSesi.tsx", "sesi.hapusSesi"],
+]) {
+  const isi = readFileSync(join(root, f), "utf8");
+  cek(`halaman ${f.split("/").pop()} pakai kamus`, isi.includes("useBahasa") && isi.includes(kunci));
+}
 const halRiw = readFileSync(join(root, "app/riwayat/page.tsx"), "utf8");
 cek(
   "riwayat pakai kamus",

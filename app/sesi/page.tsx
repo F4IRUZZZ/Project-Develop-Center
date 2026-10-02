@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { useBahasa } from "@/components/shell/BahasaProvider";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { LoginCard } from "@/components/dashboard/LoginCard";
 import { TombolHapusSesi } from "@/components/sesi/TombolHapusSesi";
@@ -38,6 +39,7 @@ type Filter = "aktif" | "semua";
 
 export default function SesiGlobal() {
   const { data: session, status } = useSession();
+  const { teks } = useBahasa();
   const [daftar, setDaftar] = useState<SesiGlobal[]>([]);
   const [namaRepo, setNamaRepo] = useState<Record<string, string>>({});
   const [filter, setFilter] = useState<Filter>("aktif");
@@ -87,37 +89,37 @@ export default function SesiGlobal() {
     await muat();
   };
 
-  if (status === "loading") return <p className="font-mono text-xs text-muted-foreground">Memuat sesi…</p>;
+  if (status === "loading") return <p className="font-mono text-xs text-muted-foreground">{teks("shell.muatSesi")}</p>;
   if (!session?.user) return <LoginCard />;
 
   const tampil = daftar.filter((s) => (filter === "aktif" ? sesiSegar(s) : true));
   const nama = (s: SesiGlobal) =>
-    (s.project_id && namaRepo[s.project_id]) || s.repo_full || "tanpa proyek";
+    (s.project_id && namaRepo[s.project_id]) || s.repo_full || teks("sesi.tanpaProyek");
 
   return (
     <div className="mx-auto w-full max-w-3xl p-4 sm:p-6">
-      <h1 className="text-[17px] font-semibold tracking-tight">Sesi AI</h1>
-      <p className="mt-1 text-[13px] text-muted-foreground">
-        Semua sesi OpenCode lintas repo. Baris feed riwayat tidak ikut terhapus.
-      </p>
+      <h1 className="text-[17px] font-semibold tracking-tight">{teks("sesi.judul")}</h1>
+      <p className="mt-1 text-[13px] text-muted-foreground">{teks("sesi.sub")}</p>
       <div className="mb-4 mt-4 flex gap-2">
         {(["aktif", "semua"] as Filter[]).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
             className={cn(
-              "rounded-[9px] px-4 py-2 text-[13px] font-medium capitalize transition-colors",
+              "rounded-[9px] px-4 py-2 text-[13px] font-medium transition-colors",
               filter === f ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}
           >
-            {f === "aktif" ? `Aktif (${daftar.filter(sesiSegar).length})` : `Semua (${daftar.length})`}
+            {f === "aktif"
+              ? teks("sesi.filterAktif").replace("{n}", String(daftar.filter(sesiSegar).length))
+              : teks("sesi.filterSemua").replace("{n}", String(daftar.length))}
           </button>
         ))}
       </div>
       <div className="scroll-tipis max-h-[60vh] overflow-y-auto rounded-2xl border border-border bg-card p-[18px]">
         {tampil.length === 0 && (
           <p className="text-[13px] text-muted-foreground">
-            {filter === "aktif" ? "Tidak ada sesi AI aktif di repo mana pun." : "Belum ada sesi tercatat."}
+            {filter === "aktif" ? teks("sesi.kosongAktif") : teks("sesi.kosongSemua")}
           </p>
         )}
         {tampil.map((s) => (
@@ -141,7 +143,13 @@ export default function SesiGlobal() {
               <div className="flex shrink-0 items-center gap-1">
                 <StatusBadge
                   status={sesiSegar(s) ? "working" : s.status === "error" ? "failed" : "idle"}
-                  label={s.ended_at ? "Selesai" : sesiSegar(s) ? (s.aktivitas?.kerja === "bekerja" ? "Bekerja" : "Aktif") : "Nonaktif"}
+                  label={
+                    s.ended_at
+                      ? teks("sesi.selesai")
+                      : sesiSegar(s)
+                        ? (s.aktivitas?.kerja === "bekerja" ? teks("sesi.bekerja") : teks("sesi.aktif"))
+                        : teks("sesi.nonaktif")
+                  }
                 />
                 <TombolHapusSesi onHapus={() => { setGalatHapus(false); setTanyaHapus(s.session_id); }} />
               </div>
@@ -156,9 +164,9 @@ export default function SesiGlobal() {
       </div>
       <ConfirmModal
         open={tanyaHapus !== null}
-        judul="Hapus sesi ini?"
-        pesan={galatHapus ? "Gagal menghapus (server menolak). Coba lagi." : `Sesi ${tanyaHapus?.slice(0, 8)}… dihapus dari daftar (jejak file ikut terhapus; feed riwayat tetap).`}
-        labelKonfirmasi="Ya, hapus"
+        judul={teks("pro.hapusJudul")}
+        pesan={galatHapus ? teks("pro.hapusPesanErr") : teks("pro.hapusPesan").replace("{id}", tanyaHapus?.slice(0, 8) ?? "")}
+        labelKonfirmasi={teks("pro.hapusYa")}
         danger
         onKonfirmasi={() => void hapus()}
         onBatal={() => { setTanyaHapus(null); setGalatHapus(false); }}

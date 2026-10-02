@@ -34,7 +34,7 @@ cek("plugin tak baca isi file (privasi)",
   !plug.includes("readFile") && !plug.includes("Bun.file") && !plug.includes("readFileSync"));
 
 const detail = readFileSync(join(root, "app/proyek/[id]/page.tsx"), "utf8");
-cek("UI panel aktivitas", detail.includes("aktivitas.kerja") && detail.includes("Siaga") && detail.includes("komit"));
+cek("UI panel aktivitas (kamus)", detail.includes("aktivitas.kerja") && detail.includes("sesi.siagaHening") && detail.includes("pro.komitLabel"));
 cek("UI label Selesai rapi", !detail.includes("Selesai (${s.status})"));
 cek("plugin path relatif", plug.includes("relative(directory"));
 
@@ -73,7 +73,7 @@ cek("status read-only + versi cocok",
   stIsi.includes('VERSI_PLUGIN_TERKINI = "2026.10.02"') && plug.includes('VERSI_PLUGIN = "2026.10.02"'));
 cek("tabel repo_health", schema.includes("CREATE TABLE IF NOT EXISTS repo_health"));
 const stPage = join(root, "app/status/page.tsx");
-cek("halaman Status 4 seksi", existsSync(stPage) && readFileSync(stPage, "utf8").includes("Plugin per Repo"));
+cek("halaman Status 4 seksi (kamus)", existsSync(stPage) && readFileSync(stPage, "utf8").includes("status.pluginJudul"));
 const sideSt = readFileSync(join(root, "components/shell/Sidebar.tsx"), "utf8");
 const bnavSt = readFileSync(join(root, "components/shell/BottomNav.tsx"), "utf8");
 cek("nav Status", sideSt.includes('"/status"') && bnavSt.includes('"/status"'));
@@ -83,13 +83,13 @@ cek("endpoint plugin-ping", existsSync(ping));
 const pingIsi = existsSync(ping) ? readFileSync(ping, "utf8") : "";
 cek("ping tanpa sesi/feed", pingIsi.includes("repo_health") && !pingIsi.includes("agent_sessions") && !pingIsi.includes("activity_log"));
 cek("ping saat init", plug.includes("/api/plugin-ping") && plug.includes("VERSI_PLUGIN"));
-cek("label Belum-pernah vs Basi", readFileSync(join(root, "app/status/page.tsx"), "utf8").includes("Belum pernah"));
+cek("label Belum-pernah vs Basi (kamus)", readFileSync(join(root, "app/status/page.tsx"), "utf8").includes("status.belumPernah"));
 cek("plugin ringkasan per-giliran", plug.includes("message.updated") && plug.includes("siramRingkasan"));
 cek("plugin ringkasan via part+peran", plug.includes("message.part.updated") && plug.includes("peranPesan") && plug.includes('"text"'));
 const dash2 = readFileSync(join(root, "app/api/dashboard/route.ts"), "utf8");
-cek("dashboard sesiRingkasan + tab Terakhir",
-  dash2.includes("sesiRingkasan") && card.includes("sesiRingkasan") && detail.includes("Terakhir:"));
-cek("tab Ringkasan", detail.includes('"ringkasan"') && detail.includes("Belum ada ringkasan"));
+cek("dashboard sesiRingkasan + tab Terakhir (kamus)",
+  dash2.includes("sesiRingkasan") && card.includes("sesiRingkasan") && detail.includes("pro.terakhirLabel"));
+cek("tab Ringkasan (kamus)", detail.includes('"ringkasan"') && detail.includes("pro.kosongRingkasan"));
 
 cek("DELETE sesi + tombol + modal", api.includes("export async function DELETE") && detail.includes("TombolHapusSesi") && detail.includes("ConfirmModal") && detail.includes("galatHapus"));
 cek("helper sesiSegar bersama", readFileSync(join(root, "lib/sesi.ts"), "utf8").includes("sesiSegar") && detail.includes("sesiSegar"));

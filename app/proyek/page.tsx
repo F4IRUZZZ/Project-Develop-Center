@@ -9,6 +9,7 @@ import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { PullModal } from "@/components/command/PullModal";
 import { Dashboard } from "@/components/dashboard/Dashboard";
 import { EVENT_SEARCH } from "@/components/shell/SearchBox";
+import { useBahasa } from "@/components/shell/BahasaProvider";
 import { siarNotifikasi } from "@/lib/notifikasi";
 import type { Project } from "@/lib/types";
 
@@ -21,6 +22,7 @@ interface Konfirmasi {
 
 export default function Proyek() {
   const { data: session, status } = useSession();
+  const { teks } = useBahasa();
   const [daftar, setDaftar] = useState<Project[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [syncing, setSyncing] = useState(true);
@@ -118,15 +120,21 @@ export default function Proyek() {
       )
     : daftar;
 
-  if (status === "loading") return <p className="font-mono text-xs text-muted-foreground">Memuat sesi…</p>;
+  if (status === "loading") return <p className="font-mono text-xs text-muted-foreground">{teks("shell.muatSesi")}</p>;
   if (!session?.user) return <LoginCard />;
 
   return (
     <div className="mx-auto w-full max-w-[1480px] p-4 sm:p-6">
       <Dashboard
         projects={projectsTampil}
-        judul={kataKunci ? `Hasil Pencarian (${projectsTampil.length})` : `Proyek (${daftar.length})`}
-        teksKosong={kataKunci ? `Tidak ada proyek yang cocok dengan "${searchQuery}".` : "Belum ada proyek."}
+        judul={
+          kataKunci
+            ? teks("pro.hasilCari").replace("{n}", String(projectsTampil.length))
+            : teks("pro.judulProyek").replace("{n}", String(daftar.length))
+        }
+        teksKosong={
+          kataKunci ? teks("pro.kosongCari").replace("{q}", searchQuery) : teks("pro.kosongUmum")
+        }
         stats={angka ?? undefined}
         onCommand={(id) => {
           setSelectedId(id);
@@ -149,7 +157,7 @@ export default function Proyek() {
             className="flex items-center gap-1.5 rounded-[9px] bg-primary px-3.5 py-2 text-[13px] font-medium text-white transition-colors hover:bg-[#5457E5] disabled:opacity-50"
           >
             <RefreshCw className={`h-[15px] w-[15px] ${syncing ? "animate-spin" : ""}`} />{" "}
-            {syncing ? "Memuat…" : "Sync GitHub"}
+            {syncing ? teks("notif.muat") : teks("pro.sync")}
           </button>
         }
       />
@@ -169,15 +177,15 @@ export default function Proyek() {
       />
       <ConfirmModal
         open={konfirmasi !== null}
-        judul={konfirmasi?.jenis === "stop" ? "Hentikan kerja AI?" : "Ubah visibilitas repo?"}
+        judul={konfirmasi?.jenis === "stop" ? teks("pro.stopJudul") : teks("pro.visJudul")}
         pesan={
           konfirmasi?.jenis === "stop"
-            ? `Kerja AI di ${konfirmasi?.repoName} dihentikan. Perintah pending dibatalkan dan task ditandai gagal.`
+            ? teks("pro.stopPesan").replace("{repo}", konfirmasi?.repoName ?? "")
             : konfirmasi?.saatIniPrivate
-              ? `${konfirmasi?.repoName} jadi PUBLIC: semua orang bisa lihat + Pages aktif.`
-              : `${konfirmasi?.repoName} jadi PRIVATE: hanya kamu + kolaborator yang bisa lihat.`
+              ? teks("pro.visPesanPublic").replace("{repo}", konfirmasi?.repoName ?? "")
+              : teks("pro.visPesanPrivate").replace("{repo}", konfirmasi?.repoName ?? "")
         }
-        labelKonfirmasi={konfirmasi?.jenis === "stop" ? "Ya, hentikan" : "Ya, ubah"}
+        labelKonfirmasi={konfirmasi?.jenis === "stop" ? teks("pro.stopYa") : teks("pro.visYa")}
         danger={konfirmasi?.jenis === "stop"}
         onKonfirmasi={() => void jalankanKonfirmasi()}
         onBatal={() => setKonfirmasi(null)}

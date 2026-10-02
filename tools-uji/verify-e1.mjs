@@ -17,7 +17,7 @@ const tasks = readFileSync(join(root, "app/api/tasks/route.ts"), "utf8");
 cek("tasks?all=1", tasks.includes('"1"') && tasks.includes("repo_name"));
 
 const proyek = readFileSync(join(root, "app/proyek/page.tsx"), "utf8");
-cek("proyek tabel + sync", proyek.includes("Sync GitHub") && proyek.includes("/api/dashboard"));
+cek("proyek tabel + sync (kamus)", proyek.includes("pro.sync") && proyek.includes("/api/dashboard"));
 cek("proyek modal perintah", proyek.includes("CommandModal"));
 
 const riwayat = readFileSync(join(root, "app/riwayat/page.tsx"), "utf8");
