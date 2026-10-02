@@ -16,7 +16,7 @@ for (const f of ["lib/kamus.ts", "components/shell/BahasaProvider.tsx", "compone
 
 const kamus = readFileSync(join(root, "lib/kamus.ts"), "utf8");
 const pasangan = [...kamus.matchAll(/"([A-Za-z0-9.]+)":\s*\{\s*id:\s*"([^"]+)",\s*en:\s*"([^"]+)"/g)];
-cek("kunci >= 30", pasangan.length >= 30, `dapat ${pasangan.length}`);
+cek("kunci >= 200 (UI penuh)", pasangan.length >= 200, `dapat ${pasangan.length}`);
 cek("semua en non-empty", pasangan.every((m) => m[3].trim().length > 0));
 cek("SSR-aman + default id", kamus.includes('typeof window === "undefined"') && kamus.includes("pdc-bahasa"));
 cek("fallback Indonesia", kamus.includes("?? KAMUS[kunci].id"));
