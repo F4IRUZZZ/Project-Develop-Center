@@ -23,6 +23,10 @@ cek("lebar ciut 68px", sidebar.includes("w-[68px]"));
 cek("pilihan persisten", sidebar.includes("bacaCiut") && sidebar.includes("simpanCiut"));
 cek("lib sidebar SSR-aman", readFileSync(join(root, "lib/sidebar.ts"), "utf8").includes('typeof window === "undefined"'));
 cek("badge live ikut ciut", sidebar.includes("absolute -right-2.5 -top-2"));
+cek("logo ubin gradasi (terang)", sidebar.includes("from-primary to-violet-500"));
+cek("userbox ciut vertikal", sidebar.includes("flex-col justify-center gap-2"));
+cek("logo ubin gradasi (terang)", sidebar.includes("from-primary to-violet-500"));
+cek("userbox ciut vertikal", sidebar.includes("flex-col justify-center gap-2"));
 
 const topbar = readFileSync(join(root, "components/shell/Topbar.tsx"), "utf8");
 cek("topbar 58px", topbar.includes("h-[58px]"));

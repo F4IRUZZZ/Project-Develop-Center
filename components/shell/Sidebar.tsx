@@ -68,9 +68,11 @@ function UserBox({ ciut }: { ciut?: boolean }) {
   const nama = session.user.name ?? session.user.email ?? "GitHub User";
   const inisial = nama.slice(0, 2).toUpperCase();
 
+  // Saat ciut ruang isi cuma 32px: susun vertikal (avatar + keluar)
+  // agar tak meluber/kepotong kiri. px-0 rebut kembali ruang padding.
   return (
-    <div className="mt-auto border-t border-border px-2 pt-2.5">
-      <div className={cn("flex items-center gap-2.5", ciut && "justify-center")}>
+    <div className={cn("mt-auto border-t border-border pt-2.5", ciut ? "px-0" : "px-2")}>
+      <div className={cn("flex items-center gap-2.5", ciut && "flex-col justify-center gap-2")}>
         <div
           title={nama}
           className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted text-xs font-semibold text-muted-foreground"
@@ -135,7 +137,8 @@ export function Sidebar() {
           alt="Logo PDC"
           width={34}
           height={34}
-          className="h-[34px] w-[34px] shrink-0 rounded-[10px] shadow-[0_4px_12px_rgba(99,102,241,0.35)]"
+          // Ubin gradasi agar P putih terbaca di tema terang maupun gelap.
+          className="h-[34px] w-[34px] shrink-0 rounded-[10px] bg-gradient-to-br from-primary to-violet-500 p-[3px] shadow-[0_4px_12px_rgba(99,102,241,0.35)]"
         />
         {!ciut && (
           <div className="min-w-0 flex-1">
