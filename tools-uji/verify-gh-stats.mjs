@@ -48,8 +48,13 @@ cek("streak kini=2", s.kini === 2, `dapat ${s.kini}`);
 cek("streak terpanjang=2", s.terpanjang === 2, `dapat ${s.terpanjang}`);
 cek("streak total=6", s.total === 6, `dapat ${s.total}`);
 cek("streak rentang", s.mulai === "2026-09-25" && s.sampai === "2026-09-29");
+cek("streak kini rentang tanggal", s.kiniMulai === "2026-09-27" && s.kiniSampai === "2026-09-28");
+cek("streak panjang rentang tanggal", s.panjangMulai === "2026-09-27" && s.panjangSampai === "2026-09-28");
 const kosong = hitungStreak([]);
-cek("streak kosong aman", kosong.kini === 0 && kosong.total === 0 && kosong.mulai === null);
+cek(
+  "streak kosong aman",
+  kosong.kini === 0 && kosong.total === 0 && kosong.mulai === null && kosong.kiniMulai === null && kosong.panjangMulai === null
+);
 
 if (gagal > 0) {
   console.log(`\nGH-STATS: ${gagal} gagal`);

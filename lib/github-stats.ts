@@ -2,7 +2,7 @@
 // ke client). 1 query: contributionsCollection (total + kalender streak)
 // + repositories (stars + agregat bahasa). Cache memori 1 jam per user.
 import { tokenGitHub } from "./server-auth";
-import { hitungStreak, type Hari } from "./streak";
+import { hitungStreak, type Hari, type InfoStreak } from "./streak";
 
 const GQL = "https://api.github.com/graphql";
 const TTL_MS = 60 * 60 * 1000;
@@ -21,7 +21,7 @@ export interface StatsGitHub {
   pr: number;
   issue: number;
   repoDisentuh: number;
-  streak: { kini: number; terpanjang: number; total: number; mulai: string | null; sampai: string | null };
+  streak: InfoStreak;
   bahasa: Bahasa[];
 }
 
