@@ -98,7 +98,7 @@ export function ActivityFeed() {
                     </>
                   )}
                 </div>
-                <div className="mt-1 font-mono text-[10.5px] text-muted-foreground">
+                <div className="mt-1 font-mono text-[10.5px] text-muted-foreground" suppressHydrationWarning>
                   {e.time.includes("T") ? waktuRelatif(e.time, lang, teks) : e.time}
                 </div>
               </div>

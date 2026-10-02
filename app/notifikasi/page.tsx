@@ -107,7 +107,7 @@ export default function Notifikasi() {
                     {e.message} <b className="font-semibold">{e.repo_name}</b>
                   </div>
                   <div className="mt-1 flex items-center gap-2 font-mono text-[10.5px] text-muted-foreground">
-                    <span>{waktuRelatif(e.created_at, lang, teks)}</span>
+                    <span suppressHydrationWarning>{waktuRelatif(e.created_at, lang, teks)}</span>
                     {!e.dibaca && (
                       <button
                         onClick={() => void tandai(e.id)}

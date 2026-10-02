@@ -80,7 +80,7 @@ export default function Status() {
               <div className="flex flex-wrap items-center gap-2 font-mono text-[12px]">
                 <StatusBadge status={data.deploy.status === "success" ? "completed" : data.deploy.status === "failure" ? "failed" : "waiting"} label={data.deploy.status} />
                 <span>{data.deploy.repo} · {data.deploy.sha}</span>
-                <span className="text-muted-foreground">{waktuRelatif(data.deploy.waktu, lang, teks)}</span>
+                <span className="text-muted-foreground" suppressHydrationWarning>{waktuRelatif(data.deploy.waktu, lang, teks)}</span>
               </div>
             ) : (
               <p className="text-[13px] text-muted-foreground">{data.deployCatatan ?? teks("status.deployKosong")}</p>
@@ -129,7 +129,7 @@ export default function Status() {
                   <div key={r.repo_full} className="flex items-center justify-between gap-2 border-b border-border py-2 last:border-b-0">
                     <div className="min-w-0">
                       <div className="truncate font-mono text-[12px]">{r.repo_full}</div>
-                      <div className="font-mono text-[10.5px] text-muted-foreground">
+                      <div className="font-mono text-[10.5px] text-muted-foreground" suppressHydrationWarning>
                         {r.plugin_version ?? teks("status.tanpaVersi")} · {waktuRelatif(r.terakhir, lang, teks)}
                       </div>
                     </div>
