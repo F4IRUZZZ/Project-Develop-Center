@@ -26,8 +26,9 @@ cek("route auth sesiUser", route.includes("sesiUser"));
 cek("route 401/502 jujur", route.includes("401") && route.includes("502"));
 
 const hal = readFileSync(join(root, "app/statistik/page.tsx"), "utf8");
-cek("halaman streak+bahasa", hal.includes("Streak") && hal.includes("Bahasa"));
-cek("halaman loading+error+retry", hal.includes("Memuat") && hal.includes("Coba lagi"));
+cek("halaman streak+bahasa (kamus)", hal.includes("stat.kini") && hal.includes("stat.bahasa"));
+cek("halaman fmtTanggal locale", hal.includes("en-US") && hal.includes("stat.belumMulai"));
+cek("halaman loading+error+retry (kamus)", hal.includes("stat.muat") && hal.includes("stat.cobaLagi") && hal.includes("stat.gagalJudul"));
 cek("halaman gate login", hal.includes("LoginCard"));
 
 const side = readFileSync(join(root, "components/shell/Sidebar.tsx"), "utf8");
