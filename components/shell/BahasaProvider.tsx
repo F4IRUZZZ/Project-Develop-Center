@@ -12,7 +12,8 @@ interface Nilai {
 const Konteks = createContext<Nilai>({ lang: "id", setLang: () => {}, teks: (k) => t("id", k) });
 
 export function BahasaProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>(() => bacaBahasa());
+  // Default dulu (cocok SSR) + sinkron setelah mount (anti #418).
+  const [lang, setLangState] = useState<Lang>("id");
 
   const setLang = useCallback((l: Lang) => {
     simpanBahasa(l);

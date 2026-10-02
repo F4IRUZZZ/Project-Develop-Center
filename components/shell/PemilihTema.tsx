@@ -5,9 +5,11 @@ import { Moon, Sun } from "lucide-react";
 import { EVENT_TEMA, gelapAktif, pantauSistem, terapkanTema, type Tema } from "@/lib/tema";
 
 export function PemilihTema() {
-  const [gelap, setGelap] = useState<boolean>(() => gelapAktif());
+  // Default gelap dulu (cocok SSR) + sinkron setelah mount (anti #418).
+  const [gelap, setGelap] = useState<boolean>(true);
 
   useEffect(() => {
+    setGelap(gelapAktif());
     const fn = () => {
       setGelap(gelapAktif());
     };

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { signOut, useSession } from "next-auth/react";
 import { Copy, KeyRound, Trash2, GitBranch, AlertTriangle, ShieldCheck, User, Palette, Sparkles, Sun, Moon, Monitor } from "lucide-react";
-import { terapkanTema, type Tema } from "@/lib/tema";
+import { bacaTema, terapkanTema, type Tema } from "@/lib/tema";
 import { LoginCard } from "@/components/dashboard/LoginCard";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { PemilihBahasa } from "@/components/shell/PemilihBahasa";
@@ -28,11 +28,8 @@ export default function Pengaturan() {
   const [githubToken, setGithubToken] = useState("");
   const [openaiKey, setOpenaiKey] = useState("");
   const [anthropicKey, setAnthropicKey] = useState("");
-  const [tema, setTema] = useState<Tema>(() => {
-    if (typeof window === "undefined") return "gelap";
-    const s = window.localStorage.getItem("pdc-tema");
-    return s === "terang" || s === "sistem" ? (s as Tema) : "gelap";
-  });
+  // Default gelap dulu (cocok SSR) + sinkron setelah mount (anti #418).
+  const [tema, setTema] = useState<Tema>("gelap");
   const [tersimpan, setTersimpan] = useState<string[]>([]);
   const [gagalSimpan, setGagalSimpan] = useState<string | null>(null);
 
@@ -54,6 +51,10 @@ export default function Pengaturan() {
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((d) => setTersimpan((d as Array<{ provider: string }>).map((x) => x.provider)))
       .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    setTema(bacaTema());
   }, []);
 
   useEffect(() => {

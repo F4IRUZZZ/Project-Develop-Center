@@ -18,7 +18,7 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NotifBadge } from "./NotifBadge";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useBahasa } from "./BahasaProvider";
@@ -116,7 +116,11 @@ function UserBox({ ciut }: { ciut?: boolean }) {
 export function Sidebar() {
   const pathname = usePathname();
   const { teks } = useBahasa();
-  const [ciut, setCiut] = useState<boolean>(() => bacaCiut());
+  // Default bentang dulu (cocok SSR) + sinkron setelah mount (anti #418).
+  const [ciut, setCiut] = useState<boolean>(false);
+  useEffect(() => {
+    setCiut(bacaCiut());
+  }, []);
   const jungkit = () => {
     setCiut((c) => {
       simpanCiut(!c);

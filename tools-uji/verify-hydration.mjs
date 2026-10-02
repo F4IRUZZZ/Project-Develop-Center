@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -29,6 +29,23 @@ for (const [f, jangkar] of WAJIB) {
 
 const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
 cek("favicon eksplisit (tanpa 404)", layout.includes('"/icon.svg"') && layout.includes("icons"));
+cek("favicon.ico ada", existsSync(join(root, "public/favicon.ico")));
+
+for (const [f, pola] of [
+  ["components/shell/BahasaProvider.tsx", 'useState<Lang>("id")'],
+  ["components/shell/PemilihTema.tsx", "useState<boolean>(true)"],
+  ["components/shell/Sidebar.tsx", "useState<boolean>(false)"],
+  ["app/pengaturan/page.tsx", 'useState<Tema>("gelap")'],
+]) {
+  const isi = readFileSync(join(root, f), "utf8");
+  cek(`${f.split("/").pop()} default-dulu`, isi.includes(pola) && isi.includes("anti #418"));
+}
+cek(
+  "tanpa localStorage di initializer komponen",
+  !["components/shell/BahasaProvider.tsx", "components/shell/PemilihTema.tsx", "components/shell/Sidebar.tsx", "app/pengaturan/page.tsx"].some((f) =>
+    readFileSync(join(root, f), "utf8").match(/useState\([^)]*localStorage|useState\(\(\) => (baca|gelap)/)
+  )
+);
 
 if (gagal > 0) {
   console.log(`\nHYDRATION: ${gagal} gagal`);
