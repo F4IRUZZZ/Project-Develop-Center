@@ -70,12 +70,20 @@ export default function Statistik() {
                 {data.streak.kini}
               </div>
               <div className="mt-1 text-[12.5px] font-medium">Streak Kini (hari)</div>
-              <div className="mt-0.5 font-mono text-[10.5px] text-muted-foreground">tanpa jeda</div>
+              <div className="mt-0.5 font-mono text-[10.5px] text-muted-foreground">
+                {data.streak.kini > 0
+                  ? `${fmtTanggal(data.streak.kiniMulai)} - ${fmtTanggal(data.streak.kiniSampai)}`
+                  : "belum mulai"}
+              </div>
             </div>
             <div>
               <div className="text-[26px] font-bold text-primary">{data.streak.terpanjang}</div>
               <div className="mt-1 text-[12.5px] font-medium">Streak Terpanjang</div>
-              <div className="mt-0.5 font-mono text-[10.5px] text-muted-foreground">hari berturut</div>
+              <div className="mt-0.5 font-mono text-[10.5px] text-muted-foreground">
+                {data.streak.terpanjang > 0
+                  ? `${fmtTanggal(data.streak.panjangMulai)} - ${fmtTanggal(data.streak.panjangSampai)}`
+                  : "—"}
+              </div>
             </div>
           </div>
 
