@@ -80,9 +80,9 @@ export async function bersihkanAntrian(sumber: Sumber): Promise<boolean> {
 }
 
 let sudahMigrasi = false;
-let infoMigrasi: string | null = null;
+let infoMigrasi: number | null = null;
 
-export function bacaInfoMigrasi(): string | null {
+export function bacaInfoMigrasi(): number | null {
   return infoMigrasi;
 }
 
@@ -121,7 +121,7 @@ export async function migrasiLokalKeApi(): Promise<number> {
     } catch {
       // localStorage penuh/diblokir: abaikan, server sudah terima.
     }
-    infoMigrasi = `${terpindah.length} perintah lokal dipindah ke server.`;
+    infoMigrasi = terpindah.length;
     siar();
   }
   return terpindah.length;

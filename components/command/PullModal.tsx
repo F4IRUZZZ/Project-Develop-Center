@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { GitMerge, GitPullRequest, X } from "lucide-react";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { useBahasa } from "@/components/shell/BahasaProvider";
 
 interface PR {
   number: number;
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export function PullModal({ open, projectId, repoName, onMerged, onClose }: Props) {
+  const { teks } = useBahasa();
   const [prs, setPrs] = useState<PR[] | null>(null);
   const [gagal, setGagal] = useState<string | null>(null);
   const [target, setTarget] = useState<PR | null>(null);
@@ -45,7 +47,7 @@ export function PullModal({ open, projectId, repoName, onMerged, onClose }: Prop
         if (!batal) setPrs((d as { open_prs: PR[] }).open_prs ?? []);
       })
       .catch(() => {
-        if (!batal) setGagal("Gagal memuat PR. Coba lagi.");
+        if (!batal) setGagal(teks("pr.gagalMuat"));
       });
     return () => {
       batal = true;
@@ -72,14 +74,14 @@ export function PullModal({ open, projectId, repoName, onMerged, onClose }: Prop
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
-        setGagal(data.error ?? "Merge gagal.");
+        setGagal(data.error ?? teks("pr.mergeGagal"));
       } else {
         setTarget(null);
         setPrs((prev) => (prev ?? []).filter((p) => p.number !== target.number));
         onMerged?.();
       }
     } catch {
-      setGagal("Jaringan gagal. Coba lagi.");
+      setGagal(teks("pr.jaringanGagal"));
     }
     setMenggabungkan(false);
   };
@@ -93,17 +95,17 @@ export function PullModal({ open, projectId, repoName, onMerged, onClose }: Prop
       onClick={onClose}
       role="dialog"
       aria-modal="true"
-      aria-label={`PR terbuka ${repoName ?? ""}`}
+      aria-label={teks("pr.aria").replace("{repo}", repoName ?? "")}
     >
       <div
         className="w-full max-w-[480px] rounded-[20px] border border-[#34344A] bg-card p-6 shadow-[0_20px_50px_rgba(0,0,0,0.55)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-5 flex items-center justify-between">
-          <div className="text-[17px] font-semibold">PR Terbuka{repoName ? ` — ${repoName}` : ""}</div>
+          <div className="text-[17px] font-semibold">{teks("pr.judul")}{repoName ? ` — ${repoName}` : ""}</div>
           <button
             onClick={onClose}
-            aria-label="Tutup"
+            aria-label={teks("modal.tutup")}
             className="flex h-[30px] w-[30px] items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
           >
             <X className="h-4 w-4" />
@@ -117,9 +119,9 @@ export function PullModal({ open, projectId, repoName, onMerged, onClose }: Prop
         )}
 
         {!prs ? (
-          <p className="font-mono text-xs text-muted-foreground">Memuat PR…</p>
+          <p className="font-mono text-xs text-muted-foreground">{teks("pr.muat")}</p>
         ) : prs.length === 0 ? (
-          <p className="text-[13px] text-muted-foreground">Tidak ada PR terbuka.</p>
+          <p className="text-[13px] text-muted-foreground">{teks("pr.kosong")}</p>
         ) : (
           <div className="scroll-tipis max-h-[320px] overflow-y-auto pr-1">
             {prs.map((pr) => (
@@ -134,7 +136,7 @@ export function PullModal({ open, projectId, repoName, onMerged, onClose }: Prop
                   onClick={() => setTarget(pr)}
                   className="flex shrink-0 items-center gap-1.5 rounded-[9px] bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-500 hover:bg-emerald-500/20"
                 >
-                  <GitMerge className="h-3.5 w-3.5" /> Merge
+                  <GitMerge className="h-3.5 w-3.5" /> {teks("pr.mergeBtn")}
                 </button>
               </div>
             ))}
@@ -146,7 +148,7 @@ export function PullModal({ open, projectId, repoName, onMerged, onClose }: Prop
             onClick={onClose}
             className="rounded-[9px] border border-border bg-transparent px-[18px] py-2 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
           >
-            Tutup
+            {teks("modal.tutup")}
           </button>
         </div>
       </div>
@@ -154,9 +156,9 @@ export function PullModal({ open, projectId, repoName, onMerged, onClose }: Prop
 
       <ConfirmModal
         open={target !== null}
-        judul={`Merge PR #${target?.number}?`}
-        pesan={`PR "${target?.title}" dari branch ${target?.branch} digabung dengan merge commit. Tindakan ini tidak bisa dibatalkan.`}
-        labelKonfirmasi={menggabungkan ? "Menggabungkan…" : "Ya, merge"}
+        judul={teks("pr.mergeJudul").replace("{n}", String(target?.number ?? ""))}
+        pesan={teks("pr.mergePesan").replace("{title}", target?.title ?? "").replace("{branch}", target?.branch ?? "")}
+        labelKonfirmasi={menggabungkan ? teks("pr.merging") : teks("pr.mergeYa")}
         onKonfirmasi={() => void merge()}
         onBatal={() => setTarget(null)}
       />

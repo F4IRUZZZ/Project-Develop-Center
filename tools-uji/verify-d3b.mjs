@@ -43,7 +43,7 @@ cek("modal dropdown live via props", modal.includes("projects = mockProjects") &
 
 const feed = readFileSync(join(root, "components/activity/ActivityFeed.tsx"), "utf8");
 cek("feed baca API + poll", feed.includes("/api/activity") && feed.includes("5000"));
-cek("feed tanpa fallback mock (jujur, P4)", !feed.includes("mockFeed") && feed.includes("Belum ada aktivitas"));
+cek("feed tanpa fallback mock (jujur, P4)", !feed.includes("mockFeed") && feed.includes("feed.kosong"));
 
 const page = readFileSync(join(root, "app/page.tsx"), "utf8");
 cek("page pakai dashboard API", page.includes("fetchDashboard"));

@@ -17,7 +17,7 @@ cek("DELETE di koleksi", delCol.includes("export async function DELETE"));
 const queue = readFileSync(join(root, "lib/queue.ts"), "utf8");
 cek("bersihkan lapor gagal", queue.includes("if (!res.ok) return false"));
 const panel = readFileSync(join(root, "components/command/QueuePanel.tsx"), "utf8");
-cek("panel tampilkan error hapus", panel.includes("Gagal membersihkan"));
+cek("panel tampilkan error hapus (kamus)", panel.includes("antre.gagalHapus"));
 
 // G1
 for (const f of ["app/api/notifications/route.ts", "app/api/notifications/read/route.ts"]) {

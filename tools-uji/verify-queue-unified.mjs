@@ -19,9 +19,9 @@ cek("useQueue kembalikan sumber", q.includes("sumber"));
 cek("tanpa auto-simulasi api", !q.includes("jadwalSimulasi"));
 
 const panel = readFileSync(join(root, "components/command/QueuePanel.tsx"), "utf8");
-cek("panel label Server/Lokal", panel.includes("Server") && panel.includes("Lokal"));
+cek("panel label Server/Lokal (kamus)", panel.includes("antre.server") && panel.includes("antre.lokal"));
 cek("panel banner migrasi", panel.includes("infoMigrasi"));
-cek("panel warning lokal", panel.includes("Mode lokal"));
+cek("panel warning lokal (kamus)", panel.includes("antre.lokalWarn"));
 
 const tasks = readFileSync(join(root, "lib/tasks.ts"), "utf8");
 cek("kontrak QueuedCommand stabil", tasks.includes("QueuedCommand") && tasks.includes("pdc-queue"));

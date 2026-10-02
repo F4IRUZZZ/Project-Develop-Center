@@ -60,6 +60,20 @@ for (const [f, kunci] of [
   const isi = readFileSync(join(root, f), "utf8");
   cek(`halaman ${f.split("/").pop()} pakai kamus`, isi.includes("useBahasa") && isi.includes(kunci));
 }
+for (const [f, kunci] of [
+  ["components/command/CommandModal.tsx", "cmd.judul"],
+  ["components/command/QueuePanel.tsx", "antre.bersihkan"],
+  ["components/activity/ActivityFeed.tsx", "feed.kosong"],
+  ["components/command/PullModal.tsx", "pr.mergeJudul"],
+  ["app/pengaturan/page.tsx", "atur.bersihJudul"],
+]) {
+  const isi = readFileSync(join(root, f), "utf8");
+  cek(`komponen ${f.split("/").pop()} pakai kamus`, isi.includes("useBahasa") && isi.includes(kunci));
+}
+cek(
+  "queue infoMigrasi angka (render di kamus)",
+  readFileSync(join(root, "lib/queue.ts"), "utf8").includes("infoMigrasi: number | null")
+);
 const halRiw = readFileSync(join(root, "app/riwayat/page.tsx"), "utf8");
 cek(
   "riwayat pakai kamus",

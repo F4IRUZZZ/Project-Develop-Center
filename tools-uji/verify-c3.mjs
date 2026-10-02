@@ -20,15 +20,15 @@ for (const f of [
 }
 
 const feed = readFileSync(join(root, "components/activity/ActivityFeed.tsx"), "utf8");
-cek("feed judul", feed.includes("Activity Feed"));
+cek("feed judul (kamus)", feed.includes("feed.judul"));
 cek("feed tanpa mock (jujur, P4)", !feed.includes("activityFeed") && !feed.includes("mockFeed"));
-cek("feed empty-state", feed.includes("Belum ada aktivitas"));
+cek("feed empty-state (kamus)", feed.includes("feed.kosong"));
 
 const modal = readFileSync(join(root, "components/command/CommandModal.tsx"), "utf8");
-cek("modal judul", modal.includes("Kirim Perintah ke AI"));
-cek("modal select proyek", modal.includes("Pilih Proyek"));
-cek("modal textarea", modal.includes("Instruksi"));
-cek("modal tombol Kirim/Batal", modal.includes("Kirim") && modal.includes("Batal"));
+cek("modal judul (kamus)", modal.includes("cmd.judul"));
+cek("modal select proyek (kamus)", modal.includes("cmd.pilihProyek"));
+cek("modal textarea (kamus)", modal.includes("cmd.instruksi"));
+cek("modal tombol Kirim/Batal (kamus)", modal.includes("cmd.kirim") && modal.includes("modal.batal"));
 cek("modal escape handler", modal.includes("Escape"));
 
 const page = readFileSync(join(root, "app/page.tsx"), "utf8");
