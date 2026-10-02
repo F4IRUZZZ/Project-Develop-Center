@@ -115,6 +115,26 @@ const KAMUS = {
   "notif.dtkLalu": { id: "dtk lalu", en: "s ago" },
   "notif.mntLalu": { id: "mnt lalu", en: "m ago" },
   "notif.jamLalu": { id: "jam lalu", en: "h ago" },
+  "stat.judul": { id: "Statistik GitHub", en: "GitHub Statistics" },
+  "stat.subKosong": { id: "Streak, kontribusi, dan bahasa setahun terakhir.", en: "Streak, contributions, and languages from the past year." },
+  "stat.subAkun": { id: "Akun {login} · setahun terakhir", en: "Account {login} · past year" },
+  "stat.total": { id: "Total Kontribusi", en: "Total Contributions" },
+  "stat.kini": { id: "Streak Kini (hari)", en: "Current Streak (days)" },
+  "stat.belumMulai": { id: "belum mulai", en: "not started" },
+  "stat.terpanjang": { id: "Streak Terpanjang", en: "Longest Streak" },
+  "stat.bintang": { id: "Bintang", en: "Stars" },
+  "stat.commit": { id: "Commit", en: "Commits" },
+  "stat.pr": { id: "Pull Request", en: "Pull Requests" },
+  "stat.issue": { id: "Issue", en: "Issues" },
+  "stat.bahasa": { id: "Bahasa Teratas", en: "Top Languages" },
+  "stat.bahasaKosong": { id: "Belum ada data bahasa.", en: "No language data yet." },
+  "stat.gagalJudul": { id: "Gagal memuat statistik", en: "Failed to load statistics" },
+  "stat.gagalSub": {
+    id: "GitHub tidak menjawab atau token kedaluwarsa. Coba lagi atau login ulang.",
+    en: "GitHub did not respond or the token expired. Try again or log in again.",
+  },
+  "stat.cobaLagi": { id: "Coba lagi", en: "Try again" },
+  "stat.muat": { id: "Memuat…", en: "Loading…" },
 } as const;
 
 export type Kunci = keyof typeof KAMUS;
