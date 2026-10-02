@@ -3,6 +3,7 @@
 import {
   Activity,
   Bell,
+  ChartColumn,
   ChevronsLeft,
   ChevronsRight,
   FolderGit2,
@@ -29,6 +30,7 @@ const NAV = [
   { label: "Sesi", icon: Activity, href: "/sesi", badge: null as string | null },
   { label: "Status", icon: HeartPulse, href: "/status", badge: null as string | null },
   { label: "Riwayat", icon: History, href: "/riwayat", badge: null as string | null },
+  { label: "Statistik", icon: ChartColumn, href: "/statistik", badge: null as string | null },
   { label: "Notifikasi", icon: Bell, href: "/notifikasi", badge: "live" },
   { label: "Pengaturan", icon: Settings, href: "/pengaturan", badge: null as string | null },
 ];
