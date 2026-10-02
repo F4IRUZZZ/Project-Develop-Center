@@ -50,6 +50,11 @@ cek(
   halNotif.includes("useBahasa") && halNotif.includes("notif.kosongJudul") && halNotif.includes("notif.tandaiSemua")
 );
 cek("waktuRelatif ikut locale", halNotif.includes("en-US") && halNotif.includes("notif.jamLalu"));
+const halRiw = readFileSync(join(root, "app/riwayat/page.tsx"), "utf8");
+cek(
+  "riwayat pakai kamus",
+  halRiw.includes("useBahasa") && halRiw.includes("riw.kosongTugas") && halRiw.includes("riw.kosongPerintah") && halRiw.includes("riw.semuaProyek")
+);
 const halStat = readFileSync(join(root, "app/statistik/page.tsx"), "utf8");
 cek("statistik pakai kamus", halStat.includes("useBahasa") && halStat.includes("stat.terpanjang") && halStat.includes("stat.cobaLagi"));
 for (const [f, kunci] of [

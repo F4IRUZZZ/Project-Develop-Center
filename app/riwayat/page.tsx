@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { LoginCard } from "@/components/dashboard/LoginCard";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
+import { useBahasa } from "@/components/shell/BahasaProvider";
+import type { Lang } from "@/lib/kamus";
 import type { AIStatus } from "@/lib/types";
 import type { QueuedCommand } from "@/lib/tasks";
 import { cn } from "@/lib/utils";
@@ -29,6 +31,7 @@ const WARNA_CMD: Record<QueuedCommand["status"], string> = {
 
 export default function Riwayat() {
   const { data: session, status } = useSession();
+  const { lang, teks } = useBahasa();
   const [tab, setTab] = useState<Tab>("tugas");
   const [filter, setFilter] = useState("");
   const [tasks, setTasks] = useState<TaskRow[]>([]);
@@ -57,7 +60,7 @@ export default function Riwayat() {
       .catch(() => {});
   }, [status]);
 
-  if (status === "loading") return <p className="font-mono text-xs text-muted-foreground">Memuat sesi…</p>;
+  if (status === "loading") return <p className="font-mono text-xs text-muted-foreground">{teks("shell.muatSesi")}</p>;
   if (!session?.user) return <LoginCard />;
 
   const proyekIds = [...new Set([...tasks.map((t) => t.project_id), ...commands.map((c) => c.project_id)])];
@@ -69,9 +72,9 @@ export default function Riwayat() {
   return (
     <div className="mx-auto w-full max-w-[1480px] p-4 sm:p-6">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-[17px] font-semibold tracking-tight">Riwayat</h2>
+        <h2 className="text-[17px] font-semibold tracking-tight">{teks("riw.judul")}</h2>
         <label htmlFor="filter-proyek" className="sr-only">
-          Filter proyek
+          {teks("riw.filterProyek")}
         </label>
         <select
           id="filter-proyek"
@@ -80,7 +83,7 @@ export default function Riwayat() {
           onChange={(e) => setFilter(e.target.value)}
           className="rounded-[9px] border border-border bg-muted px-3 py-2 font-mono text-xs focus:border-primary focus:outline-none"
         >
-          <option value="">Semua proyek</option>
+          <option value="">{teks("riw.semuaProyek")}</option>
           {proyekIds.map((id) => (
             <option key={id} value={id}>
               {namaUntuk(id)}
@@ -95,11 +98,11 @@ export default function Riwayat() {
             key={t}
             onClick={() => setTab(t)}
             className={cn(
-              "rounded-[9px] px-4 py-2 text-[13px] font-medium capitalize transition-colors",
+              "rounded-[9px] px-4 py-2 text-[13px] font-medium transition-colors",
               tab === t ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}
           >
-            {t} ({t === "tugas" ? tasksTampil.length : commandsTampil.length})
+            {t === "tugas" ? teks("riw.tugas") : teks("riw.perintah")} ({t === "tugas" ? tasksTampil.length : commandsTampil.length})
           </button>
         ))}
       </div>
@@ -109,10 +112,10 @@ export default function Riwayat() {
           <table className="w-full min-w-[560px] text-left text-[13px]">
             <thead>
               <tr className="border-b border-border text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
-                <th className="px-4 py-3 font-semibold">Tugas</th>
-                <th className="px-4 py-3 font-semibold">Proyek</th>
-                <th className="px-4 py-3 font-semibold">Status</th>
-                <th className="px-4 py-3 font-semibold">Progress</th>
+                <th className="px-4 py-3 font-semibold">{teks("riw.kolTugas")}</th>
+                <th className="px-4 py-3 font-semibold">{teks("riw.kolProyek")}</th>
+                <th className="px-4 py-3 font-semibold">{teks("riw.kolStatus")}</th>
+                <th className="px-4 py-3 font-semibold">{teks("riw.kolProgress")}</th>
               </tr>
             </thead>
             <tbody>
@@ -131,7 +134,7 @@ export default function Riwayat() {
               {tasksTampil.length === 0 && (
                 <tr>
                   <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
-                    Belum ada tugas.
+                    {teks("riw.kosongTugas")}
                   </td>
                 </tr>
               )}
@@ -152,13 +155,13 @@ export default function Riwayat() {
                 </span>
               </div>
               <div className="mt-1 font-mono text-[10.5px] text-muted-foreground">
-                {new Date(c.created_at).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                {new Date(c.created_at).toLocaleString(lang === "en" ? "en-US" : "id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
                 {c.result ? ` · ${c.result}` : ""}
               </div>
             </div>
           ))}
           {commandsTampil.length === 0 && (
-            <p className="py-8 text-center text-[13px] text-muted-foreground">Belum ada perintah.</p>
+            <p className="py-8 text-center text-[13px] text-muted-foreground">{teks("riw.kosongPerintah")}</p>
           )}
         </div>
       )}

@@ -135,6 +135,17 @@ const KAMUS = {
   },
   "stat.cobaLagi": { id: "Coba lagi", en: "Try again" },
   "stat.muat": { id: "Memuat…", en: "Loading…" },
+  "riw.judul": { id: "Riwayat", en: "History" },
+  "riw.filterProyek": { id: "Filter proyek", en: "Filter projects" },
+  "riw.semuaProyek": { id: "Semua proyek", en: "All projects" },
+  "riw.tugas": { id: "Tugas", en: "Tasks" },
+  "riw.perintah": { id: "Perintah", en: "Commands" },
+  "riw.kolTugas": { id: "Tugas", en: "Task" },
+  "riw.kolProyek": { id: "Proyek", en: "Project" },
+  "riw.kolStatus": { id: "Status", en: "Status" },
+  "riw.kolProgress": { id: "Progress", en: "Progress" },
+  "riw.kosongTugas": { id: "Belum ada tugas.", en: "No tasks yet." },
+  "riw.kosongPerintah": { id: "Belum ada perintah.", en: "No commands yet." },
 } as const;
 
 export type Kunci = keyof typeof KAMUS;
