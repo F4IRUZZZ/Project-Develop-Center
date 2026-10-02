@@ -47,6 +47,12 @@
 ## H. Riwayat Perubahan
 
 | Tanggal    | Perubahan                                                                                       | Uji                                                               |
+| 2026-10-02 | Fix hitungan dihapus merged (#85/#86, RETURNING id + live ulang sandbox dihapus:1)              | tsc + build + live sandbox                                        |
+| 2026-10-01 | P5 MCP bridge merged (#79/#84, default prod + 1 panggilan + filter server)                      | MCP-BRIDGE ALL-OK + 30 suite hijau + tsc + build + mcp build      |
+| 2026-10-01 | P4 activity jujur merged (#78/#83, tanpa mock + Selesai success + selaras c3/d3b)                | ACTIVITY-JUJUR ALL-OK + 29 suite hijau + tsc + build              |
+| 2026-10-01 | P3 notif luas merged (#77/#82, Selesai masuk notif + LEFT JOIN + filter type)                    | NOTIF-LUAS ALL-OK + 28 suite hijau + tsc + build + live E2E        |
+| 2026-10-01 | P2 stuck sweep merged (#76/#81, writer DB + route sweep + hook dashboard)                        | STUCK-SWEEP ALL-OK + 27 suite hijau + tsc + build                  |
+| 2026-10-01 | P1 queue unified merged (#75/#80, migrasi lokal→server + label sumber)                           | QUEUE-UNIFIED ALL-OK + 26 suite hijau + tsc + build               |
 | ---------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
 | 2026-09-27 | O login referensi + logo + favicon merged (+octocat, tema Sistem, a11y)                         | O-CEK ALL-OK + 18 suite hijau + tsc + build                       |
 | 2026-09-28 | Audit-1 remediasi merged (provider-keys + hapus akun + M1/M3/M5)                                | AUDIT1-CEK ALL-OK + 20 suite hijau + tsc + build + 401-gate       |
