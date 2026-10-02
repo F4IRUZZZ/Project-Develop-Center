@@ -36,13 +36,18 @@ export async function POST(req: NextRequest) {
   }>;
   const final = lama.length > 0 && (lama[0].status !== "active" || lama[0].ended_at !== null);
 
+  // Backfill #99: sesi yang terdaftar buta-repo (NULL) dilengkapi saat
+  // denyut berikutnya membawa repo — COALESCE agar tak pernah menimpa
+  // atribusi lama dengan NULL / memindahkan sesi antar proyek diam-diam.
   await sql`
     INSERT INTO agent_sessions (session_id, user_id, project_id, repo_full, mode, status, last_seen_at)
     VALUES (${sessionId}, ${ctx.userId}, ${projectId}, ${body.repo_full?.trim() ?? null}, ${mode}, 'active', now())
     ON CONFLICT (session_id) DO UPDATE SET
       last_seen_at = now(),
       status = CASE WHEN ${bukaUlang} THEN 'active' WHEN agent_sessions.status = 'active' THEN 'active' ELSE agent_sessions.status END,
-      ended_at = CASE WHEN ${bukaUlang} THEN NULL ELSE agent_sessions.ended_at END
+      ended_at = CASE WHEN ${bukaUlang} THEN NULL ELSE agent_sessions.ended_at END,
+      repo_full = COALESCE(NULLIF(agent_sessions.repo_full, ''), EXCLUDED.repo_full),
+      project_id = COALESCE(agent_sessions.project_id, ${projectId})
   `;
   // Kesehatan plugin per repo (halaman Status): versi tak disediakan salinan
   // lama → pertahankan yang ada; last_seen selalu segar saat ada laporan.
