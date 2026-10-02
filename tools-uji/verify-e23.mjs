@@ -35,7 +35,7 @@ cek("dashboard props monitor/kelola", dash.includes("readOnly") && dash.includes
 const proyek = readFileSync(join(root, "app/proyek/page.tsx"), "utf8");
 cek("proyek grid kartu + stop", proyek.includes("Dashboard") && proyek.includes("/api/commands/cancel"));
 const home = readFileSync(join(root, "app/page.tsx"), "utf8");
-cek("home filter perhatian", home.includes("PERHATIAN") && home.includes("Perlu Perhatian"));
+cek("home filter perhatian (kamus)", home.includes("PERHATIAN") && home.includes("dash.butuhPerhatian"));
 const cancel = readFileSync(join(root, "app/api/commands/cancel/route.ts"), "utf8");
 cek("cancel batalkan + tulis error", (cancel.includes("Dihentikan pengguna") || cancel.includes("TANDA_STOP")) && cancel.includes("activity_log"));
 

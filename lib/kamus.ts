@@ -77,6 +77,27 @@ const KAMUS = {
   },
   "gate.cta": { id: "Sambungkan Akun GitHub", en: "Connect GitHub Account" },
   "bahasa.label": { id: "Bahasa", en: "Language" },
+  "dash.proyekAktif": { id: "Proyek Aktif", en: "Active Projects" },
+  "dash.aiBekerja": { id: "AI Bekerja", en: "AI Working" },
+  "dash.tugasSelesai": { id: "Tugas Selesai", en: "Tasks Done" },
+  "dash.sedangAktif": { id: "Sedang Aktif", en: "Currently Active" },
+  "dash.butuhPerhatian": { id: "Perlu Perhatian", en: "Needs Attention" },
+  "dash.kosongSesi": { id: "Tidak ada sesi AI aktif di repo mana pun.", en: "No active AI sessions in any repo." },
+  "dash.kosongTenang": {
+    id: "Semua tenang — tidak ada AI yang bekerja. Kirim perintah dari menu Proyek.",
+    en: "All quiet — no AI working. Send a command from the Projects menu.",
+  },
+  "dash.gagalRepo": { id: "Gagal memuat repo GitHub — menampilkan data contoh.", en: "Failed to load GitHub repos — showing sample data." },
+  "dash.muatRepo": { id: "Memuat repo GitHub…", en: "Loading GitHub repos…" },
+  "kartu.aiBekerja": { id: "AI bekerja", en: "AI working" },
+  "kartu.aiAktif": { id: "AI aktif", en: "AI active" },
+  "kartu.titleBekerja": { id: "AI sedang menyunting kode di repo ini", en: "AI is editing code in this repo" },
+  "kartu.titleAktif": { id: "Sesi AI aktif di repo ini", en: "Active AI session in this repo" },
+  "kartu.jadikanPublic": { id: "Jadikan public", en: "Make public" },
+  "kartu.jadikanPrivate": { id: "Jadikan private", en: "Make private" },
+  "kartu.perintah": { id: "Perintah", en: "Command" },
+  "kartu.stop": { id: "Stop", en: "Stop" },
+  "antre.perintahDiAntre": { id: "perintah dalam antrian", en: "commands in queue" },
 } as const;
 
 export type Kunci = keyof typeof KAMUS;
