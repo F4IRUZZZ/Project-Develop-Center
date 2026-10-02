@@ -22,7 +22,7 @@ cek("proyek modal perintah", proyek.includes("CommandModal"));
 
 const riwayat = readFileSync(join(root, "app/riwayat/page.tsx"), "utf8");
 cek("riwayat tab tugas+perintah", riwayat.includes('"tugas"') && riwayat.includes('"perintah"'));
-cek("riwayat filter proyek", riwayat.includes("Semua proyek"));
+cek("riwayat filter proyek (kamus)", riwayat.includes("riw.semuaProyek"));
 
 const sidebar = readFileSync(join(root, "components/shell/Sidebar.tsx"), "utf8");
 cek("nav proyek hidup", sidebar.includes('href: "/proyek"'));
