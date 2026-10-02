@@ -16,8 +16,8 @@ for (const f of ["public/logo-pdc.svg", "public/logo-pdc-dark.svg", "app/icon.sv
 
 // O2 — Login ala referensi (split brand + pill CTA, dark Nebula)
 const landing = readFileSync(join(root, "components/shell/LoginLanding.tsx"), "utf8");
-cek("landing split brand", landing.includes("Selamat Datang Kembali") && landing.includes("md:grid-cols-2"));
-cek("landing pill GitHub", landing.includes("Masuk dengan GitHub") && landing.includes("rounded-full"));
+cek("landing split brand (kamus)", landing.includes("landing.sambut") && landing.includes("md:grid-cols-2"));
+cek("landing pill GitHub (kamus)", landing.includes("user.masukDenganGithub") && landing.includes("rounded-full"));
 cek("landing pakai logo", landing.includes("/logo-pdc.svg"));
 cek("landing tanpa shell", !landing.includes("Sidebar"));
 cek("landing logo GitHub asli", landing.includes("GithubMark"));

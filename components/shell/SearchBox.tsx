@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Search } from "lucide-react";
+import { useBahasa } from "./BahasaProvider";
 import type { Project } from "@/lib/types";
 import type { QueuedCommand } from "@/lib/tasks";
 
@@ -18,6 +19,7 @@ interface Hasil {
 
 export function SearchBox() {
   const { status } = useSession();
+  const { teks } = useBahasa();
   const router = useRouter();
   const [q, setQ] = useState("");
   const [hasil, setHasil] = useState<Hasil[]>([]);
@@ -63,14 +65,14 @@ export function SearchBox() {
         const out: Hasil[] = [];
         for (const p of d as Project[]) {
           if (p.repoName.toLowerCase().includes(kata) || p.repoFull.toLowerCase().includes(kata)) {
-            out.push({ key: p.id, label: p.repoName, sub: `Proyek · ${p.statusLabel}`, href: `/proyek/${p.id}` });
+            out.push({ key: p.id, label: p.repoName, sub: `${teks("search.proyek")} · ${p.statusLabel}`, href: `/proyek/${p.id}` });
             if (out.length >= 8) break;
           }
         }
         if (out.length < 8) {
           for (const t of tk as Array<{ id: string; title: string; project_id: string }>) {
             if (t.title.toLowerCase().includes(kata)) {
-              out.push({ key: t.id, label: t.title, sub: "Tugas · Riwayat", href: "/riwayat" });
+              out.push({ key: t.id, label: t.title, sub: `${teks("search.tugas")} · ${teks("nav.riwayat")}`, href: "/riwayat" });
               if (out.length >= 8) break;
             }
           }
@@ -78,7 +80,7 @@ export function SearchBox() {
         if (out.length < 8) {
           for (const cmd of c as QueuedCommand[]) {
             if (cmd.command_text.toLowerCase().includes(kata)) {
-              out.push({ key: cmd.id, label: cmd.command_text.slice(0, 60), sub: `Perintah · ${cmd.status}`, href: "/riwayat" });
+              out.push({ key: cmd.id, label: cmd.command_text.slice(0, 60), sub: `${teks("search.perintah")} · ${cmd.status}`, href: "/riwayat" });
               if (out.length >= 8) break;
             }
           }
@@ -90,7 +92,7 @@ export function SearchBox() {
       }
     }, 300);
     return () => window.clearTimeout(t);
-  }, [q, status]);
+  }, [q, status, teks]);
 
   return (
     <div ref={ref} className="relative min-w-0 flex-1 sm:max-w-[300px] sm:flex-none sm:basis-[300px]">
@@ -102,7 +104,7 @@ export function SearchBox() {
         onChange={(e) => updateSearch(e.target.value)}
         onFocus={() => hasil.length > 0 && setBuka(true)}
         className="w-full rounded-[9px] border border-border bg-muted py-2 pl-9 pr-3 text-[13px] text-muted-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
-        placeholder="Cari proyek, tugas, atau log…"
+        placeholder={teks("search.placeholder")}
       />
       {buka && hasil.length > 0 && (
         <div className="absolute left-0 right-0 top-11 z-50 overflow-hidden rounded-[14px] border border-border bg-card shadow-[0_12px_32px_rgba(0,0,0,0.45)]">

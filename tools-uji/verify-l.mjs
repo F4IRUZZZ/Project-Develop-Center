@@ -13,7 +13,7 @@ cek("components/shell/NotifBadge.tsx", existsSync(join(root, "components/shell/N
 cek("components/shell/BottomNav.tsx", existsSync(join(root, "components/shell/BottomNav.tsx")));
 
 const nav = readFileSync(join(root, "components/shell/BottomNav.tsx"), "utf8");
-cek("5 item menu", ["Dashboard", "Proyek", "Riwayat", "Notifikasi", "Pengaturan"].every((s) => nav.includes(s)));
+cek("item menu (kamus)", ["nav.dashboard", "nav.proyek", "nav.riwayat", "nav.notifikasi", "nav.pengaturan"].every((s) => nav.includes(s)));
 cek("hanya HP (lg:hidden)", nav.includes("lg:hidden"));
 cek("badge dipakai bersama", nav.includes("NotifBadge"));
 

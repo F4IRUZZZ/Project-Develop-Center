@@ -4,15 +4,18 @@ import { Inbox, Radio } from "lucide-react";
 import Image from "next/image";
 import { signIn } from "next-auth/react";
 import { GithubMark } from "@/components/ui/GithubMark";
+import { useBahasa } from "./BahasaProvider";
+import type { Kunci } from "@/lib/kamus";
 
-const FITUR: Array<{ icon: (props: { className?: string }) => React.ReactNode; judul: string; deskripsi: string }> = [
-  { icon: Radio, judul: "Pantau AI live", deskripsi: "Status, progress, dan activity semua repo dalam satu layar." },
-  { icon: Inbox, judul: "Kelola antrian", deskripsi: "Kirim perintah, hentikan kerja, lihat riwayat per proyek." },
-  { icon: GithubMark, judul: "Terhubung GitHub", deskripsi: "Repo live + jembatan MCP ke OpenCode." },
+const FITUR: Array<{ icon: (props: { className?: string }) => React.ReactNode; judul: Kunci; deskripsi: Kunci }> = [
+  { icon: Radio, judul: "landing.fitur1j", deskripsi: "landing.fitur1d" },
+  { icon: Inbox, judul: "landing.fitur2j", deskripsi: "landing.fitur2d" },
+  { icon: GithubMark, judul: "landing.fitur3j", deskripsi: "landing.fitur3d" },
 ];
 
 // Struktur meniru referensi (split brand + CTA), adaptasi dark Nebula.
 export function LoginLanding() {
+  const { teks } = useBahasa();
   return (
     <main className="flex min-h-screen w-full items-center justify-center bg-background p-4 sm:p-8">
       <div className="grid w-full max-w-4xl overflow-hidden rounded-[20px] border border-border bg-card shadow-[0_20px_50px_rgba(0,0,0,0.55)] md:grid-cols-2">
@@ -28,20 +31,16 @@ export function LoginLanding() {
           />
           <Image src="/logo-pdc.svg" alt="Logo PDC" width={48} height={48} className="h-12 w-12" />
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Selamat Datang Kembali</h1>
-            <p className="mt-2 max-w-xs text-sm text-white/80">
-              Agar tetap terhubung, masuk dengan akun GitHub-mu untuk membuka command center AI.
-            </p>
+            <h1 className="text-3xl font-bold tracking-tight">{teks("landing.sambut")}</h1>
+            <p className="mt-2 max-w-xs text-sm text-white/80">{teks("landing.sub")}</p>
           </div>
           <button
             onClick={() => signIn("github")}
             className="flex w-full max-w-xs items-center justify-center gap-2 rounded-full border border-white/70 bg-transparent px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-white/10"
           >
-            <GithubMark className="h-4 w-4" /> Masuk dengan GitHub
+            <GithubMark className="h-4 w-4" /> {teks("user.masukDenganGithub")}
           </button>
-          <p className="font-mono text-[10.5px] text-white/60">
-            Baca repo · merge PR hanya atas persetujuanmu.
-          </p>
+          <p className="font-mono text-[10.5px] text-white/60">{teks("landing.catatan")}</p>
         </div>
 
         {/* Kanan: ilustrasi ambient Nebula */}
@@ -76,7 +75,7 @@ export function LoginLanding() {
           <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-5">
             {FITUR.map((f) => (
               <div key={f.judul} className="flex items-center gap-1.5 text-[11px] text-white/60">
-                <f.icon className="h-3.5 w-3.5" /> {f.judul}
+                <f.icon className="h-3.5 w-3.5" /> {teks(f.judul)}
               </div>
             ))}
           </div>

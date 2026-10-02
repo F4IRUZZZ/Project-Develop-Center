@@ -5,11 +5,13 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { PemilihTema } from "./PemilihTema";
 import { NotifBadge } from "./NotifBadge";
+import { useBahasa } from "./BahasaProvider";
 import { UserMenu } from "./UserMenu";
 import { SearchBox } from "./SearchBox";
 
 export function Topbar() {
   const { data: session } = useSession();
+  const { teks } = useBahasa();
   const nama = session?.user?.name ?? session?.user?.email ?? "?";
   const inisial = nama.slice(0, 2).toUpperCase();
 
@@ -19,7 +21,7 @@ export function Topbar() {
       <div className="flex shrink-0 items-center gap-2.5">
         <Link
           href="/notifikasi"
-          aria-label="Notifikasi"
+          aria-label={teks("nav.notifikasi")}
           className="relative flex h-9 w-9 items-center justify-center rounded-[9px] border border-border bg-muted text-muted-foreground transition-colors hover:text-foreground"
         >
           <Bell className="h-[17px] w-[17px]" />

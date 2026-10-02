@@ -21,28 +21,31 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { NotifBadge } from "./NotifBadge";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { useBahasa } from "./BahasaProvider";
 import { bacaCiut, simpanCiut } from "@/lib/sidebar";
+import type { Kunci } from "@/lib/kamus";
 import { cn } from "@/lib/utils";
 
-const NAV = [
-  { label: "Dashboard", icon: LayoutDashboard, href: "/", badge: null as string | null },
-  { label: "Proyek", icon: FolderGit2, href: "/proyek", badge: null as string | null },
-  { label: "Sesi", icon: Activity, href: "/sesi", badge: null as string | null },
-  { label: "Status", icon: HeartPulse, href: "/status", badge: null as string | null },
-  { label: "Riwayat", icon: History, href: "/riwayat", badge: null as string | null },
-  { label: "Statistik", icon: ChartColumn, href: "/statistik", badge: null as string | null },
-  { label: "Notifikasi", icon: Bell, href: "/notifikasi", badge: "live" },
-  { label: "Pengaturan", icon: Settings, href: "/pengaturan", badge: null as string | null },
+const NAV: Array<{ kunci: Kunci; icon: typeof LayoutDashboard; href: string; badge: string | null }> = [
+  { kunci: "nav.dashboard", icon: LayoutDashboard, href: "/", badge: null },
+  { kunci: "nav.proyek", icon: FolderGit2, href: "/proyek", badge: null },
+  { kunci: "nav.sesi", icon: Activity, href: "/sesi", badge: null },
+  { kunci: "nav.status", icon: HeartPulse, href: "/status", badge: null },
+  { kunci: "nav.riwayat", icon: History, href: "/riwayat", badge: null },
+  { kunci: "nav.statistik", icon: ChartColumn, href: "/statistik", badge: null },
+  { kunci: "nav.notifikasi", icon: Bell, href: "/notifikasi", badge: "live" },
+  { kunci: "nav.pengaturan", icon: Settings, href: "/pengaturan", badge: null },
 ];
 
 function UserBox({ ciut }: { ciut?: boolean }) {
   const { data: session, status } = useSession();
+  const { teks } = useBahasa();
   const [tanyaKeluar, setTanyaKeluar] = useState(false);
 
   if (status === "loading") {
     return (
       <div className="mt-auto border-t border-border px-2 pt-2.5 font-mono text-[11px] text-muted-foreground">
-        {ciut ? "…" : "Memuat sesi…"}
+        {ciut ? "…" : teks("shell.muatSesi")}
       </div>
     );
   }
@@ -52,11 +55,11 @@ function UserBox({ ciut }: { ciut?: boolean }) {
       <div className="mt-auto border-t border-border px-2 pt-2.5">
         <button
           onClick={() => signIn("github")}
-          title="Login GitHub"
-          aria-label="Login GitHub"
+          title={teks("user.masukGithub")}
+          aria-label={teks("user.masukGithub")}
           className="flex w-full items-center justify-center gap-1.5 rounded-[9px] bg-primary px-0 py-2 text-xs font-medium text-white transition-colors hover:bg-[#5457E5]"
         >
-          <LogIn className="h-3.5 w-3.5" /> {!ciut && "Login GitHub"}
+          <LogIn className="h-3.5 w-3.5" /> {!ciut && teks("user.masukGithub")}
         </button>
       </div>
     );
@@ -83,14 +86,14 @@ function UserBox({ ciut }: { ciut?: boolean }) {
             <div className="truncate text-[13px] font-medium">{nama}</div>
             <div className="flex items-center gap-1.5 text-[11px] text-emerald-500">
               <span className="h-[7px] w-[7px] rounded-full bg-emerald-500" />
-              Connected
+              {teks("user.terhubung")}
             </div>
           </div>
         )}
         <button
           onClick={() => setTanyaKeluar(true)}
-          title="Keluar"
-          aria-label="Keluar"
+          title={teks("user.keluar")}
+          aria-label={teks("user.keluar")}
           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] text-muted-foreground hover:bg-muted hover:text-foreground"
         >
           <LogOut className="h-4 w-4" />
@@ -98,9 +101,9 @@ function UserBox({ ciut }: { ciut?: boolean }) {
       </div>
       <ConfirmModal
         open={tanyaKeluar}
-        judul="Keluar dari PDC?"
-        pesan="Sesi GitHub-mu di perangkat ini diakhiri. Antrian dan data di database tetap aman."
-        labelKonfirmasi="Ya, keluar"
+        judul={teks("user.tanyaKeluar")}
+        pesan={teks("user.pesanKeluar")}
+        labelKonfirmasi={teks("user.yaKeluar")}
         onKonfirmasi={() => void signOut()}
         onBatal={() => setTanyaKeluar(false)}
       />
@@ -110,6 +113,7 @@ function UserBox({ ciut }: { ciut?: boolean }) {
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { teks } = useBahasa();
   const [ciut, setCiut] = useState<boolean>(() => bacaCiut());
   const jungkit = () => {
     setCiut((c) => {
@@ -141,8 +145,8 @@ export function Sidebar() {
         )}
         <button
           onClick={jungkit}
-          title={ciut ? "Bentangkan sidebar" : "Ciutkan sidebar"}
-          aria-label={ciut ? "Bentangkan sidebar" : "Ciutkan sidebar"}
+          title={ciut ? teks("shell.bentangkan") : teks("shell.ciutkan")}
+          aria-label={ciut ? teks("shell.bentangkan") : teks("shell.ciutkan")}
           aria-expanded={!ciut}
           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] text-muted-foreground hover:bg-muted hover:text-foreground"
         >
@@ -152,12 +156,13 @@ export function Sidebar() {
 
       {!ciut && (
         <div className="px-2 pb-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
-          Menu
+          {teks("shell.menu")}
         </div>
       )}
       <nav>
         {NAV.map((item) => {
-          const aktif = item.href ? pathname === item.href : item.label === "Dashboard" && pathname === "/";
+          const nama = teks(item.kunci);
+          const aktif = item.href ? pathname === item.href : item.kunci === "nav.dashboard" && pathname === "/";
           const cls = cn(
             "mb-0.5 flex cursor-pointer items-center gap-2.5 rounded-[9px] px-2.5 py-2 text-[13.5px] font-medium transition-colors",
             ciut && "justify-center px-0",
@@ -171,7 +176,7 @@ export function Sidebar() {
           ) : (
             <>
               <item.icon className="h-[18px] w-[18px]" strokeWidth={1.75} />
-              {item.label}
+              {nama}
               {item.badge === "live" ? (
                 <NotifBadge />
               ) : (
@@ -184,11 +189,11 @@ export function Sidebar() {
             </>
           );
           return item.href ? (
-            <Link key={item.label} href={item.href} className={cls} title={ciut ? item.label : undefined}>
+            <Link key={item.kunci} href={item.href} className={cls} title={ciut ? nama : undefined}>
               {isi}
             </Link>
           ) : (
-            <div key={item.label} className={cls} title={ciut ? item.label : undefined}>
+            <div key={item.kunci} className={cls} title={ciut ? nama : undefined}>
               {isi}
             </div>
           );
