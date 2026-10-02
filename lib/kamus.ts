@@ -98,6 +98,23 @@ const KAMUS = {
   "kartu.perintah": { id: "Perintah", en: "Command" },
   "kartu.stop": { id: "Stop", en: "Stop" },
   "antre.perintahDiAntre": { id: "perintah dalam antrian", en: "commands in queue" },
+  "notif.judul": { id: "Notifikasi", en: "Notifications" },
+  "notif.baru": { id: "baru", en: "new" },
+  "notif.sub": {
+    id: "PR, error, dan penyelesaian AI 24 jam terakhir dari semua proyek.",
+    en: "PRs, errors, and AI completions in the last 24 hours across all projects.",
+  },
+  "notif.tandaiSemua": { id: "Tandai semua dibaca", en: "Mark all as read" },
+  "notif.kosongJudul": { id: "Tidak ada notifikasi", en: "No notifications" },
+  "notif.kosongSub": {
+    id: "Semua tenang. PR baru dan error AI akan muncul di sini.",
+    en: "All quiet. New PRs and AI errors will appear here.",
+  },
+  "notif.tandai": { id: "Tandai dibaca", en: "Mark as read" },
+  "notif.muat": { id: "Memuat…", en: "Loading…" },
+  "notif.dtkLalu": { id: "dtk lalu", en: "s ago" },
+  "notif.mntLalu": { id: "mnt lalu", en: "m ago" },
+  "notif.jamLalu": { id: "jam lalu", en: "h ago" },
 } as const;
 
 export type Kunci = keyof typeof KAMUS;

@@ -5,20 +5,23 @@ import { useSession } from "next-auth/react";
 import { BellOff, CheckCheck, CircleCheck, GitPullRequest, TriangleAlert } from "lucide-react";
 import { LoginCard } from "@/components/dashboard/LoginCard";
 import { fetchNotifikasi, siarNotifikasi, tandaiDibaca, type Notifikasi } from "@/lib/notifikasi";
+import { useBahasa } from "@/components/shell/BahasaProvider";
+import type { Kunci, Lang } from "@/lib/kamus";
 import { cn } from "@/lib/utils";
 
-function waktuRelatif(iso: string): string {
+function waktuRelatif(iso: string, lang: Lang, teks: (k: Kunci) => string): string {
   const dtk = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
-  if (dtk < 60) return `${dtk} dtk lalu`;
+  if (dtk < 60) return `${dtk} ${teks("notif.dtkLalu")}`;
   const mnt = Math.round(dtk / 60);
-  if (mnt < 60) return `${mnt} mnt lalu`;
+  if (mnt < 60) return `${mnt} ${teks("notif.mntLalu")}`;
   const jam = Math.round(mnt / 60);
-  if (jam < 24) return `${jam} jam lalu`;
-  return new Date(iso).toLocaleDateString("id-ID", { day: "numeric", month: "short" });
+  if (jam < 24) return `${jam} ${teks("notif.jamLalu")}`;
+  return new Date(iso).toLocaleDateString(lang === "en" ? "en-US" : "id-ID", { day: "numeric", month: "short" });
 }
 
 export default function Notifikasi() {
   const { data: session, status } = useSession();
+  const { lang, teks } = useBahasa();
   const [items, setItems] = useState<Notifikasi[] | null>(null);
 
   const muat = useCallback(() => {
@@ -32,7 +35,7 @@ export default function Notifikasi() {
     muat();
   }, [status, muat]);
 
-  if (status === "loading") return <p className="font-mono text-xs text-muted-foreground">Memuat sesi…</p>;
+  if (status === "loading") return <p className="font-mono text-xs text-muted-foreground">{teks("shell.muatSesi")}</p>;
   if (!session?.user) return <LoginCard />;
 
   const belum = items?.filter((e) => !e.dibaca).length ?? 0;
@@ -47,28 +50,26 @@ export default function Notifikasi() {
     <div className="mx-auto w-full max-w-2xl p-4 sm:p-6">
       <div className="mb-1 flex items-center justify-between">
         <h2 className="text-[17px] font-semibold tracking-tight">
-          Notifikasi {items && belum > 0 && <span className="font-mono text-xs font-normal text-muted-foreground">({belum} baru)</span>}
+          {teks("notif.judul")} {items && belum > 0 && <span className="font-mono text-xs font-normal text-muted-foreground">({belum} {teks("notif.baru")})</span>}
         </h2>
         {belum > 0 && (
           <button
             onClick={() => void tandai()}
             className="flex items-center gap-1.5 rounded-[9px] border border-border px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
           >
-            <CheckCheck className="h-3.5 w-3.5" /> Tandai semua dibaca
+            <CheckCheck className="h-3.5 w-3.5" /> {teks("notif.tandaiSemua")}
           </button>
         )}
       </div>
-      <p className="mb-6 text-[13px] text-muted-foreground">PR, error, dan penyelesaian AI 24 jam terakhir dari semua proyek.</p>
+      <p className="mb-6 text-[13px] text-muted-foreground">{teks("notif.sub")}</p>
 
       {!items ? (
-        <p className="font-mono text-xs text-muted-foreground">Memuat…</p>
+        <p className="font-mono text-xs text-muted-foreground">{teks("notif.muat")}</p>
       ) : items.length === 0 ? (
         <div className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-card px-4 py-12 text-center">
           <BellOff className="h-8 w-8 text-muted-foreground" />
-          <div className="text-[15px] font-semibold">Tidak ada notifikasi</div>
-          <p className="max-w-xs text-[13px] text-muted-foreground">
-            Semua tenang. PR baru dan error AI akan muncul di sini.
-          </p>
+          <div className="text-[15px] font-semibold">{teks("notif.kosongJudul")}</div>
+          <p className="max-w-xs text-[13px] text-muted-foreground">{teks("notif.kosongSub")}</p>
         </div>
       ) : (
         <div className="scroll-tipis max-h-[520px] overflow-y-auto rounded-2xl border border-border bg-card p-[18px]">
@@ -106,13 +107,13 @@ export default function Notifikasi() {
                     {e.message} <b className="font-semibold">{e.repo_name}</b>
                   </div>
                   <div className="mt-1 flex items-center gap-2 font-mono text-[10.5px] text-muted-foreground">
-                    <span>{waktuRelatif(e.created_at)}</span>
+                    <span>{waktuRelatif(e.created_at, lang, teks)}</span>
                     {!e.dibaca && (
                       <button
                         onClick={() => void tandai(e.id)}
                         className="rounded-full bg-primary/10 px-2 py-0.5 font-sans text-[10px] font-medium text-primary hover:bg-primary/20"
                       >
-                        Tandai dibaca
+                        {teks("notif.tandai")}
                       </button>
                     )}
                   </div>

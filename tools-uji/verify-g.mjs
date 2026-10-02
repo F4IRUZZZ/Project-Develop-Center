@@ -26,7 +26,7 @@ for (const f of ["app/api/notifications/route.ts", "app/api/notifications/read/r
 const schema = readFileSync(join(root, "db/schema.sql"), "utf8");
 cek("tabel notification_reads", schema.includes("CREATE TABLE IF NOT EXISTS notification_reads"));
 const halNotif = readFileSync(join(root, "app/notifikasi/page.tsx"), "utf8");
-cek("tombol tandai per item+semua", halNotif.includes("Tandai dibaca") && halNotif.includes("Tandai semua dibaca"));
+cek("tombol tandai per item+semua (kamus)", halNotif.includes("notif.tandai") && halNotif.includes("notif.tandaiSemua"));
 const sidebar = readFileSync(join(root, "components/shell/Sidebar.tsx"), "utf8");
 const badge = readFileSync(join(root, "components/shell/NotifBadge.tsx"), "utf8");
 cek("badge minus dibaca", badge.includes("fetchNotifikasi"));

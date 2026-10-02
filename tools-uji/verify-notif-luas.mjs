@@ -30,7 +30,7 @@ cek("kontrak prefix Selesai:", mcp.includes("Selesai: ${summary}") && mcp.includ
 
 const hal = readFileSync(join(root, "app/notifikasi/page.tsx"), "utf8");
 cek("halaman ikon selesai", hal.includes("CircleCheck") && hal.includes('e.type === "info"'));
-cek("halaman empty tetap", hal.includes("Tidak ada notifikasi"));
+cek("halaman empty tetap (kamus)", hal.includes("notif.kosongJudul"));
 
 if (gagal > 0) {
   console.log(`\nNOTIF-LUAS: ${gagal} gagal`);
