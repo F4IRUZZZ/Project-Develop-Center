@@ -11,6 +11,8 @@ import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { CommandModal } from "@/components/command/CommandModal";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { PullModal } from "@/components/command/PullModal";
+import { useBahasa } from "@/components/shell/BahasaProvider";
+import type { Lang } from "@/lib/kamus";
 import type { AIStatus, Project } from "@/lib/types";
 import type { QueuedCommand } from "@/lib/tasks";
 import type { ActivityEvent } from "@/lib/types";
@@ -52,6 +54,7 @@ interface TaskRow {
 export default function DetailProyek({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { data: session, status } = useSession();
+  const { lang, teks } = useBahasa();
   const [proyek, setProyek] = useState<Project | null>(null);
   const [tasks, setTasks] = useState<TaskRow[]>([]);
   const [commands, setCommands] = useState<QueuedCommand[]>([]);
@@ -130,15 +133,15 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
     await muat();
   };
 
-  if (status === "loading") return <p className="font-mono text-xs text-muted-foreground">Memuat sesi…</p>;
+  if (status === "loading") return <p className="font-mono text-xs text-muted-foreground">{teks("shell.muatSesi")}</p>;
   if (!session?.user) return <LoginCard />;
   if (!proyek)
     return (
       <div className="mx-auto w-full max-w-3xl p-6">
         <Link href="/proyek" className="text-[13px] text-primary hover:underline">
-          ← Kembali ke Proyek
+          {teks("pro.kembaliProyek")}
         </Link>
-        <p className="mt-4 font-mono text-xs text-muted-foreground">Memuat proyek…</p>
+        <p className="mt-4 font-mono text-xs text-muted-foreground">{teks("pro.muatProyek")}</p>
       </div>
     );
 
@@ -150,7 +153,7 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
   return (
     <div className="mx-auto w-full max-w-3xl p-4 sm:p-6">
       <Link href="/proyek" className="mb-4 inline-flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="h-4 w-4" /> Proyek
+        <ArrowLeft className="h-4 w-4" /> {teks("search.proyek")}
       </Link>
 
       <div className="rounded-2xl border border-border bg-card p-5">
@@ -170,7 +173,7 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
         {aktif ? (
           <div className="mt-4">
             <div className="mb-1.5 text-[13px]">
-              <span className="text-muted-foreground">Tugas: </span>
+              <span className="text-muted-foreground">{teks("pro.tugasLabel")}</span>
               {aktif.title}
             </div>
             <div className="h-1.5 overflow-hidden rounded bg-muted">
@@ -179,7 +182,7 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
             <div className="mt-1 font-mono text-[11px] text-muted-foreground">{aktif.progress}%</div>
           </div>
         ) : (
-          <p className="mt-4 text-[13px] text-muted-foreground">Tidak ada task aktif. Kirim perintah untuk memulai.</p>
+          <p className="mt-4 text-[13px] text-muted-foreground">{teks("pro.tidakAdaTask")}</p>
         )}
 
         <div className="mt-4 flex flex-wrap gap-2">
@@ -187,7 +190,7 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
             onClick={() => setModalOpen(true)}
             className="flex items-center gap-1.5 rounded-[9px] bg-primary/10 px-4 py-2 text-xs font-medium text-primary hover:bg-primary/20"
           >
-            <Terminal className="h-3.5 w-3.5" /> Perintah
+            <Terminal className="h-3.5 w-3.5" /> {teks("kartu.perintah")}
           </button>
           {proyek.status === "waiting" && (
             <button
@@ -202,30 +205,38 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
               onClick={() => setTanyaStop(true)}
               className="rounded-[9px] bg-red-500/10 px-4 py-2 text-xs font-medium text-red-500 hover:bg-red-500/20"
             >
-              Stop
+              {teks("kartu.stop")}
             </button>
           )}
         </div>
       </div>
 
       <div className="mb-4 mt-6 flex gap-2">
-        {(["tugas", "perintah", "aktivitas", "sesi", "ringkasan"] as Tab[]).map((t) => (
+        {(
+          [
+            ["tugas", "riw.tugas"],
+            ["perintah", "riw.perintah"],
+            ["aktivitas", "pro.tabAktivitas"],
+            ["sesi", "nav.sesi"],
+            ["ringkasan", "pro.tabRingkasan"],
+          ] as Array<[Tab, "riw.tugas" | "riw.perintah" | "pro.tabAktivitas" | "nav.sesi" | "pro.tabRingkasan"]>
+        ).map(([t, kunci]) => (
           <button
             key={t}
             onClick={() => setTab(t)}
             className={cn(
-              "rounded-[9px] px-4 py-2 text-[13px] font-medium capitalize transition-colors",
+              "rounded-[9px] px-4 py-2 text-[13px] font-medium transition-colors",
               tab === t ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}
           >
-            {t}
+            {teks(kunci)}
           </button>
         ))}
       </div>
 
       {tab === "tugas" && (
         <div className="rounded-2xl border border-border bg-card p-[18px]">
-          {tasks.length === 0 && <p className="text-[13px] text-muted-foreground">Belum ada tugas.</p>}
+          {tasks.length === 0 && <p className="text-[13px] text-muted-foreground">{teks("riw.kosongTugas")}</p>}
           {tasks.map((t) => (
             <div key={t.id} className="border-b border-border py-2.5 last:border-b-0">
               <div className="flex items-center justify-between gap-2">
@@ -240,7 +251,7 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
 
       {tab === "perintah" && (
         <div className="rounded-2xl border border-border bg-card p-[18px]">
-          {commands.length === 0 && <p className="text-[13px] text-muted-foreground">Belum ada perintah.</p>}
+          {commands.length === 0 && <p className="text-[13px] text-muted-foreground">{teks("riw.kosongPerintah")}</p>}
           {commands.map((c) => (
             <div key={c.id} className="border-b border-border py-2.5 last:border-b-0">
               <div className="text-[13px]">{c.command_text}</div>
@@ -255,7 +266,7 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
 
       {tab === "aktivitas" && (
         <div className="scroll-tipis max-h-[420px] overflow-y-auto rounded-2xl border border-border bg-card p-[18px]">
-          {feed.length === 0 && <p className="text-[13px] text-muted-foreground">Belum ada aktivitas.</p>}
+          {feed.length === 0 && <p className="text-[13px] text-muted-foreground">{teks("pro.kosongFeed")}</p>}
           {feed.map((e) => (
             <div key={e.id} className="border-b border-border py-2.5 last:border-b-0">
               <div className="text-[13px]">{e.message}</div>
@@ -268,9 +279,7 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
       {tab === "sesi" && (
         <div className="scroll-tipis max-h-[420px] overflow-y-auto rounded-2xl border border-border bg-card p-[18px]">
           {sesi.length === 0 && (
-            <p className="text-[13px] text-muted-foreground">
-              Belum ada sesi tercatat. Pasang plugin pdc-presence di repo ini agar sesi OpenCode terlacak otomatis.
-            </p>
+            <p className="text-[13px] text-muted-foreground">{teks("pro.kosongSesiPlugin")}</p>
           )}
           {sesi.map((s) => (
             <div key={s.session_id} className="border-b border-border py-2.5 last:border-b-0">
@@ -281,19 +290,25 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
                 <div className="flex shrink-0 items-center gap-1">
                   <StatusBadge
                     status={sesiSegar(s) ? "working" : s.status === "error" ? "failed" : "idle"}
-                    label={s.ended_at ? "Selesai" : !sesiSegar(s) ? "Nonaktif" : "Aktif"}
+                    label={s.ended_at ? teks("sesi.selesai") : !sesiSegar(s) ? teks("sesi.nonaktif") : teks("sesi.aktif")}
                   />
                   <TombolHapusSesi onHapus={() => { setGalatHapusSesi(false); setTanyaHapusSesi(s.session_id); }} />
                 </div>
               </div>
               <div className="mt-1 font-mono text-[10.5px] text-muted-foreground">
-                mulai {new Date(s.started_at).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                {teks("pro.mulaiLabel")}{new Date(s.started_at).toLocaleString(lang === "en" ? "en-US" : "id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
               </div>
               {s.aktivitas && (
                 <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[10.5px] text-muted-foreground">
                   <StatusBadge
                     status={s.aktivitas.kerja === "bekerja" ? "working" : s.aktivitas.kerja === "siaga" ? "waiting" : "idle"}
-                    label={s.aktivitas.kerja === "bekerja" ? "Bekerja" : s.aktivitas.kerja === "siaga" ? `Siaga · hening ${s.aktivitas.hening_mnt ?? 0} mnt` : "Nonaktif"}
+                    label={
+                      s.aktivitas.kerja === "bekerja"
+                        ? teks("sesi.bekerja")
+                        : s.aktivitas.kerja === "siaga"
+                          ? teks("sesi.siagaHening").replace("{n}", String(s.aktivitas.hening_mnt ?? 0))
+                          : teks("sesi.nonaktif")
+                    }
                   />
                   {s.aktivitas.file_terakhir.length > 0 && (
                     <span className="truncate">
@@ -303,7 +318,7 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
                   )}
                   {s.aktivitas.komit_terakhir?.sha && (
                     <span>
-                      komit {s.aktivitas.komit_terakhir.sha.slice(0, 7)}
+                      {teks("pro.komitLabel")}{s.aktivitas.komit_terakhir.sha.slice(0, 7)}
                       {s.aktivitas.komit_terakhir.files_changed !== null
                         ? ` · ${s.aktivitas.komit_terakhir.files_changed} file +${s.aktivitas.komit_terakhir.lines_added ?? 0}-${s.aktivitas.komit_terakhir.lines_removed ?? 0}`
                         : ""}
@@ -313,9 +328,9 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
               )}
               {s.ringkasan_terakhir && (
                 <p className="mt-1 truncate text-[12px] text-foreground/80" title={s.ringkasan_terakhir}>
-                  Terakhir: {s.ringkasan_terakhir}
+                  {teks("pro.terakhirLabel")}{s.ringkasan_terakhir}
                   {s.ringkasan_waktu
-                    ? ` · ${Math.max(0, Math.round((Date.now() - new Date(s.ringkasan_waktu).getTime()) / 60000))} mnt lalu`
+                    ? ` · ${Math.max(0, Math.round((Date.now() - new Date(s.ringkasan_waktu).getTime()) / 60000))} ${teks("notif.mntLalu")}`
                     : ""}
                 </p>
               )}
@@ -327,12 +342,10 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
       {tab === "ringkasan" && (
         <div className="scroll-tipis max-h-[420px] overflow-y-auto rounded-2xl border border-border bg-card p-[18px]">
           {sesi.length === 0 && (
-            <p className="text-[13px] text-muted-foreground">Belum ada sesi tercatat.</p>
+            <p className="text-[13px] text-muted-foreground">{teks("pro.kosongSesi")}</p>
           )}
           {sesi.slice(0, 10).every((s) => !s.ringkasan_terakhir) && sesi.length > 0 && (
-            <p className="mb-2 text-[13px] text-muted-foreground">
-              Belum ada ringkasan. Ringkasan ditulis di akhir tiap giliran jawaban agent.
-            </p>
+            <p className="mb-2 text-[13px] text-muted-foreground">{teks("pro.kosongRingkasan")}</p>
           )}
           {sesi.slice(0, 10).map((s) => (
             <div key={s.session_id} className="border-b border-border py-2.5 last:border-b-0">
@@ -343,7 +356,7 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
                 <div className="flex shrink-0 items-center gap-1">
                   <StatusBadge
                     status={sesiSegar(s) ? "working" : s.status === "error" ? "failed" : "idle"}
-                    label={s.ended_at ? "Selesai" : !sesiSegar(s) ? "Nonaktif" : "Aktif"}
+                    label={s.ended_at ? teks("sesi.selesai") : !sesiSegar(s) ? teks("sesi.nonaktif") : teks("sesi.aktif")}
                   />
                   <TombolHapusSesi onHapus={() => { setGalatHapusSesi(false); setTanyaHapusSesi(s.session_id); }} />
                 </div>
@@ -352,11 +365,11 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
                 <p className="mt-1 text-[13px] leading-relaxed">
                   {s.ringkasan_terakhir}
                   {s.ringkasan_waktu
-                    ? <span className="font-mono text-[10.5px] text-muted-foreground"> · {Math.max(0, Math.round((Date.now() - new Date(s.ringkasan_waktu).getTime()) / 60000))} mnt lalu</span>
+                    ? <span className="font-mono text-[10.5px] text-muted-foreground"> · {Math.max(0, Math.round((Date.now() - new Date(s.ringkasan_waktu).getTime()) / 60000))} {teks("notif.mntLalu")}</span>
                     : null}
                 </p>
               ) : (
-                <p className="mt-1 font-mono text-[10.5px] text-muted-foreground">tanpa ringkasan</p>
+                <p className="mt-1 font-mono text-[10.5px] text-muted-foreground">{teks("pro.tanpaRingkasan")}</p>
               )}
             </div>
           ))}
@@ -373,18 +386,18 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
       <PullModal open={pullOpen} projectId={id} repoName={proyek.repoName} onMerged={() => void muat()} onClose={() => setPullOpen(false)} />
       <ConfirmModal
         open={tanyaStop}
-        judul="Hentikan kerja AI?"
-        pesan={`Kerja AI di ${proyek.repoName} dihentikan. Perintah pending dibatalkan.`}
-        labelKonfirmasi="Ya, hentikan"
+        judul={teks("pro.stopJudul")}
+        pesan={teks("pro.stopPesanDetail").replace("{repo}", proyek.repoName)}
+        labelKonfirmasi={teks("pro.stopYa")}
         danger
         onKonfirmasi={() => void stop()}
         onBatal={() => setTanyaStop(false)}
       />
       <ConfirmModal
         open={tanyaHapusSesi !== null}
-        judul="Hapus sesi ini?"
-        pesan={galatHapusSesi ? "Gagal menghapus (server menolak). Coba lagi." : `Sesi ${tanyaHapusSesi?.slice(0, 8)}… dihapus dari daftar (jejak file ikut terhapus; feed riwayat tetap).`}
-        labelKonfirmasi="Ya, hapus"
+        judul={teks("pro.hapusJudul")}
+        pesan={galatHapusSesi ? teks("pro.hapusPesanErr") : teks("pro.hapusPesan").replace("{id}", tanyaHapusSesi?.slice(0, 8) ?? "")}
+        labelKonfirmasi={teks("pro.hapusYa")}
         danger
         onKonfirmasi={() => void hapusSesi()}
         onBatal={() => { setTanyaHapusSesi(null); setGalatHapusSesi(false); }}
