@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { isErr, sesiUser } from "@/lib/server-auth";
+import { galat } from "@/lib/galat-api";
 
 // Jejak aktivitas sesi (dipanggil plugin OpenCode, auth Bearer key mesin).
 // METADATA SAJA: path file + angka stat + sha komit. Isi file/pesan DILARANG
@@ -38,18 +39,18 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Body JSON tidak valid" }, { status: 400 });
+    return NextResponse.json({ error: galat(req, "bodyInvalid") }, { status: 400 });
   }
   const sessionId = body.session_id?.trim() ?? "";
-  if (!sessionId) return NextResponse.json({ error: "session_id wajib" }, { status: 400 });
+  if (!sessionId) return NextResponse.json({ error: galat(req, "sesiIdWajib") }, { status: 400 });
   if (!Array.isArray(body.events) || body.events.length === 0) {
-    return NextResponse.json({ error: "events wajib diisi" }, { status: 400 });
+    return NextResponse.json({ error: galat(req, "eventsWajib") }, { status: 400 });
   }
 
   const sql = db();
   const ada =
     await sql`SELECT 1 FROM agent_sessions WHERE session_id = ${sessionId} AND user_id = ${ctx.userId} LIMIT 1`;
-  if (ada.length === 0) return NextResponse.json({ error: "Sesi tidak ketemu" }, { status: 404 });
+  if (ada.length === 0) return NextResponse.json({ error: galat(req, "sesiHilang") }, { status: 404 });
 
   let adaSunting = false;
   let masuk = 0;

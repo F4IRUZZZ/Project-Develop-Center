@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { buatId, isErr, sesiUser, tokenGitHub } from "@/lib/server-auth";
+import { galat } from "@/lib/galat-api";
 
 // Merge PR terbuka (satu-satunya aksi write ke GitHub dari webapp, PRD F15).
 // Metode: merge commit. Tidak bisa dibatalkan — UI wajib konfirmasi dulu.
@@ -12,20 +13,20 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Body JSON tidak valid" }, { status: 400 });
+    return NextResponse.json({ error: galat(req, "bodyInvalid") }, { status: 400 });
   }
   const projectId = body.project_id?.trim() ?? "";
   const prNumber = Number(body.number);
   if (!projectId || !Number.isInteger(prNumber) || prNumber <= 0) {
-    return NextResponse.json({ error: "project_id + number (int) wajib" }, { status: 400 });
+    return NextResponse.json({ error: galat(req, "pullsNumWajib") }, { status: 400 });
   }
 
   const proj = await db()`SELECT repo_full FROM projects WHERE id = ${projectId} AND user_id = ${ctx.userId}`;
   const row = proj[0] as { repo_full: string } | undefined;
-  if (!row) return NextResponse.json({ error: "Proyek tidak ketemu" }, { status: 404 });
+  if (!row) return NextResponse.json({ error: galat(req, "proyekHilang") }, { status: 404 });
 
   const token = await tokenGitHub(ctx.userId);
-  if (!token) return NextResponse.json({ error: "Token GitHub tidak tersedia, login ulang" }, { status: 401 });
+  if (!token) return NextResponse.json({ error: galat(req, "tokenGithub") }, { status: 401 });
 
   const res = await fetch(`https://api.github.com/repos/${row.repo_full}/pulls/${prNumber}/merge`, {
     method: "PUT",

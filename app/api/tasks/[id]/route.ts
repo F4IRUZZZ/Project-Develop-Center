@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { isErr, sesiUser } from "@/lib/server-auth";
+import { galat } from "@/lib/galat-api";
 
 const BOLEH = new Set(["idle", "working", "waiting", "completed", "failed", "stuck"]);
 
@@ -13,13 +14,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Body JSON tidak valid" }, { status: 400 });
+    return NextResponse.json({ error: galat(req, "bodyInvalid") }, { status: 400 });
   }
   if (body.status !== undefined && !BOLEH.has(body.status)) {
-    return NextResponse.json({ error: "status tidak dikenal" }, { status: 400 });
+    return NextResponse.json({ error: galat(req, "taskStatusUnknown") }, { status: 400 });
   }
   if (body.progress !== undefined && (body.progress < 0 || body.progress > 100)) {
-    return NextResponse.json({ error: "progress 0-100" }, { status: 400 });
+    return NextResponse.json({ error: galat(req, "taskProgress") }, { status: 400 });
   }
 
   const selesai = body.status === "completed" || body.status === "failed";
@@ -33,6 +34,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     WHERE id = ${id} AND user_id = ${ctx.userId}
     RETURNING id
   `;
-  if (rows.length === 0) return NextResponse.json({ error: "Task tidak ketemu" }, { status: 404 });
+  if (rows.length === 0) return NextResponse.json({ error: galat(req, "taskHilang") }, { status: 404 });
   return NextResponse.json({ ok: true });
 }

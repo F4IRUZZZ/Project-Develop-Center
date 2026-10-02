@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { isErr, sesiUser } from "@/lib/server-auth";
+import { galat } from "@/lib/galat-api";
 import { buatApiKey } from "@/lib/api-key";
 
 export async function GET(req: NextRequest) {
@@ -18,7 +19,7 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Body JSON tidak valid" }, { status: 400 });
+    return NextResponse.json({ error: galat(req, "bodyInvalid") }, { status: 400 });
   }
   const name = body.name?.trim().slice(0, 60) || "opencode-local";
   const key = await buatApiKey(ctx.userId, name);

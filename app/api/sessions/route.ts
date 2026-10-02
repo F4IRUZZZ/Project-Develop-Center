@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { isErr, sesiUser } from "@/lib/server-auth";
+import { galat } from "@/lib/galat-api";
 
 // Daftarkan/segarkan sesi AI (dipanggil plugin OpenCode, auth Bearer key mesin).
 // Upsert by session_id: buka sesi baru atau segarkan yang hidup.
@@ -12,10 +13,10 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Body JSON tidak valid" }, { status: 400 });
+    return NextResponse.json({ error: galat(req, "bodyInvalid") }, { status: 400 });
   }
   const sessionId = body.session_id?.trim() ?? "";
-  if (!sessionId) return NextResponse.json({ error: "session_id wajib" }, { status: 400 });
+  if (!sessionId) return NextResponse.json({ error: galat(req, "sesiIdWajib") }, { status: 400 });
   const mode = body.mode === "plan" ? "plan" : "build";
   // reopen=true HANYA dari bukti hidup (lazy-register plugin): mengaktifkan
   // kembali baris final. Denyut biasa tanpa flag tak pernah membuka ulang.
@@ -95,10 +96,10 @@ export async function PATCH(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Body JSON tidak valid" }, { status: 400 });
+    return NextResponse.json({ error: galat(req, "bodyInvalid") }, { status: 400 });
   }
   const sessionId = body.session_id?.trim() ?? "";
-  if (!sessionId) return NextResponse.json({ error: "session_id wajib" }, { status: 400 });
+  if (!sessionId) return NextResponse.json({ error: galat(req, "sesiIdWajib") }, { status: 400 });
 
   const sql = db();
   if (body.status === "error" || body.status === "selesai") {
@@ -107,7 +108,7 @@ export async function PATCH(req: NextRequest) {
       session_id: string;
       project_id: string | null;
     }>;
-    if (tutup.length === 0) return NextResponse.json({ error: "Sesi tidak ketemu" }, { status: 404 });
+    if (tutup.length === 0) return NextResponse.json({ error: galat(req, "sesiHilang") }, { status: 404 });
     if (tutup[0].project_id) {
       await sql`INSERT INTO activity_log (id, user_id, project_id, type, message)
         VALUES (${`act-tutup-${sessionId}-${akhir}`}, ${ctx.userId}, ${tutup[0].project_id}, ${akhir === "error" ? "error" : "info"}, ${akhir === "error" ? "Sesi AI error." : "Sesi AI selesai."})
@@ -117,7 +118,7 @@ export async function PATCH(req: NextRequest) {
   }
 
   const denyut = await sql`UPDATE agent_sessions SET status = 'active', ended_at = NULL, last_seen_at = now() WHERE session_id = ${sessionId} AND user_id = ${ctx.userId} RETURNING session_id`;
-  if (denyut.length === 0) return NextResponse.json({ error: "Sesi tidak ketemu" }, { status: 404 });
+  if (denyut.length === 0) return NextResponse.json({ error: galat(req, "sesiHilang") }, { status: 404 });
   return NextResponse.json({ ok: true });
 }
 
@@ -131,13 +132,13 @@ export async function DELETE(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Body JSON tidak valid" }, { status: 400 });
+    return NextResponse.json({ error: galat(req, "bodyInvalid") }, { status: 400 });
   }
   const sessionId = body.session_id?.trim() ?? "";
-  if (!sessionId) return NextResponse.json({ error: "session_id wajib" }, { status: 400 });
+  if (!sessionId) return NextResponse.json({ error: galat(req, "sesiIdWajib") }, { status: 400 });
 
   const rows = await db()`DELETE FROM agent_sessions WHERE session_id = ${sessionId} AND user_id = ${ctx.userId} RETURNING session_id`;
-  if (rows.length === 0) return NextResponse.json({ error: "Sesi tidak ketemu" }, { status: 404 });
+  if (rows.length === 0) return NextResponse.json({ error: galat(req, "sesiHilang") }, { status: 404 });
   return NextResponse.json({ ok: true });
 }
 

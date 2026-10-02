@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { galat } from "@/lib/galat-api";
 import {
   bacaBatas,
   proyekUntukRepo,
@@ -13,9 +14,9 @@ import {
 // Webhook GitHub (F9). Auth = HMAC signature, bukan sesi (GitHub tak punya cookie).
 export async function POST(req: Request) {
   const mentah = await req.text();
-  if (!bacaBatas(mentah)) return NextResponse.json({ error: "Body terlalu besar" }, { status: 413 });
+  if (!bacaBatas(mentah)) return NextResponse.json({ error: galat(req, "hookBesar") }, { status: 413 });
   if (!verifikasiSignature(mentah, req.headers.get("x-hub-signature-256"))) {
-    return NextResponse.json({ error: "Signature tidak valid" }, { status: 401 });
+    return NextResponse.json({ error: galat(req, "hookSig") }, { status: 401 });
   }
 
   const event = req.headers.get("x-github-event") ?? "";
@@ -32,7 +33,7 @@ export async function POST(req: Request) {
   try {
     body = JSON.parse(mentah) as Record<string, unknown>;
   } catch {
-    return NextResponse.json({ error: "Body JSON tidak valid" }, { status: 400 });
+    return NextResponse.json({ error: galat(req, "bodyInvalid") }, { status: 400 });
   }
 
   const full = ((body.repository as { full_name?: string } | undefined)?.full_name ?? "") as string;

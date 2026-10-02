@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { buatId, isErr, sesiUser } from "@/lib/server-auth";
+import { galat } from "@/lib/galat-api";
 import type { ActivityEvent } from "@/lib/types";
 
 const BOLEH = new Set(["progress", "commit", "pr", "issue", "error", "info"]);
@@ -50,13 +51,13 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Body JSON tidak valid" }, { status: 400 });
+    return NextResponse.json({ error: galat(req, "bodyInvalid") }, { status: 400 });
   }
   if (!body.project_id || !body.message?.trim()) {
-    return NextResponse.json({ error: "project_id + message wajib" }, { status: 400 });
+    return NextResponse.json({ error: galat(req, "actProjMsgWajib") }, { status: 400 });
   }
   if (body.type && !BOLEH.has(body.type)) {
-    return NextResponse.json({ error: "type tidak dikenal" }, { status: 400 });
+    return NextResponse.json({ error: galat(req, "actTipeUnknown") }, { status: 400 });
   }
 
   const id = buatId("act");
