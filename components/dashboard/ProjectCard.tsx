@@ -1,6 +1,7 @@
 import { Clock, FolderGit2, Lock, LockOpen, Square, Terminal } from "lucide-react";
 import Link from "next/link";
 import { PrButton } from "@/components/command/PullModal";
+import { useBahasa } from "@/components/shell/BahasaProvider";
 import { cn } from "@/lib/utils";
 import type { Project } from "@/lib/types";
 import { StatusBadge } from "./StatusBadge";
@@ -22,6 +23,7 @@ interface CardProps {
 }
 
 export function ProjectCard({ project, readOnly, onCommand, onStop, onVisibility, onPulls }: CardProps) {
+  const { teks } = useBahasa();
   const aksi = readOnly ? [] : project.actions;
   const tampilPr = project.status === "waiting" && onPulls && !readOnly;
   return (
@@ -39,20 +41,20 @@ export function ProjectCard({ project, readOnly, onCommand, onStop, onVisibility
               <PendingBadge projectId={project.id} />
               {project.sesiKerja === "bekerja" ? (
                 <span
-                  title={`AI sedang menyunting kode di repo ini${project.sesiRingkasan ? `: ${project.sesiRingkasan}` : ""}`}
+                  title={`${teks("kartu.titleBekerja")}${project.sesiRingkasan ? `: ${project.sesiRingkasan}` : ""}`}
                   className="ml-1.5 inline-flex items-center gap-1 rounded-full bg-sky-500/10 px-2 py-0.5 text-[10px] font-medium text-sky-500"
                 >
                   <span className="h-[6px] w-[6px] animate-pulse rounded-full bg-sky-500" />
-                  AI bekerja
+                  {teks("kartu.aiBekerja")}
                 </span>
               ) : (
                 project.sesiAktif && (
                   <span
-                    title={`Sesi AI aktif di repo ini${project.sesiRingkasan ? `: ${project.sesiRingkasan}` : ""}`}
+                    title={`${teks("kartu.titleAktif")}${project.sesiRingkasan ? `: ${project.sesiRingkasan}` : ""}`}
                     className="ml-1.5 inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-500"
                   >
                     <span className="h-[6px] w-[6px] animate-pulse rounded-full bg-emerald-500" />
-                    AI aktif
+                    {teks("kartu.aiAktif")}
                   </span>
                 )
               )}
@@ -68,8 +70,8 @@ export function ProjectCard({ project, readOnly, onCommand, onStop, onVisibility
           (onVisibility && !readOnly ? (
             <button
               onClick={() => onVisibility(project.id, project.isPrivate ?? false)}
-              title={project.isPrivate ? "Jadikan public" : "Jadikan private"}
-              aria-label={project.isPrivate ? "Jadikan public" : "Jadikan private"}
+              title={project.isPrivate ? teks("kartu.jadikanPublic") : teks("kartu.jadikanPrivate")}
+              aria-label={project.isPrivate ? teks("kartu.jadikanPublic") : teks("kartu.jadikanPrivate")}
               className="flex items-center gap-1 rounded-[9px] border border-border px-2 py-1 font-mono text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               {project.isPrivate ? <Lock className="h-3 w-3" /> : <LockOpen className="h-3 w-3" />}
@@ -102,7 +104,7 @@ export function ProjectCard({ project, readOnly, onCommand, onStop, onVisibility
                   onClick={() => onStop(project.id)}
                   className="flex flex-1 items-center justify-center gap-1.5 rounded-[9px] bg-red-500/10 px-0 py-2 text-xs font-medium text-red-500 transition-colors hover:bg-red-500/20"
                 >
-                  <Square className="h-3.5 w-3.5" /> Stop
+                  <Square className="h-3.5 w-3.5" /> {teks("kartu.stop")}
                 </button>
               )}
             </>
@@ -113,7 +115,7 @@ export function ProjectCard({ project, readOnly, onCommand, onStop, onVisibility
               onClick={() => onCommand?.(project.id)}
               className="flex flex-1 items-center justify-center gap-1.5 rounded-[9px] bg-primary/10 px-0 py-2 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
             >
-              <Terminal className="h-3.5 w-3.5" /> Perintah
+              <Terminal className="h-3.5 w-3.5" /> {teks("kartu.perintah")}
             </button>
           )}
           {aksi.includes("stop" as Project["actions"][number]) && (
@@ -121,7 +123,7 @@ export function ProjectCard({ project, readOnly, onCommand, onStop, onVisibility
               onClick={() => onStop?.(project.id)}
               className="flex flex-1 items-center justify-center gap-1.5 rounded-[9px] bg-red-500/10 px-0 py-2 text-xs font-medium text-red-500 transition-colors hover:bg-red-500/20"
             >
-              <Square className="h-3.5 w-3.5" /> Stop
+              <Square className="h-3.5 w-3.5" /> {teks("kartu.stop")}
             </button>
           )}
             </>

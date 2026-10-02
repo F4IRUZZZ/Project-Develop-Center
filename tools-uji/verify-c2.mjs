@@ -28,7 +28,7 @@ cek("mock progress 45", mock.includes("progress: 45"));
 const card = readFileSync(join(root, "components/dashboard/ProjectCard.tsx"), "utf8");
 cek("kartu tanpa Merge PR (dihapus E3)", !card.includes("Merge PR"));
 cek("kartu aksi Stop", card.includes("Stop"));
-cek("kartu aksi Perintah", card.includes("Perintah"));
+cek("kartu aksi Perintah (kamus)", card.includes("kartu.perintah"));
 
 const page = readFileSync(join(root, "app/page.tsx"), "utf8");
 cek("page pakai Dashboard", page.includes("Dashboard"));

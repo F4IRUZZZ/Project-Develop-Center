@@ -26,7 +26,7 @@ const dash = readFileSync(join(root, "app/api/dashboard/route.ts"), "utf8");
 cek("flag sesiAktif 3 mnt", dash.includes("sesiAktif") && dash.includes("3 minutes"));
 
 const card = readFileSync(join(root, "components/dashboard/ProjectCard.tsx"), "utf8");
-cek("indikator AI aktif", card.includes("AI aktif") && card.includes("animate-pulse"));
+cek("indikator AI aktif (kamus)", card.includes("kartu.aiAktif") && card.includes("animate-pulse"));
 
 const plug = readFileSync(join(root, "plugins/pdc-presence.js"), "utf8");
 cek("plugin session.created/idle/error", plug.includes("session.created") && plug.includes("session.idle") && plug.includes("session.error"));

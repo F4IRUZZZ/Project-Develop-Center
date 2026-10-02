@@ -44,6 +44,15 @@ for (const [f, kunci] of [
 }
 const atur = readFileSync(join(root, "app/pengaturan/page.tsx"), "utf8");
 cek("picker di Pengaturan", atur.includes("PemilihBahasa"));
+for (const [f, kunci] of [
+  ["components/dashboard/Stats.tsx", "dash.proyekAktif"],
+  ["components/dashboard/ProjectCard.tsx", "kartu.perintah"],
+  ["components/command/PendingBadge.tsx", "antre.perintahDiAntre"],
+  ["app/page.tsx", "dash.butuhPerhatian"],
+]) {
+  const isi = readFileSync(join(root, f), "utf8");
+  cek(`dashboard ${f.split("/").pop()} pakai kamus`, isi.includes("useBahasa") && isi.includes(kunci));
+}
 cek("tanpa window.confirm baru", !shell.includes("window.confirm") && !atur.includes("window.confirm"));
 
 if (gagal > 0) {

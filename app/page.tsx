@@ -11,12 +11,14 @@ import { Stats } from "@/components/dashboard/Stats";
 import { fetchDashboard } from "@/lib/github";
 import { projects as mockProjects } from "@/lib/mock";
 import { EVENT_SEARCH } from "@/components/shell/SearchBox";
+import { useBahasa } from "@/components/shell/BahasaProvider";
 import type { Project } from "@/lib/types";
 
 const PERHATIAN = new Set(["working", "waiting", "stuck", "failed"]);
 
 export default function Home() {
   const { data: session, status } = useSession();
+  const { teks } = useBahasa();
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
   const [live, setLive] = useState<Project[] | null>(null);
@@ -83,7 +85,7 @@ export default function Home() {
     <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-6 p-4 sm:p-6 xl:flex-row">
       <div className="min-w-0 flex-1">
         {status === "loading" ? (
-          <p className="font-mono text-xs text-muted-foreground">Memuat sesi…</p>
+          <p className="font-mono text-xs text-muted-foreground">{teks("shell.muatSesi")}</p>
         ) : !session?.user ? (
           <LoginCard />
         ) : live ? (
@@ -96,31 +98,31 @@ export default function Home() {
             <div className="mb-6">
               <Dashboard
                 projects={aktif}
-                judul="Sedang Aktif"
+                judul={teks("dash.sedangAktif")}
                 readOnly
                 sembunyiStats
                 sembunyiAksiHeader
-                teksKosong="Tidak ada sesi AI aktif di repo mana pun."
+                teksKosong={teks("dash.kosongSesi")}
               />
             </div>
             <Dashboard
               projects={perhatian}
-              judul="Perlu Perhatian"
+              judul={teks("dash.butuhPerhatian")}
               readOnly
               sembunyiStats
               sembunyiAksiHeader
-              teksKosong="Semua tenang — tidak ada AI yang bekerja. Kirim perintah dari menu Proyek."
+              teksKosong={teks("dash.kosongTenang")}
             />
           </>
         ) : gagalRepo ? (
           <>
             <p className="mb-4 rounded-[9px] border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[13px] text-amber-500">
-              Gagal memuat repo GitHub — menampilkan data contoh.
+              {teks("dash.gagalRepo")}
             </p>
             <Dashboard projects={mockProjects} onCommand={openFor} />
           </>
         ) : (
-          <p className="font-mono text-xs text-muted-foreground">Memuat repo GitHub…</p>
+          <p className="font-mono text-xs text-muted-foreground">{teks("dash.muatRepo")}</p>
         )}
         {session?.user && <QueuePanel />}
       </div>
