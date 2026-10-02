@@ -46,7 +46,7 @@ cek("dep MCP SDK", Boolean(pkg.dependencies?.["@modelcontextprotocol/server"]));
 cek("mcp-server build OK", existsSync(join(mcp, "dist", "index.js")));
 
 const keys = readFileSync(join(root, "app/pengaturan/page.tsx"), "utf8");
-cek("halaman kelola key", keys.includes("/api/keys") && (keys.includes("Buat key baru") || keys.includes("Buat API key") || keys.includes("API key untuk mengizinkan")));
+cek("halaman kelola key (kamus)", keys.includes("/api/keys") && keys.includes("atur.buatKey"));
 
 if (gagal > 0) {
   console.log(`\nD4-CEK: ${gagal} gagal`);

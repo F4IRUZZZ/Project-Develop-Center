@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { Inbox, Trash2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { bersihkanAntrian, bacaInfoMigrasi, sumberDariStatus, tutupInfoMigrasi, useQueue } from "@/lib/queue";
+import { useBahasa } from "@/components/shell/BahasaProvider";
+import type { Kunci, Lang } from "@/lib/kamus";
 import type { QueuedCommand } from "@/lib/tasks";
 import { cn } from "@/lib/utils";
 
@@ -14,11 +16,11 @@ const WARNA: Record<QueuedCommand["status"], string> = {
   failed: "bg-red-500/10 text-red-500",
 };
 
-const LABEL: Record<QueuedCommand["status"], string> = {
-  pending: "Menunggu",
-  processing: "Diproses",
-  completed: "Selesai",
-  failed: "Gagal",
+const LABEL: Record<QueuedCommand["status"], Kunci> = {
+  pending: "antre.labelPending",
+  processing: "antre.labelProcessing",
+  completed: "antre.labelCompleted",
+  failed: "antre.labelFailed",
 };
 
 function useNamaProyek(): (id: string) => string {
@@ -34,16 +36,17 @@ function useNamaProyek(): (id: string) => string {
   return (id: string) => peta[id] ?? id;
 }
 
-function waktuRelatif(iso: string): string {
+function waktuRelatif(iso: string, lang: Lang, teks: (k: Kunci) => string): string {
   const dtk = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
-  if (dtk < 60) return `${dtk} dtk lalu`;
+  if (dtk < 60) return `${dtk} ${teks("notif.dtkLalu")}`;
   const mnt = Math.round(dtk / 60);
-  if (mnt < 60) return `${mnt} mnt lalu`;
-  return `${Math.round(mnt / 60)} jam lalu`;
+  if (mnt < 60) return `${mnt} ${teks("notif.mntLalu")}`;
+  return `${Math.round(mnt / 60)} ${teks("notif.jamLalu")}`;
 }
 
 export function QueuePanel() {
   const { status } = useSession();
+  const { lang, teks } = useBahasa();
   const { antrian, sumber } = useQueue();
   const infoMigrasi = bacaInfoMigrasi();
   const selesai = antrian.filter((c) => c.status === "completed" || c.status === "failed").length;
@@ -55,13 +58,13 @@ export function QueuePanel() {
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2 text-[15px] font-semibold">
           <Inbox className="h-4 w-4 text-muted-foreground" />
-          Antrian Perintah
+          {teks("antre.judul")}
           <span className="font-mono text-xs font-normal text-muted-foreground">({antrian.length})</span>
           <span
-            title={sumber === "api" ? "Tersimpan di server, terbawa antar perangkat" : "Mode lokal: tersimpan di browser ini saja"}
+            title={sumber === "api" ? teks("antre.serverTitle") : teks("antre.lokalTitle")}
             className="rounded-full border border-border px-2 py-0.5 text-[10.5px] font-medium text-muted-foreground"
           >
-            {sumber === "api" ? "Server" : "Lokal"}
+            {sumber === "api" ? teks("antre.server") : teks("antre.lokal")}
           </span>
         </div>
         {selesai > 0 && (
@@ -72,36 +75,36 @@ export function QueuePanel() {
             }}
             className="flex items-center gap-1.5 rounded-[9px] border border-border px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
           >
-            <Trash2 className="h-3.5 w-3.5" /> Bersihkan selesai
+            <Trash2 className="h-3.5 w-3.5" /> {teks("antre.bersihkan")}
           </button>
         )}
       </div>
       {gagalHapus && (
         <p className="mb-3 rounded-[9px] border border-red-500/30 bg-red-500/10 px-3 py-2 text-[13px] text-red-500">
-          Gagal membersihkan. Coba lagi.
+          {teks("antre.gagalHapus")}
         </p>
       )}
       {sumber === "lokal" && antrian.length > 0 && (
         <p className="mb-3 rounded-[9px] border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[12.5px] text-amber-600 dark:text-amber-400">
-          Mode lokal — perintah hanya di browser ini. Login untuk memindah ke server.
+          {teks("antre.lokalWarn")}
         </p>
       )}
-      {infoMigrasi && (
+      {infoMigrasi !== null && (
         <div className="mb-3 flex items-center justify-between gap-2 rounded-[9px] border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-[12.5px] text-emerald-600 dark:text-emerald-400">
-          <span>{infoMigrasi}</span>
+          <span>{teks("antre.migrasi").replace("{n}", String(infoMigrasi))}</span>
           <button
             onClick={tutupInfoMigrasi}
-            aria-label="Tutup info migrasi"
+            aria-label={teks("modal.tutup")}
             className="shrink-0 rounded-md px-1.5 py-0.5 hover:bg-emerald-500/20"
           >
-            Tutup
+            {teks("modal.tutup")}
           </button>
         </div>
       )}
 
       {antrian.length === 0 ? (
         <p className="text-[13px] text-muted-foreground">
-          Belum ada perintah. Klik <b className="font-semibold">Perintah</b> pada kartu proyek untuk mengirim satu.
+          {teks("antre.kosongA")} <b className="font-semibold">{teks("kartu.perintah")}</b> {teks("antre.kosongB")}
         </p>
       ) : (
         <div className="scroll-tipis max-h-[400px] overflow-y-auto pr-1">
@@ -113,11 +116,11 @@ export function QueuePanel() {
                   <span className="font-mono text-[11px] text-muted-foreground">· {namaProyek(c.project_id)}</span>
                 </div>
                 <span className={cn("shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-medium", WARNA[c.status])}>
-                  {LABEL[c.status]}
+                  {teks(LABEL[c.status])}
                 </span>
               </div>
               <div className="mt-1 font-mono text-[10.5px] text-muted-foreground">
-                {waktuRelatif(c.created_at)}
+                {waktuRelatif(c.created_at, lang, teks)}
                 {c.result ? ` · ${c.result}` : ""}
               </div>
             </div>

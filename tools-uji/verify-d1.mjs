@@ -34,8 +34,8 @@ const card = readFileSync(join(root, "components/dashboard/ProjectCard.tsx"), "u
 cek("kartu badge pending", card.includes("PendingBadge"));
 
 const panel = readFileSync(join(root, "components/command/QueuePanel.tsx"), "utf8");
-cek("panel judul Antrian", panel.includes("Antrian Perintah"));
-cek("panel tombol bersihkan", panel.includes("Bersihkan selesai"));
+cek("panel judul Antrian (kamus)", panel.includes("antre.judul"));
+cek("panel tombol bersihkan (kamus)", panel.includes("antre.bersihkan"));
 
 const page = readFileSync(join(root, "app/page.tsx"), "utf8");
 cek("page pakai QueuePanel", page.includes("QueuePanel"));

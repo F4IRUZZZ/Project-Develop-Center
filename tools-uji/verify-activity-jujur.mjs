@@ -12,7 +12,7 @@ function cek(nama, ok, detail = "") {
 const feed = readFileSync(join(root, "components/activity/ActivityFeed.tsx"), "utf8");
 cek("tanpa import mock", !feed.includes("lib/mock") && !feed.includes("mockFeed"));
 cek("fallback daftar kosong", feed.includes("live ?? []"));
-cek("empty-state ada", feed.includes("Belum ada aktivitas"));
+cek("empty-state ada (kamus)", feed.includes("feed.kosong"));
 cek("ikon success dipakai", feed.includes("success"));
 
 const api = readFileSync(join(root, "app/api/activity/route.ts"), "utf8");

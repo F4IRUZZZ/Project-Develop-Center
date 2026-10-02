@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { projects as mockProjects } from "@/lib/mock";
 import type { Project } from "@/lib/types";
 import { kirimPerintah, sumberDariStatus } from "@/lib/queue";
+import { useBahasa } from "@/components/shell/BahasaProvider";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -18,6 +19,7 @@ interface Props {
 
 export function CommandModal({ open, initialProjectId, projects = mockProjects, onTerkirim, onClose }: Props) {
   const { status } = useSession();
+  const { teks } = useBahasa();
   const [projectId, setProjectId] = useState(initialProjectId ?? projects[0]?.id ?? "");
   const [text, setText] = useState("");
   const [gagal, setGagal] = useState(false);
@@ -51,17 +53,17 @@ export function CommandModal({ open, initialProjectId, projects = mockProjects, 
       onClick={onClose}
       role="dialog"
       aria-modal="true"
-      aria-label="Kirim Perintah ke AI"
+      aria-label={teks("cmd.judul")}
     >
       <div
         className="w-full max-w-[480px] rounded-[20px] border border-[#34344A] bg-card p-6 shadow-[0_20px_50px_rgba(0,0,0,0.55)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-5 flex items-center justify-between">
-          <div className="text-[17px] font-semibold">Kirim Perintah ke AI</div>
+          <div className="text-[17px] font-semibold">{teks("cmd.judul")}</div>
           <button
             onClick={onClose}
-            aria-label="Tutup"
+            aria-label={teks("modal.tutup")}
             className="flex h-[30px] w-[30px] items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
           >
             <X className="h-4 w-4" />
@@ -69,7 +71,7 @@ export function CommandModal({ open, initialProjectId, projects = mockProjects, 
         </div>
 
         <label className="mb-1.5 block text-xs font-medium text-muted-foreground" htmlFor="pdc-cmd-project">
-          Pilih Proyek
+          {teks("cmd.pilihProyek")}
         </label>
         <select
           id="pdc-cmd-project"
@@ -85,20 +87,20 @@ export function CommandModal({ open, initialProjectId, projects = mockProjects, 
         </select>
 
         <label className="mb-1.5 block text-xs font-medium text-muted-foreground" htmlFor="pdc-cmd-text">
-          Instruksi
+          {teks("cmd.instruksi")}
         </label>
         <textarea
           id="pdc-cmd-text"
           rows={4}
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Contoh: Tambahkan fitur lupa password di halaman login"
+          placeholder={teks("cmd.contoh")}
           className="mb-4 w-full resize-none rounded-[9px] border border-border bg-muted px-3 py-2.5 font-sans text-[13px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
         />
 
         {gagal && (
           <p className="mb-4 rounded-[9px] border border-red-500/30 bg-red-500/10 px-3 py-2 text-[13px] text-red-500">
-            Gagal menyimpan ke database. Coba lagi.
+            {teks("cmd.gagal")}
           </p>
         )}
         <div className="flex justify-end gap-2.5">
@@ -106,7 +108,7 @@ export function CommandModal({ open, initialProjectId, projects = mockProjects, 
             onClick={onClose}
             className="rounded-[9px] border border-border bg-transparent px-[18px] py-2 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
           >
-            Batal
+            {teks("modal.batal")}
           </button>
           <button
             onClick={async () => {
@@ -122,7 +124,7 @@ export function CommandModal({ open, initialProjectId, projects = mockProjects, 
               (text.trim().length === 0 || projectId === "") && "cursor-not-allowed opacity-50 hover:bg-primary/10"
             )}
           >
-            <Send className="h-3.5 w-3.5" /> Kirim
+            <Send className="h-3.5 w-3.5" /> {teks("cmd.kirim")}
           </button>
         </div>
       </div>
