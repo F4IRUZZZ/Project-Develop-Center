@@ -39,9 +39,9 @@ cek("kartu tombol gembok", card.includes("onVisibility") && card.includes("priva
 const layout = readFileSync(join(root, "app/layout.tsx"), "utf8");
 cek("layout via AppShell", layout.includes("AppShell") && !layout.includes("<Sidebar"));
 const landing = readFileSync(join(root, "components/shell/LoginLanding.tsx"), "utf8");
-cek("landing OAuth-style", landing.includes("Masuk dengan GitHub"));
+cek("landing OAuth-style (kamus)", landing.includes("user.masukDenganGithub"));
 const sidebar = readFileSync(join(root, "components/shell/Sidebar.tsx"), "utf8");
-cek("logout confirm", sidebar.includes("Yakin keluar") || sidebar.includes("Keluar dari PDC"));
+cek("logout confirm (kamus)", sidebar.includes("user.tanyaKeluar") || sidebar.includes("user.yaKeluar"));
 
 import { readdirSync, statSync } from "node:fs";
 const kena = [];

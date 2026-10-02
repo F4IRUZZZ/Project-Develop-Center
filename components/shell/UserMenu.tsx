@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { signOut } from "next-auth/react";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { useBahasa } from "./BahasaProvider";
 
 interface Props {
   nama: string;
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export function UserMenu({ nama, inisial, gambar }: Props) {
+  const { teks } = useBahasa();
   const [buka, setBuka] = useState(false);
   const [tanyaKeluar, setTanyaKeluar] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -38,7 +40,7 @@ export function UserMenu({ nama, inisial, gambar }: Props) {
     <div ref={ref} className="relative">
       <button
         onClick={() => setBuka((v) => !v)}
-        aria-label="Menu pengguna"
+        aria-label={teks("user.menuPengguna")}
         className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-muted text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
       >
         {gambar ? (
@@ -56,7 +58,7 @@ export function UserMenu({ nama, inisial, gambar }: Props) {
             onClick={() => setBuka(false)}
             className="flex items-center gap-2 rounded-[9px] px-2.5 py-2 text-[13px] text-muted-foreground hover:bg-muted hover:text-foreground"
           >
-            <Settings className="h-4 w-4" /> Pengaturan
+            <Settings className="h-4 w-4" /> {teks("user.pengaturan")}
           </Link>
           <button
             onClick={() => {
@@ -65,16 +67,16 @@ export function UserMenu({ nama, inisial, gambar }: Props) {
             }}
             className="flex w-full items-center gap-2 rounded-[9px] px-2.5 py-2 text-left text-[13px] text-muted-foreground hover:bg-muted hover:text-foreground"
           >
-            <LogOut className="h-4 w-4" /> Keluar
+            <LogOut className="h-4 w-4" /> {teks("user.keluar")}
           </button>
         </div>
       )}
 
       <ConfirmModal
         open={tanyaKeluar}
-        judul="Keluar dari PDC?"
-        pesan="Sesi GitHub-mu di perangkat ini diakhiri. Antrian dan data di database tetap aman."
-        labelKonfirmasi="Ya, keluar"
+        judul={teks("user.tanyaKeluar")}
+        pesan={teks("user.pesanKeluar")}
+        labelKonfirmasi={teks("user.yaKeluar")}
         onKonfirmasi={() => void signOut()}
         onBatal={() => setTanyaKeluar(false)}
       />

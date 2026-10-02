@@ -6,6 +6,7 @@ import { Copy, KeyRound, Trash2, GitBranch, AlertTriangle, ShieldCheck, User, Pa
 import { terapkanTema, type Tema } from "@/lib/tema";
 import { LoginCard } from "@/components/dashboard/LoginCard";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { PemilihBahasa } from "@/components/shell/PemilihBahasa";
 
 interface ApiKey {
   id: string;
@@ -169,7 +170,8 @@ export default function Pengaturan() {
             <div className="text-[13px] font-medium text-foreground">{session?.user?.name || "Pengguna"}</div>
             <div className="text-[12px] text-muted-foreground">{session?.user?.email || "Email tidak tersedia"}</div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
             <Palette className="h-4 w-4 text-muted-foreground" />
             <div
               role="radiogroup"
@@ -201,6 +203,8 @@ export default function Pengaturan() {
                 </button>
               ))}
             </div>
+            </div>
+            <PemilihBahasa />
           </div>
         </div>
       </div>

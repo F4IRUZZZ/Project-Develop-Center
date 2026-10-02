@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { TriangleAlert, X } from "lucide-react";
+import { useBahasa } from "@/components/shell/BahasaProvider";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -21,12 +22,14 @@ export function ConfirmModal({
   open,
   judul,
   pesan,
-  labelKonfirmasi = "Ya, lanjutkan",
+  labelKonfirmasi,
   danger,
   onKonfirmasi,
   onBatal,
 }: Props) {
+  const { teks } = useBahasa();
   const [mounted] = useState(() => typeof document !== "undefined");
+  const labelYa = labelKonfirmasi ?? teks("modal.yaLanjut");
 
   useEffect(() => {
     if (!open) return;
@@ -65,7 +68,7 @@ export function ConfirmModal({
           </div>
           <button
             onClick={onBatal}
-            aria-label="Tutup"
+            aria-label={teks("modal.tutup")}
             className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
           >
             <X className="h-4 w-4" />
@@ -79,7 +82,7 @@ export function ConfirmModal({
             onClick={onBatal}
             className="rounded-[9px] border border-border bg-transparent px-[18px] py-2 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
           >
-            Batal
+            {teks("modal.batal")}
           </button>
           <button
             onClick={onKonfirmasi}
@@ -88,7 +91,7 @@ export function ConfirmModal({
               danger ? "bg-red-500 hover:bg-red-600" : "bg-primary hover:bg-[#5457E5]"
             )}
           >
-            {labelKonfirmasi}
+            {labelYa}
           </button>
         </div>
       </div>
