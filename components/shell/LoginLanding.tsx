@@ -29,7 +29,7 @@ export function LoginLanding() {
             aria-hidden
             className="pointer-events-none absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-black/20 blur-2xl"
           />
-          <Image src="/logo-pdc.svg" alt="Logo PDC" width={48} height={48} className="h-12 w-12" />
+          <Image src="/logo-pdc-dark.svg" alt="Logo PDC" width={48} height={48} className="h-12 w-12 rounded-2xl" />
           <div>
             <h1 className="text-3xl font-bold tracking-tight">{teks("landing.sambut")}</h1>
             <p className="mt-2 max-w-xs text-sm text-white/80">{teks("landing.sub")}</p>
