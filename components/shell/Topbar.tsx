@@ -52,6 +52,7 @@ export function Topbar() {
   return (
     <header className="relative flex h-[58px] shrink-0 items-center justify-between gap-3 border-b border-border bg-card/85 px-4 backdrop-blur-md sm:px-6">
       <div className="flex min-w-0 items-center gap-2">
+        {/* nav drawer WAJIB di dalam div ref (#121): tap item tak boleh dianggap klik-luar */}
         <div ref={ref} className="shrink-0 lg:hidden">
           <button
             onClick={() => setBuka((v) => !v)}
@@ -62,6 +63,30 @@ export function Topbar() {
           >
             <Menu className="h-[17px] w-[17px]" />
           </button>
+          {buka && (
+            <nav className="absolute inset-x-0 top-[58px] z-50 border-b border-border bg-card/98 p-2 shadow-[0_12px_32px_rgba(0,0,0,0.45)] backdrop-blur-md lg:hidden">
+              {DRAWER.map((item) => {
+                const aktif = pathname === item.href;
+                return (
+                  <Link
+                    key={item.kunci}
+                    href={item.href}
+                    onClick={() => setBuka(false)}
+                    className={cn(
+                      "flex items-center gap-2.5 rounded-[9px] px-2.5 py-2.5 text-[13.5px] font-medium transition-colors",
+                      aktif ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                  >
+                    <span className="relative flex items-center">
+                      <item.icon className="h-[18px] w-[18px]" strokeWidth={1.75} />
+                      {item.live && <NotifBadge className="absolute -right-2.5 -top-2" />}
+                    </span>
+                    {teks(item.kunci)}
+                  </Link>
+                );
+              })}
+            </nav>
+          )}
         </div>
         <span className="shrink-0 text-[15px] font-bold tracking-tight lg:hidden">PDC</span>
         <SearchBox />
@@ -89,30 +114,6 @@ export function Topbar() {
           )}
         </div>
       </div>
-      {buka && (
-        <nav className="absolute inset-x-0 top-[58px] z-50 border-b border-border bg-card/98 p-2 shadow-[0_12px_32px_rgba(0,0,0,0.45)] backdrop-blur-md lg:hidden">
-          {DRAWER.map((item) => {
-            const aktif = pathname === item.href;
-            return (
-              <Link
-                key={item.kunci}
-                href={item.href}
-                onClick={() => setBuka(false)}
-                className={cn(
-                  "flex items-center gap-2.5 rounded-[9px] px-2.5 py-2.5 text-[13.5px] font-medium transition-colors",
-                  aktif ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                )}
-              >
-                <span className="relative flex items-center">
-                  <item.icon className="h-[18px] w-[18px]" strokeWidth={1.75} />
-                  {item.live && <NotifBadge className="absolute -right-2.5 -top-2" />}
-                </span>
-                {teks(item.kunci)}
-              </Link>
-            );
-          })}
-        </nav>
-      )}
     </header>
   );
 }
