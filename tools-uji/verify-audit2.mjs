@@ -13,7 +13,7 @@ function cek(nama, ok, detail = "") {
 // H3 — eslint nol error (dijaga via pipeline, bukan file tunggal)
 cek("lib/queue pendengar const", readFileSync(join(root, "lib/queue.ts"), "utf8").includes("const pendengar"));
 cek("ConfirmModal lazy mounted", readFileSync(join(root, "components/ui/ConfirmModal.tsx"), "utf8").includes("useState(() => typeof document"));
-cek("tema lazy init pengaturan", readFileSync(join(root, "app/pengaturan/page.tsx"), "utf8").includes("useState<Tema>(() =>"));
+cek("tema default-dulu pengaturan (anti #418)", readFileSync(join(root, "app/pengaturan/page.tsx"), "utf8").includes('useState<Tema>("gelap")'));
 
 // M2 — LIMIT antrian
 const cmd = readFileSync(join(root, "app/api/commands/route.ts"), "utf8");
