@@ -76,6 +76,7 @@ export async function DELETE(req: NextRequest) {
   const ctx = await sesiUser(req);
   if (isErr(ctx)) return NextResponse.json({ error: ctx.error }, { status: ctx.status });
 
-  const hasil = await db()`DELETE FROM command_queue WHERE user_id = ${ctx.userId} AND status IN ('completed', 'failed')`;
+  // RETURNING agar hitungan jujur (tanpanya driver kembalikan array kosong).
+  const hasil = await db()`DELETE FROM command_queue WHERE user_id = ${ctx.userId} AND status IN ('completed', 'failed') RETURNING id`;
   return NextResponse.json({ ok: true, dihapus: hasil.length });
 }
