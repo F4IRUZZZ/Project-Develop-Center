@@ -47,6 +47,13 @@
 ## H. Riwayat Perubahan
 
 | Tanggal    | Perubahan                                                                                       | Uji                                                               |
+| 2026-10-02 | Bilingual halaman Proyek+Sesi+Status (#111, ±55 kunci, tanggal locale)                           | I18N ALL-OK + 32 suite hijau + tsc + build                        |
+| 2026-10-02 | Bilingual komponen Pengaturan+Command/Queue/Feed/Pull (#112, ±90 kunci)                          | I18N ALL-OK + 32 suite hijau + tsc + build                        |
+| 2026-10-02 | Bilingual gelombang-5 Riwayat (#109/#110, 98 kunci)                                              | I18N ALL-OK + 32 suite hijau + tsc + build                        |
+| 2026-10-02 | Bilingual gelombang-4 Statistik (#107/#108, 87 kunci + tanggal locale)                           | GH-STATS ALL-OK + 32 suite hijau + tsc + build                    |
+| 2026-10-02 | Bilingual gelombang-3 Notifikasi (#105/#106, 70 kunci + waktu locale)                           | I18N ALL-OK + 32 suite hijau + tsc + build + live E2E             |
+| 2026-10-02 | Bilingual gelombang-2 Dashboard (#97/#98, 59 kunci)                                              | I18N ALL-OK + 32 suite hijau + tsc + build                        |
+| 2026-10-02 | Bilingual infra+shell (#95/#96, kamus 41 kunci + picker)                                         | I18N ALL-OK + 32 suite hijau + tsc + build                        |
 | 2026-10-02 | Fix hitungan dihapus merged (#85/#86, RETURNING id + live ulang sandbox dihapus:1)              | tsc + build + live sandbox                                        |
 | 2026-10-01 | P5 MCP bridge merged (#79/#84, default prod + 1 panggilan + filter server)                      | MCP-BRIDGE ALL-OK + 30 suite hijau + tsc + build + mcp build      |
 | 2026-10-01 | P4 activity jujur merged (#78/#83, tanpa mock + Selesai success + selaras c3/d3b)                | ACTIVITY-JUJUR ALL-OK + 29 suite hijau + tsc + build              |
