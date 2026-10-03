@@ -50,7 +50,7 @@ export function Topbar() {
   }, [buka ]);
 
   return (
-    <header className="relative flex h-[58px] shrink-0 items-center justify-between gap-3 border-b border-border bg-card/85 px-4 backdrop-blur-md sm:px-6">
+    <header className="relative flex h-[58px] shrink-0 items-center justify-between gap-3 border-b border-border bg-card px-4 sm:px-6">
       <div className="flex min-w-0 items-center gap-2">
         {/* nav drawer WAJIB di dalam div ref (#121): tap item tak boleh dianggap klik-luar */}
         <div ref={ref} className="shrink-0 lg:hidden">

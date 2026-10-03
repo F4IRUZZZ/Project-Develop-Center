@@ -28,6 +28,7 @@ cek("tanpa padding bar HP", !shell.includes("pb-20"));
 const sidebar = readFileSync(join(root, "components/shell/Sidebar.tsx"), "utf8");
 cek("sidebar pakai badge bersama", sidebar.includes("./NotifBadge") || sidebar.includes("NotifBadge"));
 cek("brand PDC singkat", sidebar.includes(">PDC<") && !sidebar.includes("Develop Center"));
+cek("header solid tanpa blur (#133)", nav.includes("bg-card px-4") && !nav.includes("backdrop-blur"));
 
 if (gagal > 0) {
   console.log(`\nL-CEK: ${gagal} gagal`);
