@@ -47,6 +47,21 @@
 ## H. Riwayat Perubahan
 
 | Tanggal    | Perubahan                                                                                       | Uji                                                               |
+| 2026-10-03 | Header solid tanpa blur (#133/#134, usir artefak GPU ghost drawer)                               | L-CEK ALL-OK + 33 suite hijau + tsc + build + foto user           |
+| 2026-10-03 | Drawer solid + max-h scroll + target 44px (#125/#131/#132, tutup ghost visual)                   | L-CEK ALL-OK + 33 suite hijau + tsc + build + foto user           |
+| 2026-10-03 | Fix drawer HP nav masuk ref (#121/#122, anti unmount prematur)                                   | L-CEK ALL-OK + 33 suite hijau + tsc + build                       |
+| 2026-10-03 | Instrumentasi tap sementara (#123/#124, toast on-screen, lalu revert #128)                       | tsc + build (sementara, bersih kembali)                           |
+| 2026-10-02 | Anti #418 initializer default-dulu (#129/#130, lang/tema/ciut + favicon.ico)                     | HYDRATION ALL-OK + 33 suite hijau + tsc + build                   |
+| 2026-10-02 | Anti React #418 waktu + favicon eksplisit (#126/#127, 12 node suppress)                          | HYDRATION ALL-OK + 33 suite hijau + tsc + build                   |
+| 2026-10-02 | Logo varian ubin gelap (#103/#104, Sidebar + LoginLanding)                                       | C1+O ALL-OK + 32 suite hijau + tsc + build + visual user          |
+| 2026-10-02 | Visual sidebar: ubin logo + UserBox vertikal ciut (#101/#102)                                    | C1-CEK ALL-OK + 32 suite hijau + tsc + build                      |
+| 2026-10-02 | Fix sesi buta-repo (#99/#100, repo bersuara + retry + backfill)                                  | PRESENCE ALL-OK + 32 suite hijau + tsc + build + forensik DB      |
+| 2026-10-02 | Bilingual API Accept-Language (#117/#118, 35 kunci galat-api)                                    | API-I18N ALL-OK + 33 suite hijau + tsc + build + live ID/EN        |
+| 2026-10-02 | Streak tampilkan rentang tanggal (#93/#94, kiniMulai/Sampai + panjang)                           | GH-STATS ALL-OK + 31 suite hijau + tsc + build                    |
+| 2026-10-02 | Statistik GitHub native (#91/#92, streak + bahasa + /statistik)                                  | GH-STATS ALL-OK + 31 suite hijau + tsc + build                    |
+| 2026-10-02 | Hapus permanen key dicabut (#89/#90, ?permanen=1 + bulk)                                         | N+D4 ALL-OK + 30 suite hijau + tsc + build                        |
+| 2026-10-02 | Sidebar ciut/bentang (#87/#88, toggle + ingat pilihan)                                           | C1-CEK ALL-OK + 30 suite hijau + tsc + build                      |
+| 2026-10-02 | Nav HP hamburger + brand PDC, hapus BottomNav (#119/#120, +fix ref #121/#122)                    | L-CEK ALL-OK + 32 suite hijau + tsc + build + tap-test HP          |
 | 2026-10-02 | Bilingual halaman Proyek+Sesi+Status (#111, ±55 kunci, tanggal locale)                           | I18N ALL-OK + 32 suite hijau + tsc + build                        |
 | 2026-10-02 | Bilingual komponen Pengaturan+Command/Queue/Feed/Pull (#112, ±90 kunci)                          | I18N ALL-OK + 32 suite hijau + tsc + build                        |
 | 2026-10-02 | Bilingual gelombang-5 Riwayat (#109/#110, 98 kunci)                                              | I18N ALL-OK + 32 suite hijau + tsc + build                        |
