@@ -64,7 +64,7 @@ export function Topbar() {
             <Menu className="h-[17px] w-[17px]" />
           </button>
           {buka && (
-            <nav className="absolute inset-x-0 top-[58px] z-50 border-b border-border bg-card/98 p-2 shadow-[0_12px_32px_rgba(0,0,0,0.45)] backdrop-blur-md lg:hidden">
+            <nav className="absolute inset-x-0 top-[58px] z-50 max-h-[70dvh] overflow-y-auto border-b border-border bg-card p-2 shadow-[0_12px_32px_rgba(0,0,0,0.45)] lg:hidden">
               {DRAWER.map((item) => {
                 const aktif = pathname === item.href;
                 return (
@@ -73,7 +73,7 @@ export function Topbar() {
                     href={item.href}
                     onClick={() => setBuka(false)}
                     className={cn(
-                      "flex items-center gap-2.5 rounded-[9px] px-2.5 py-2.5 text-[13.5px] font-medium transition-colors",
+                      "flex min-h-[44px] items-center gap-2.5 rounded-[9px] px-2.5 py-2.5 text-[13.5px] font-medium transition-colors",
                       aktif ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
                     )}
                   >
