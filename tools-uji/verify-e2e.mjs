@@ -23,7 +23,7 @@ cek("server dimatikan", run.includes("SIGKILL") || run.includes(".kill("));
 cek("tanpa sentuh port dev", !run.includes(":3000"));
 
 const spec = readFileSync(join(root, "e2e/smoke.spec.ts"), "utf8");
-const jumlah = (spec.match(/\btest\(/g) ?? []).length;
+const jumlah = (spec.match(/(?<!\.)\btest\(/g) ?? []).length;
 cek("test >= 8", jumlah >= 8, `dapat ${jumlah}`);
 cek("cek hydration #418", spec.includes("418") && spec.includes("hydration"));
 cek("cek gate 401 ID+EN", spec.includes("Accept-Language") && spec.includes("401"));
