@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { signOut, useSession } from "next-auth/react";
-import { Copy, KeyRound, Trash2, GitBranch, AlertTriangle, ShieldCheck, User, Palette, Sparkles, Sun, Moon, Monitor } from "lucide-react";
+import { Copy, KeyRound, Trash2, GitBranch, AlertTriangle, ShieldCheck, User, Palette, Sparkles, Sun, Moon, Monitor, Send, BellRing } from "lucide-react";
 import { bacaTema, terapkanTema, type Tema } from "@/lib/tema";
 import { LoginCard } from "@/components/dashboard/LoginCard";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
@@ -16,6 +16,13 @@ interface ApiKey {
   revoked: boolean;
   last_used_at: string | null;
   created_at: string;
+}
+
+interface TujuanTg {
+  id: string;
+  label: string;
+  chat_id: string;
+  aktif: boolean;
 }
 
 export default function Pengaturan() {
@@ -32,6 +39,11 @@ export default function Pengaturan() {
   const [tema, setTema] = useState<Tema>("gelap");
   const [tersimpan, setTersimpan] = useState<string[]>([]);
   const [gagalSimpan, setGagalSimpan] = useState<string | null>(null);
+  const [tgList, setTgList] = useState<TujuanTg[]>([]);
+  const [tgLabel, setTgLabel] = useState("Telegram");
+  const [tgToken, setTgToken] = useState("");
+  const [tgChat, setTgChat] = useState("");
+  const [tgInfo, setTgInfo] = useState<string | null>(null);
 
   const [modal, setModal] = useState({
     open: false,
@@ -50,6 +62,10 @@ export default function Pengaturan() {
     fetch("/api/provider-keys", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((d) => setTersimpan((d as Array<{ provider: string }>).map((x) => x.provider)))
+      .catch(() => {});
+    fetch("/api/notif-tujuan", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((d) => setTgList(d as TujuanTg[]))
       .catch(() => {});
   }, []);
 
@@ -110,6 +126,55 @@ export default function Pengaturan() {
     await Promise.all(revokedKeys.map((k) => fetch(`/api/keys/${k.id}?permanen=1`, { method: "DELETE" })));
     muat();
     tutupModal();
+  };
+
+  const simpanTg = async () => {
+    setTgInfo(null);
+    try {
+      const res = await fetch("/api/notif-tujuan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ label: tgLabel, bot_token: tgToken, chat_id: tgChat }),
+      });
+      if (!res.ok) {
+        const d = (await res.json().catch(() => ({}))) as { error?: string };
+        setTgInfo(d.error ?? teks("atur.gagalSimpan"));
+      } else {
+        setTgToken("");
+        setTgChat("");
+        setTgInfo(teks("atur.tgTersimpan"));
+        muat();
+      }
+    } catch {
+      setTgInfo(teks("atur.jaringanGagal"));
+    }
+  };
+
+  const tesTg = async (id: string) => {
+    setTgInfo(null);
+    try {
+      const res = await fetch(`/api/notif-tujuan/${id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ aksi: "test" }),
+      });
+      setTgInfo(res.ok ? teks("atur.tgTerkirim") : teks("atur.tgGagalKirim"));
+    } catch {
+      setTgInfo(teks("atur.jaringanGagal"));
+    }
+  };
+
+  const hapusTg = (id: string, label: string) => {
+    triggerModal(
+      teks("atur.tgHapusJudul"),
+      teks("atur.tgHapusPesan").replace("{name}", label),
+      async () => {
+        await fetch(`/api/notif-tujuan/${id}`, { method: "DELETE" }).catch(() => {});
+        muat();
+        tutupModal();
+      },
+      teks("atur.hapusYa")
+    );
   };
 
   const simpanGithubToken = () => {
@@ -368,6 +433,81 @@ export default function Pengaturan() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* SEKSI TELEGRAM */}
+      <div className="mb-6 rounded-2xl border border-border bg-card p-[18px]">
+        <div className="mb-2 flex items-center gap-2 text-[15px] font-semibold">
+          <BellRing className="h-4 w-4" /> {teks("atur.tgJudul")}
+        </div>
+        <p className="mb-4 text-[13px] text-muted-foreground">{teks("atur.tgSub")}</p>
+        <div className="mb-3 flex flex-col gap-2">
+          <input
+            id="tgLabel"
+            name="tgLabel"
+            value={tgLabel}
+            onChange={(e) => setTgLabel(e.target.value)}
+            placeholder={teks("atur.tgLabelPh")}
+            className="min-w-0 flex-1 rounded-[9px] border border-border bg-muted px-3 py-2 text-[13px] focus:border-primary focus:outline-none"
+          />
+          <input
+            id="tgToken"
+            name="tgToken"
+            type="password"
+            value={tgToken}
+            onChange={(e) => setTgToken(e.target.value)}
+            placeholder={teks("atur.tgTokenPh")}
+            className="min-w-0 flex-1 rounded-[9px] border border-border bg-muted px-3 py-2 font-mono text-[13px] focus:border-primary focus:outline-none"
+          />
+          <div className="flex gap-2">
+            <input
+              id="tgChat"
+              name="tgChat"
+              value={tgChat}
+              onChange={(e) => setTgChat(e.target.value)}
+              placeholder={teks("atur.tgChatPh")}
+              className="min-w-0 flex-1 rounded-[9px] border border-border bg-muted px-3 py-2 font-mono text-[13px] focus:border-primary focus:outline-none"
+            />
+            <button
+              onClick={() => void simpanTg()}
+              disabled={!tgToken || !tgChat}
+              className="flex shrink-0 items-center gap-1.5 rounded-[9px] bg-primary px-4 py-2 text-[13px] font-medium text-white hover:bg-[#5457E5] disabled:opacity-50"
+            >
+              <ShieldCheck className="h-4 w-4" /> {teks("atur.simpanBtn")}
+            </button>
+          </div>
+        </div>
+        {tgInfo && (
+          <p className="mb-3 text-[12.5px] text-muted-foreground">{tgInfo}</p>
+        )}
+        {tgList.length > 0 && (
+          <div className="rounded-xl border border-border bg-muted/30">
+            {tgList.map((t) => (
+              <div key={t.id} className="flex items-center justify-between gap-2 border-b border-border px-3 py-2.5 last:border-b-0">
+                <div className="min-w-0">
+                  <div className="text-[13px] font-medium">{t.label}</div>
+                  <div className="font-mono text-[10.5px] text-muted-foreground">{t.chat_id}</div>
+                </div>
+                <div className="flex shrink-0 items-center gap-1">
+                  <button
+                    onClick={() => void tesTg(t.id)}
+                    title={teks("atur.tgTes")}
+                    className="flex h-8 w-8 items-center justify-center rounded-[9px] text-muted-foreground hover:bg-muted hover:text-foreground"
+                  >
+                    <Send className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => hapusTg(t.id, t.label)}
+                    title={teks("atur.hapusTitle")}
+                    className="flex h-8 w-8 items-center justify-center rounded-[9px] text-muted-foreground hover:bg-red-500/10 hover:text-red-500"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* SEKSI DANGER ZONE */}

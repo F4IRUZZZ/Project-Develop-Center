@@ -52,6 +52,11 @@ const ERR = {
   statusDeployTakTerbaca: { id: "Deploy production tidak terbaca.", en: "Production deploy unreadable." },
   statusGagalDeploy: { id: "Gagal membaca deploy.", en: "Failed to read deploy." },
   statusGagalDb: { id: "Gagal membaca database.", en: "Failed to read database." },
+  tgFormatInvalid: { id: "Format bot token tidak valid", en: "Invalid bot token format" },
+  tgChatWajib: { id: "chat_id wajib", en: "chat_id is required" },
+  tgHilang: { id: "Tujuan tidak ketemu", en: "Destination not found" },
+  tgTokenRusak: { id: "Token rusak, buat ulang tujuan", en: "Token corrupted, recreate the destination" },
+  tgGagalKirim: { id: "Gagal kirim ke Telegram", en: "Failed to send to Telegram" },
 } as const;
 
 export type KunciGalat = keyof typeof ERR;
