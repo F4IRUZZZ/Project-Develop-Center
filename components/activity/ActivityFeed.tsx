@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { Check, GitCommitHorizontal, GitPullRequest, RefreshCw, Rss } from "lucide-react";
 import { useBahasa } from "@/components/shell/BahasaProvider";
+import { mulaiPolling } from "@/lib/polling";
 import type { Kunci, Lang } from "@/lib/kamus";
 import type { ActivityEvent } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -39,20 +40,24 @@ export function ActivityFeed() {
   useEffect(() => {
     if (status !== "authenticated") return;
     let batal = false;
-    const poll = () => {
-      fetch("/api/activity", { cache: "no-store" })
-        .then((r) => (r.ok ? r.json() : Promise.reject()))
-        .then((d) => {
-          if (!batal) setLive(d as ActivityEvent[]);
-        })
-        .catch(() => {});
+    const poll = async (): Promise<boolean> => {
+      try {
+        const r = await fetch("/api/activity", { cache: "no-store" });
+        if (!r.ok) return false;
+        const d = (await r.json()) as ActivityEvent[];
+        if (!batal) setLive(d);
+        return true;
+      } catch {
+        return false;
+      }
     };
-    const t0 = window.setTimeout(poll, 0);
-    const t = window.setInterval(poll, 5000);
+    const kendali = mulaiPolling(() => {
+      if (batal) return Promise.resolve(true);
+      return poll();
+    }, { awalMs: 5000 });
     return () => {
       batal = true;
-      window.clearTimeout(t0);
-      window.clearInterval(t);
+      kendali.berhenti();
     };
   }, [status]);
 

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { fetchNotifikasi, EVENT_NOTIF } from "@/lib/notifikasi";
+import { mulaiPolling } from "@/lib/polling";
 import { cn } from "@/lib/utils";
 
 // Badge notifikasi live, dipakai Sidebar + drawer Topbar.
@@ -17,17 +18,24 @@ export function NotifBadge({ className }: { className?: string }) {
 
   useEffect(() => {
     if (status !== "authenticated") return;
-    const muat = () =>
-      fetchNotifikasi()
-        .then((rows) => setN(rows.filter((r) => !r.dibaca).length))
-        .catch(() => {});
-    void muat();
+    const muat = async (): Promise<boolean> => {
+      try {
+        const rows = await fetchNotifikasi();
+        setN(rows.filter((r) => !r.dibaca).length);
+        return true;
+      } catch {
+        return false;
+      }
+    };
     // Event aksi (stop/tandai) = instan; poll 30s = jaring pengaman.
-    window.addEventListener(EVENT_NOTIF, muat);
-    const t = window.setInterval(muat, 30000);
+    const segarkan = () => {
+      void muat();
+    };
+    window.addEventListener(EVENT_NOTIF, segarkan);
+    const kendali = mulaiPolling(muat, { awalMs: 30000 });
     return () => {
-      window.removeEventListener(EVENT_NOTIF, muat);
-      window.clearInterval(t);
+      window.removeEventListener(EVENT_NOTIF, segarkan);
+      kendali.berhenti();
     };
   }, [status]);
 

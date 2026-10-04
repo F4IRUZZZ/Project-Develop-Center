@@ -12,6 +12,7 @@ import { CommandModal } from "@/components/command/CommandModal";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { PullModal } from "@/components/command/PullModal";
 import { useBahasa } from "@/components/shell/BahasaProvider";
+import { mulaiPolling } from "@/lib/polling";
 import type { Lang } from "@/lib/kamus";
 import type { AIStatus, Project } from "@/lib/types";
 import type { QueuedCommand } from "@/lib/tasks";
@@ -87,19 +88,17 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
       setCommands((c as QueuedCommand[]).filter((x) => x.project_id === id));
       setFeed(a as ActivityEvent[]);
       setSesi(s as SesiRow[]);
+      return true;
     } catch {
       /* abaikan */
+      return false;
     }
   }, [id]);
 
   useEffect(() => {
     if (status !== "authenticated") return;
-    const t0 = window.setTimeout(() => void muat(), 0);
-    const t = window.setInterval(muat, 10000);
-    return () => {
-      window.clearTimeout(t0);
-      window.clearInterval(t);
-    };
+    const kendali = mulaiPolling(muat, { awalMs: 10000 });
+    return () => kendali.berhenti();
   }, [status, muat]);
 
   const stop = async () => {

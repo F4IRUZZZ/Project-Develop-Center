@@ -13,6 +13,7 @@ import { fetchDashboard } from "@/lib/github";
 import { projects as mockProjects } from "@/lib/mock";
 import { EVENT_SEARCH } from "@/components/shell/SearchBox";
 import { useBahasa } from "@/components/shell/BahasaProvider";
+import { mulaiPolling } from "@/lib/polling";
 import type { Project } from "@/lib/types";
 
 const PERHATIAN = new Set(["working", "waiting", "stuck", "failed"]);
@@ -45,13 +46,17 @@ export default function Home() {
       .then(setLive)
       .catch(() => setGagalRepo(true));
     muatAngka();
-    const t = window.setInterval(() => {
-      fetchDashboard()
-        .then(setLive)
-        .catch(() => {});
-      muatAngka();
-    }, 10000);
-    return () => window.clearInterval(t);
+    const segarkan = async (): Promise<boolean> => {
+      try {
+        setLive(await fetchDashboard());
+        muatAngka();
+        return true;
+      } catch {
+        return false;
+      }
+    };
+    const kendali = mulaiPolling(segarkan, { awalMs: 10000 });
+    return () => kendali.berhenti();
   }, [status]);
 
   useEffect(() => {

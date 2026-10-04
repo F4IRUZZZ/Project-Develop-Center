@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useBahasa } from "@/components/shell/BahasaProvider";
+import { mulaiPolling } from "@/lib/polling";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { LoginCard } from "@/components/dashboard/LoginCard";
 import { TombolHapusSesi } from "@/components/sesi/TombolHapusSesi";
@@ -46,7 +47,7 @@ export default function SesiGlobal() {
   const [tanyaHapus, setTanyaHapus] = useState<string | null>(null);
   const [galatHapus, setGalatHapus] = useState(false);
 
-  const muat = useCallback(async () => {
+  const muat = useCallback(async (): Promise<boolean> => {
     try {
       const [s, d] = await Promise.all([
         fetch("/api/sessions", { cache: "no-store" }).then((r) => (r.ok ? r.json() : [])),
@@ -56,16 +57,17 @@ export default function SesiGlobal() {
       const peta: Record<string, string> = {};
       for (const p of d as Array<{ id: string; repoName: string }>) peta[String(p.id)] = p.repoName;
       setNamaRepo(peta);
+      return true;
     } catch {
       /* abaikan */
+      return false;
     }
   }, []);
 
   useEffect(() => {
     if (status !== "authenticated") return;
-    void muat();
-    const t = window.setInterval(muat, 10000);
-    return () => window.clearInterval(t);
+    const kendali = mulaiPolling(muat, { awalMs: 10000 });
+    return () => kendali.berhenti();
   }, [status, muat]);
 
   const hapus = async () => {
