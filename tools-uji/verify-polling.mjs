@@ -29,7 +29,7 @@ const SITUS = [
 ];
 for (const [f, fn, ms] of SITUS) {
   const isi = readFileSync(join(root, f), "utf8");
-  cek(`${f.split("/").pop()} via helper`, isi.includes(fn) && isi.includes(ms));
+  cek(`${f} via helper`, isi.includes(fn) && isi.includes(ms));
 }
 
 const plug = readFileSync(join(root, "plugins/pdc-presence.js"), "utf8");

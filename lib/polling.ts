@@ -1,5 +1,5 @@
 // Polling adaptif: setTimeout berantai + backoff eksponensial saat gagal.
-// Gantikan setInterval mentah di 9 titik polling client: jeda berikutnya
+// Gantikan setInterval mentah di 8 titik polling client: jeda berikutnya
 // dihitung SETELAH respons selesai (tanpa request menumpuk saat lambat),
 // melambat x2 (maks 60 dtk) saat gagal, reset saat sukses, dan menahan
 // diri saat tab hidden. Perilaku sukses identik interval lama.
