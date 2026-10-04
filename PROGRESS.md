@@ -47,6 +47,9 @@
 ## H. Riwayat Perubahan
 
 | Tanggal    | Perubahan                                                                                       | Uji                                                               |
+| 2026-10-04 | Playwright E2E smoke (#139/#140, 8 test + runner ephemeral + test:e2e)                          | E2E 8/8 + 35 suite hijau + tsc + build                            |
+| 2026-10-04 | Adaptive polling backoff (#137/#138, 8 titik + hormati hidden)                                   | POLLING ALL-OK + 34 suite hijau + tsc + build                     |
+| 2026-10-04 | QA phase 1 (#135/#136, type module + /api/search + skeleton + scrollbar)                        | 33 suite hijau + tsc + build                                      |
 | 2026-10-03 | Header solid tanpa blur (#133/#134, usir artefak GPU ghost drawer)                               | L-CEK ALL-OK + 33 suite hijau + tsc + build + foto user           |
 | 2026-10-03 | Drawer solid + max-h scroll + target 44px (#125/#131/#132, tutup ghost visual)                   | L-CEK ALL-OK + 33 suite hijau + tsc + build + foto user           |
 | 2026-10-03 | Fix drawer HP nav masuk ref (#121/#122, anti unmount prematur)                                   | L-CEK ALL-OK + 33 suite hijau + tsc + build                       |
