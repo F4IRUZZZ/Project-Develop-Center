@@ -7,6 +7,7 @@ import { LoginCard } from "@/components/dashboard/LoginCard";
 import { useBahasa } from "@/components/shell/BahasaProvider";
 import type { Lang } from "@/lib/kamus";
 import type { StatsGitHub } from "@/lib/github-stats";
+import type { Analitik } from "@/app/api/stats/analytics/route";
 
 function fmtTanggal(iso: string | null, lang: Lang): string {
   if (!iso) return "—";
@@ -21,6 +22,7 @@ export default function Statistik() {
   const { data: session, status } = useSession();
   const { lang, teks } = useBahasa();
   const [data, setData] = useState<StatsGitHub | null>(null);
+  const [ana, setAna] = useState<Analitik | null>(null);
   const [galat, setGalat] = useState(false);
 
   const muat = useCallback(() => {
@@ -34,6 +36,10 @@ export default function Statistik() {
   useEffect(() => {
     if (status !== "authenticated") return;
     muat();
+    fetch("/api/stats/analytics", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((d) => setAna(d as Analitik))
+      .catch(() => {});
   }, [status, muat]);
 
   if (status === "loading") return <p className="font-mono text-xs text-muted-foreground">{teks("shell.muatSesi")}</p>;
@@ -134,6 +140,64 @@ export default function Statistik() {
                     </div>
                   ))}
                 </div>
+              </>
+            )}
+          </div>
+
+          <div className="rounded-2xl border border-border bg-card p-[18px]">
+            <div className="mb-3 text-[15px] font-semibold">{teks("stat.anaJudul")}</div>
+            {!ana || (ana.totalSelesai === 0 && ana.perMinggu.length === 0 && ana.repoTersibuk.length === 0) ? (
+              <p className="text-[13px] text-muted-foreground">{teks("stat.anaKosong")}</p>
+            ) : (
+              <>
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div>
+                    <div className="text-[22px] font-bold text-primary">{ana.totalSelesai}</div>
+                    <div className="mt-1 text-[12px] text-muted-foreground">{teks("stat.anaSelesai")}</div>
+                  </div>
+                  <div>
+                    <div className="text-[22px] font-bold text-primary">
+                      {ana.rataMenit === null ? "—" : teks("stat.anaMenit").replace("{n}", String(Math.round(ana.rataMenit)))}
+                    </div>
+                    <div className="mt-1 text-[12px] text-muted-foreground">{teks("stat.anaRata")}</div>
+                  </div>
+                  <div>
+                    <div className="text-[22px] font-bold text-primary">{(ana.errorRate * 100).toFixed(0)}%</div>
+                    <div className="mt-1 text-[12px] text-muted-foreground">{teks("stat.anaError")}</div>
+                  </div>
+                </div>
+                {ana.perMinggu.length > 0 && (
+                  <div className="mt-4 flex h-20 items-end gap-1.5">
+                    {ana.perMinggu.map((m) => {
+                      const maks = Math.max(1, ...ana.perMinggu.map((x) => x.selesai + x.gagal));
+                      const tinggi = Math.max(6, Math.round(((m.selesai + m.gagal) / maks) * 72));
+                      return (
+                        <div
+                          key={m.minggu}
+                          title={`${m.minggu}: ${m.selesai} / ${m.gagal}`}
+                          style={{ height: `${tinggi}px` }}
+                          className="min-w-0 flex-1 rounded-sm bg-primary/70"
+                        />
+                      );
+                    })}
+                  </div>
+                )}
+                {ana.repoTersibuk.length > 0 && (
+                  <div className="mt-4">
+                    <div className="mb-2 text-[12.5px] font-semibold">{teks("stat.anaRepo")}</div>
+                    {ana.repoTersibuk.map((r) => (
+                      <div key={r.repo} className="flex items-center justify-between gap-2 py-1 text-[12.5px]">
+                        <span className="min-w-0 flex-1 truncate font-medium">{r.repo}</span>
+                        <span className="font-mono text-[11px] text-muted-foreground">{r.n}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {ana.jamTersibuk !== null && (
+                  <div className="mt-3 font-mono text-[11px] text-muted-foreground">
+                    {teks("stat.anaJam")}: {String(ana.jamTersibuk).padStart(2, "0")}:00
+                  </div>
+                )}
               </>
             )}
           </div>
