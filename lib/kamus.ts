@@ -353,6 +353,15 @@ const KAMUS = {
   "atur.jaringanGagal": { id: "Jaringan gagal. Coba lagi.", en: "Network failed. Try again." },
   "atur.dangerJudul": { id: "Danger Zone", en: "Danger Zone" },
   "atur.dangerSub": { id: "Tindakan di bawah ini bersifat destruktif dan tidak dapat dibatalkan.", en: "Actions below are destructive and cannot be undone." },
+  "stat.anaJudul": { id: "Produktivitas AI · 30 hari", en: "AI Productivity · 30 days" },
+  "stat.anaSelesai": { id: "Tugas selesai", en: "Tasks done" },
+  "stat.anaRata": { id: "Rata-rata durasi", en: "Avg duration" },
+  "stat.anaMenit": { id: "{n} mnt", en: "{n} min" },
+  "stat.anaError": { id: "Tingkat gagal", en: "Failure rate" },
+  "stat.anaRepo": { id: "Repo tersibuk", en: "Busiest repos" },
+  "stat.anaJam": { id: "Jam tersibuk (WIB)", en: "Busiest hour (WIB)" },
+  "stat.anaKosong": { id: "Belum ada data 30 hari terakhir.", en: "No data in the last 30 days." },
+  "stat.anaMinggu": { id: "mg {m}", en: "wk {m}" },
 } as const;
 
 export type Kunci = keyof typeof KAMUS;
