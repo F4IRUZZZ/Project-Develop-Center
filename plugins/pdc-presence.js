@@ -245,9 +245,35 @@ export default {
       }
     };
 
-    // Cari ID sesi di berbagai bentuk payload. Urutan penting: kunci
-    // session* tepercaya di mana pun; .id polos HANYA dari info (created/
-    // updated/deleted) — .id milik message/part BUKAN id sesi, dilarang.
+    // Cari ID sesi di berbagai bentuk payload. V2: bentuk payload tak
+    // terdokumentasi dan terbukti beda (tipe shell.exited tak ada di docs).
+    // Strategi anti-rapuh: (1) cocokkan field umum dulu (cepat), (2) deep-scan
+    // rekursif seluruh event cari string ^ses_[A-Za-z0-9]+ (format ID sesi
+    // OpenCode, stabil lintas versi). .id polos HANYA dari info — .id milik
+    // message/part BUKAN id sesi, dilarang.
+    const POLA_SESI = /^ses_[A-Za-z0-9]+$/;
+    const cariIdDalam = (o, dalam = 0, lihat = new Set()) => {
+      if (o === null || o === undefined || dalam > 4) return null;
+      if (typeof o === "string") return POLA_SESI.test(o) ? o : null;
+      if (typeof o !== "object" || lihat.has(o)) return null;
+      lihat.add(o);
+      if (Array.isArray(o)) {
+        for (const v of o) {
+          const h = cariIdDalam(v, dalam + 1, lihat);
+          if (h) return h;
+        }
+        return null;
+      }
+      for (const k of ["sessionID", "sessionId", "session_id"]) {
+        const v = o[k];
+        if (typeof v === "string" && POLA_SESI.test(v)) return v;
+      }
+      for (const v of Object.values(o)) {
+        const h = cariIdDalam(v, dalam + 1, lihat);
+        if (h) return h;
+      }
+      return null;
+    };
     const infoSesi = (event) => {
       const p = event?.properties ?? {};
       const ambil = (o) => {
@@ -262,7 +288,8 @@ export default {
         ambil(p.part) ??
         ambil(p.session) ??
         ambil(event) ??
-        (typeof p.info?.id === "string" && p.info.id ? p.info.id : null);
+        (typeof p.info?.id === "string" && p.info.id ? p.info.id : null) ??
+        cariIdDalam(event);
       let mode = MODE;
       if (!ENV_MODE) {
         for (const o of [p, p?.info, p?.message]) {
