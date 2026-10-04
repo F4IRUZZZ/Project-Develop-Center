@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Search } from "lucide-react";
 import { useBahasa } from "./BahasaProvider";
-import type { Project } from "@/lib/types";
-import type { QueuedCommand } from "@/lib/tasks";
+import type { Kunci } from "@/lib/kamus";
 
 export const EVENT_SEARCH = "pdc-search";
 
@@ -15,6 +14,12 @@ interface Hasil {
   label: string;
   sub: string;
   href: string;
+}
+
+interface SearchResponse {
+  projects: Array<{ id: string; repo_name: string; repo_full: string }>;
+  tasks: Array<{ id: string; title: string; project_id: string; status: string }>;
+  commands: Array<{ id: string; command_text: string; project_id: string; status: string }>;
 }
 
 export function SearchBox() {
@@ -57,20 +62,22 @@ export function SearchBox() {
         return;
       }
       try {
-        const [d, tk, c] = await Promise.all([
-          fetch("/api/dashboard", { cache: "no-store" }).then((r) => (r.ok ? r.json() : [])),
-          fetch("/api/tasks?all=1", { cache: "no-store" }).then((r) => (r.ok ? r.json() : [])),
-          fetch("/api/commands", { cache: "no-store" }).then((r) => (r.ok ? r.json() : [])),
-        ]);
+        const res = await fetch(`/api/search?q=${encodeURIComponent(kata)}`, { cache: "no-store" });
+        if (!res.ok) throw new Error("Search failed");
+        const data = (await res.json()) as {
+          projects: Array<{ id: string; repo_name: string; repo_full: string }>;
+          tasks: Array<{ id: string; title: string; project_id: string; status: string }>;
+          commands: Array<{ id: string; command_text: string; project_id: string; status: string }>;
+        };
         const out: Hasil[] = [];
-        for (const p of d as Project[]) {
-          if (p.repoName.toLowerCase().includes(kata) || p.repoFull.toLowerCase().includes(kata)) {
-            out.push({ key: p.id, label: p.repoName, sub: `${teks("search.proyek")} · ${p.statusLabel}`, href: `/proyek/${p.id}` });
+        for (const p of data.projects) {
+          if (p.repo_name.toLowerCase().includes(kata) || p.repo_full.toLowerCase().includes(kata)) {
+            out.push({ key: p.id, label: p.repo_name, sub: `${teks("search.proyek")} · ${p.repo_name}`, href: `/proyek/${p.id}` });
             if (out.length >= 8) break;
           }
         }
         if (out.length < 8) {
-          for (const t of tk as Array<{ id: string; title: string; project_id: string }>) {
+          for (const t of data.tasks) {
             if (t.title.toLowerCase().includes(kata)) {
               out.push({ key: t.id, label: t.title, sub: `${teks("search.tugas")} · ${teks("nav.riwayat")}`, href: "/riwayat" });
               if (out.length >= 8) break;
@@ -78,7 +85,7 @@ export function SearchBox() {
           }
         }
         if (out.length < 8) {
-          for (const cmd of c as QueuedCommand[]) {
+          for (const cmd of data.commands) {
             if (cmd.command_text.toLowerCase().includes(kata)) {
               out.push({ key: cmd.id, label: cmd.command_text.slice(0, 60), sub: `${teks("search.perintah")} · ${cmd.status}`, href: "/riwayat" });
               if (out.length >= 8) break;

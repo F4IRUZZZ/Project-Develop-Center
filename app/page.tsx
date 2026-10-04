@@ -8,6 +8,7 @@ import { QueuePanel } from "@/components/command/QueuePanel";
 import { Dashboard } from "@/components/dashboard/Dashboard";
 import { LoginCard } from "@/components/dashboard/LoginCard";
 import { Stats } from "@/components/dashboard/Stats";
+import { SkeletonCard, SkeletonTable, SkeletonText } from "@/components/ui/Skeleton";
 import { fetchDashboard } from "@/lib/github";
 import { projects as mockProjects } from "@/lib/mock";
 import { EVENT_SEARCH } from "@/components/shell/SearchBox";
@@ -85,7 +86,10 @@ export default function Home() {
     <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-6 p-4 sm:p-6 xl:flex-row">
       <div className="min-w-0 flex-1">
         {status === "loading" ? (
-          <p className="font-mono text-xs text-muted-foreground">{teks("shell.muatSesi")}</p>
+          <div className="space-y-4">
+            <SkeletonCard />
+            <SkeletonTable rows={3} cols={4} />
+          </div>
         ) : !session?.user ? (
           <LoginCard />
         ) : live ? (
@@ -122,7 +126,10 @@ export default function Home() {
             <Dashboard projects={mockProjects} onCommand={openFor} />
           </>
         ) : (
-          <p className="font-mono text-xs text-muted-foreground">{teks("dash.muatRepo")}</p>
+          <div className="space-y-4">
+            <SkeletonCard />
+            <SkeletonTable rows={3} cols={4} />
+          </div>
         )}
         {session?.user && <QueuePanel />}
       </div>
