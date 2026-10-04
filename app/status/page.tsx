@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { LoginCard } from "@/components/dashboard/LoginCard";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { useBahasa } from "@/components/shell/BahasaProvider";
+import { mulaiPolling } from "@/lib/polling";
 import type { Kunci, Lang } from "@/lib/kamus";
 
 interface StatusData {
@@ -40,22 +41,23 @@ export default function Status() {
   const [data, setData] = useState<StatusData | null>(null);
   const [gagal, setGagal] = useState(false);
 
-  const muat = useCallback(async () => {
+  const muat = useCallback(async (): Promise<boolean> => {
     try {
       const res = await fetch("/api/status", { cache: "no-store" });
       if (!res.ok) throw new Error();
       setData((await res.json()) as StatusData);
       setGagal(false);
+      return true;
     } catch {
       setGagal(true);
+      return false;
     }
   }, []);
 
   useEffect(() => {
     if (status !== "authenticated") return;
-    void muat();
-    const t = window.setInterval(muat, 30000);
-    return () => window.clearInterval(t);
+    const kendali = mulaiPolling(muat, { awalMs: 30000 });
+    return () => kendali.berhenti();
   }, [status, muat]);
 
   if (status === "loading") return <p className="font-mono text-xs text-muted-foreground">{teks("shell.muatSesi")}</p>;

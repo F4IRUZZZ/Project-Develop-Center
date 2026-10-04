@@ -96,7 +96,7 @@ cek("helper sesiSegar bersama", readFileSync(join(root, "lib/sesi.ts"), "utf8").
 const sesiPage = join(root, "app/sesi/page.tsx");
 cek("halaman Sesi global", existsSync(sesiPage));
 const sesiIsi = existsSync(sesiPage) ? readFileSync(sesiPage, "utf8") : "";
-cek("sesi global filter+hapus+refresh", sesiIsi.includes('"aktif"') && sesiIsi.includes("TombolHapusSesi") && sesiIsi.includes("setInterval"));
+cek("sesi global filter+hapus+refresh (polling adaptif)", sesiIsi.includes('"aktif"') && sesiIsi.includes("TombolHapusSesi") && sesiIsi.includes("mulaiPolling"));
 const side = readFileSync(join(root, "components/shell/Sidebar.tsx"), "utf8");
 const topSesi = readFileSync(join(root, "components/shell/Topbar.tsx"), "utf8");
 cek("nav Sesi", side.includes('"/sesi"') && topSesi.includes('"/sesi"'));

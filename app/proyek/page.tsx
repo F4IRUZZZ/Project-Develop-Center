@@ -10,6 +10,7 @@ import { PullModal } from "@/components/command/PullModal";
 import { Dashboard } from "@/components/dashboard/Dashboard";
 import { EVENT_SEARCH } from "@/components/shell/SearchBox";
 import { useBahasa } from "@/components/shell/BahasaProvider";
+import { mulaiPolling } from "@/lib/polling";
 import { siarNotifikasi } from "@/lib/notifikasi";
 import type { Project } from "@/lib/types";
 
@@ -33,12 +34,15 @@ export default function Proyek() {
   const [pullId, setPullId] = useState<string | undefined>(undefined);
   const [konfirmasi, setKonfirmasi] = useState<Konfirmasi | null>(null);
 
-  const muat = useCallback(async () => {
+  const muat = useCallback(async (): Promise<boolean> => {
+    let ok = true;
     try {
       const res = await fetch("/api/dashboard", { cache: "no-store" });
       if (res.ok) setDaftar((await res.json()) as Project[]);
+      else ok = false;
     } catch {
       /* abaikan */
+      ok = false;
     }
     try {
       const res = await fetch("/api/stats", { cache: "no-store" });
@@ -47,6 +51,7 @@ export default function Proyek() {
     } catch {
       /* abaikan */
     }
+    return ok;
   }, []);
 
   const sync = useCallback(async () => {
@@ -66,10 +71,8 @@ export default function Proyek() {
       await muat();
       setSyncing(false);
     })();
-    const t = window.setInterval(() => {
-      void muat();
-    }, 10000);
-    return () => window.clearInterval(t);
+    const kendali = mulaiPolling(muat, { awalMs: 10000 });
+    return () => kendali.berhenti();
   }, [status, muat]);
 
   useEffect(() => {

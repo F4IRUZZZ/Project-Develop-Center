@@ -10,12 +10,13 @@ import {
   enqueue as enqueueLokal,
   type QueuedCommand,
 } from "./tasks";
+import { mulaiPolling, type KendaliPolling } from "./polling";
 
 export type Sumber = "api" | "lokal";
 
 let cache: QueuedCommand[] = [];
 const pendengar = new Set<() => void>();
-let interval: number | null = null;
+let polling: KendaliPolling | null = null;
 let langgananLokal = false;
 
 function siar() {
@@ -128,13 +129,12 @@ export async function migrasiLokalKeApi(): Promise<number> {
 }
 
 function mulai(sumber: Sumber) {
-  if (interval) {
-    clearInterval(interval);
-    interval = null;
+  if (polling) {
+    polling.berhenti();
+    polling = null;
   }
   if (sumber === "api") {
-    void muatDariApi();
-    interval = window.setInterval(() => void muatDariApi(), 5000);
+    polling = mulaiPolling(() => muatDariApi(), { awalMs: 5000 });
   } else {
     muatDariLokal();
     if (!langgananLokal) {
