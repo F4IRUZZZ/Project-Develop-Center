@@ -47,6 +47,7 @@
 ## H. Riwayat Perubahan
 
 | Tanggal    | Perubahan                                                                                       | Uji                                                               |
+| 2026-10-04 | Bundle analyzer opt-in (#141/#142, ANALYZE=1 + verify-bundle)                                    | BUNDLE ALL-OK + 36 suite hijau + tsc + build                      |
 | 2026-10-04 | Playwright E2E smoke (#139/#140, 8 test + runner ephemeral + test:e2e)                          | E2E 8/8 + 35 suite hijau + tsc + build                            |
 | 2026-10-04 | Adaptive polling backoff (#137/#138, 8 titik + hormati hidden)                                   | POLLING ALL-OK + 34 suite hijau + tsc + build                     |
 | 2026-10-04 | QA phase 1 (#135/#136, type module + /api/search + skeleton + scrollbar)                        | 33 suite hijau + tsc + build                                      |
