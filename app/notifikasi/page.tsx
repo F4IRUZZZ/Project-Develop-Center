@@ -8,6 +8,7 @@ import { fetchNotifikasi, siarNotifikasi, tandaiDibaca, type Notifikasi } from "
 import { useBahasa } from "@/components/shell/BahasaProvider";
 import type { Kunci, Lang } from "@/lib/kamus";
 import { cn } from "@/lib/utils";
+import { SkeletonCard, SkeletonText } from "@/components/ui/Skeleton";
 
 function waktuRelatif(iso: string, lang: Lang, teks: (k: Kunci) => string): string {
   const dtk = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
@@ -64,7 +65,10 @@ export default function Notifikasi() {
       <p className="mb-6 text-[13px] text-muted-foreground">{teks("notif.sub")}</p>
 
       {!items ? (
-        <p className="font-mono text-xs text-muted-foreground">{teks("notif.muat")}</p>
+        <div className="space-y-4">
+          <SkeletonCard />
+          <SkeletonText lines={3} />
+        </div>
       ) : items.length === 0 ? (
         <div className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-card px-4 py-12 text-center">
           <BellOff className="h-8 w-8 text-muted-foreground" />
