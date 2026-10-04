@@ -362,6 +362,20 @@ const KAMUS = {
   "stat.anaJam": { id: "Jam tersibuk (WIB)", en: "Busiest hour (WIB)" },
   "stat.anaKosong": { id: "Belum ada data 30 hari terakhir.", en: "No data in the last 30 days." },
   "stat.anaMinggu": { id: "mg {m}", en: "wk {m}" },
+  "atur.tgJudul": { id: "Notifikasi Telegram", en: "Telegram Notifications" },
+  "atur.tgSub": {
+    id: "Terima kabar selesai/gagal/stuck di Telegram. Buat bot via @BotFather, kirim 1 chat ke bot, lalu isi token + chat id.",
+    en: "Get done/failed/stuck news on Telegram. Create a bot via @BotFather, send it 1 chat, then fill token + chat id.",
+  },
+  "atur.tgLabelPh": { id: "Nama, mis. HP saya", en: "Name, e.g. my phone" },
+  "atur.tgTokenPh": { id: "Bot token (123456:ABC...)", en: "Bot token (123456:ABC...)" },
+  "atur.tgChatPh": { id: "Chat id (angka)", en: "Chat id (number)" },
+  "atur.tgTersimpan": { id: "Tujuan tersimpan.", en: "Destination saved." },
+  "atur.tgTerkirim": { id: "Pesan tes terkirim, cek Telegram.", en: "Test message sent, check Telegram." },
+  "atur.tgGagalKirim": { id: "Gagal kirim. Periksa token/chat id.", en: "Send failed. Check token/chat id." },
+  "atur.tgTes": { id: "Kirim pesan tes", en: "Send test message" },
+  "atur.tgHapusJudul": { id: "Hapus tujuan?", en: "Delete destination?" },
+  "atur.tgHapusPesan": { id: "Tujuan '{name}' dihapus. Notifikasi ke sana berhenti.", en: "Destination '{name}' deleted. Notifications stop." },
 } as const;
 
 export type Kunci = keyof typeof KAMUS;

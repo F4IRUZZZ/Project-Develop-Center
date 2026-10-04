@@ -178,3 +178,19 @@ CREATE TABLE IF NOT EXISTS provider_keys (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   PRIMARY KEY (user_id, provider)
 );
+
+-- Notifikasi keluar (PRD F13): tujuan Telegram (token terenkripsi).
+CREATE TABLE IF NOT EXISTS notif_tujuan (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  channel TEXT NOT NULL DEFAULT 'telegram'
+    CHECK (channel IN ('telegram')),
+  label TEXT NOT NULL,
+  bot_token_enc TEXT NOT NULL,
+  chat_id TEXT NOT NULL,
+  aktif BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_notif_tujuan_user
+  ON notif_tujuan (user_id);

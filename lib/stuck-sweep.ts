@@ -7,6 +7,7 @@
 
 import { db } from "@/lib/db";
 import { buatId } from "@/lib/id";
+import { siarTelegram } from "@/lib/telegram";
 
 export const STUCK_MNT = 30;
 export const SWEEP_LIMIT = 50;
@@ -34,6 +35,9 @@ export async function sapuStuck(userId: string): Promise<HasilSweep> {
     await sql`INSERT INTO activity_log (id, user_id, project_id, type, message) VALUES (${buatId("act")}, ${userId}, ${t.project_id}, 'error', ${`Stuck: "${t.title}" tanpa update >30 mnt.`})`;
     tasks += 1;
   }
+  if (tasks > 0) {
+    void siarTelegram(userId, `[PDC] ${tasks} tugas macet (stuck) tanpa update >30 mnt.`).catch(() => {});
+  }
 
   // 2. command pending/processing yatim (bridge mati): status TIDAK diubah
   // (CHECK command_queue larang stuck) — hanya tulis activity error agar
@@ -53,6 +57,9 @@ export async function sapuStuck(userId: string): Promise<HasilSweep> {
     if (sudah.length > 0) continue;
     await sql`INSERT INTO activity_log (id, user_id, project_id, type, message) VALUES (${buatId("act")}, ${userId}, ${c.project_id}, 'error', ${`Yatim: perintah ${c.id} ("${c.command_text.slice(0, 60)}") tanpa update >30 mnt.`})`;
     pendingYatim += 1;
+  }
+  if (pendingYatim > 0) {
+    void siarTelegram(userId, `[PDC] ${pendingYatim} perintah yatim tanpa update >30 mnt.`).catch(() => {});
   }
 
   return { tasks, pendingYatim };
