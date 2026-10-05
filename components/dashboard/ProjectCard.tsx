@@ -16,16 +16,13 @@ const BAR: Record<Project["progressTone"], string> = {
 interface CardProps {
   project: Project;
   readOnly?: boolean;
-  // Sembunyikan chip hijau sesi-aktif (untuk seksi yang per definisi semua
-  // sesinya hidup, mis. Sedang Aktif — chipnya redundan di sana).
-  sembunyiAktif?: boolean;
   onCommand?: (projectId: string) => void;
   onStop?: (projectId: string) => void;
   onVisibility?: (projectId: string, saatIniPrivate: boolean) => void;
   onPulls?: (projectId: string) => void;
 }
 
-export function ProjectCard({ project, readOnly, sembunyiAktif, onCommand, onStop, onVisibility, onPulls }: CardProps) {
+export function ProjectCard({ project, readOnly, onCommand, onStop, onVisibility, onPulls }: CardProps) {
   const { teks } = useBahasa();
   const aksi = readOnly ? [] : project.actions;
   const tampilPr = project.status === "waiting" && onPulls && !readOnly;
@@ -45,13 +42,14 @@ export function ProjectCard({ project, readOnly, sembunyiAktif, onCommand, onSto
               {project.sesiKerja === "bekerja" ? (
                 <span
                   title={`${teks("kartu.titleBekerja")}${project.sesiRingkasan ? `: ${project.sesiRingkasan}` : ""}`}
-                  className="ml-1.5 inline-flex items-center gap-1 rounded-full bg-sky-500/10 px-2 py-0.5 text-[10px] font-medium text-sky-500"
+                  aria-label={teks("kartu.aiBekerja")}
+                  role="img"
+                  className="ml-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-sky-500/10 text-sky-500"
                 >
                   <span className="h-[6px] w-[6px] animate-pulse rounded-full bg-sky-500" />
-                  {teks("kartu.aiBekerja")}
                 </span>
               ) : (
-                project.sesiAktif && !sembunyiAktif && (
+                project.sesiAktif && (
                   <span
                     title={`${teks("kartu.titleAktif")}${project.sesiRingkasan ? `: ${project.sesiRingkasan}` : ""}`}
                     aria-label={teks("kartu.aiAktif")}
