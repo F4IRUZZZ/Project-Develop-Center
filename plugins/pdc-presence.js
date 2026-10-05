@@ -5,7 +5,7 @@
 // JANGAN tambah export lain / default export (risiko registrasi ganda).
 // JANGAN `import { Plugin } from "@opencode/plugin"`: tak ter-resolve dari
 // file .js polos dan hanya helper type — object return lolos skema yang sama.
-const VERSI_PLUGIN = "2026.10.05";
+const VERSI_PLUGIN = "2026.10.06";
 // Butuh env di mesin: PDC_API_URL (default production; set eksplisit
 // untuk dev lokal), PDC_API_KEY (buat di webapp PDC > Pengaturan),
 // opsional PDC_MODE (plan/build).
@@ -351,17 +351,27 @@ export const PdcPresence = async (input) => {
   // Resolusi repo via git remote. Gagal = null + warn BERSUARA (tandai)
   // agar sesi-buta-proyek (#99) langsung ketahuan dari log — jangan
   // pernah gagal diam-diam lagi. URL non-GitHub = null wajar (tanpa warn).
+  // Timeout 15 dtk (spawn dingin/antivirus bisa >5 dtk); warn identik
+  // dibatasi 1x/10 mnt per penyebab agar log tak banjir bila persisten.
+  const BATAS_REPO_MS = 15000;
+  const TENANG_WARN_MS = 10 * 60 * 1000;
+  let warnRepoTerakhir = { kunci: null, at: 0 };
   const repoFull = async (tandai) => {
     let url = null;
     try {
       const { execFileSync } = await import("node:child_process");
       url = execFileSync("git", ["-C", directory, "config", "--get", "remote.origin.url"], {
         encoding: "utf8",
-        timeout: 5000,
+        timeout: BATAS_REPO_MS,
       }).trim();
     } catch (e) {
       if (tandai) {
-        await log("warn", `repo tak ter-resolve (${tandai}): dir=${directory} err=${String((e && e.message) || e).slice(0, 150)}`, {});
+        const kunci = `${tandai}:${String((e && e.code) || e).slice(0, 40)}`;
+        const kini = Date.now();
+        if (warnRepoTerakhir.kunci !== kunci || kini - warnRepoTerakhir.at > TENANG_WARN_MS) {
+          warnRepoTerakhir = { kunci, at: kini };
+          await log("warn", `repo tak ter-resolve (${tandai}): dir=${directory} err=${String((e && e.message) || e).slice(0, 150)}`, {});
+        }
       }
       return null;
     }
