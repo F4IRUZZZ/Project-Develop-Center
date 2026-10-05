@@ -31,9 +31,9 @@ cek("indikator AI aktif (kamus)", card.includes("kartu.aiAktif") && card.include
 cek("backfill repo/project #99", api.includes("COALESCE") && api.includes("EXCLUDED.repo_full"));
 
 const plug = readFileSync(join(root, "plugins/pdc-presence.js"), "utf8");
-cek("format v2 default-export", plug.includes("export default") && plug.includes("Plugin.define"));
-cek("subscribe event v2", plug.includes("ctx.event.subscribe"));
-cek("tanpa client mentah v1", !plug.includes("client.session.list") && !plug.includes("client.app.log"));
+cek("format v1.18 named export", plug.includes("export const PdcPresence") && !plug.includes("export default"));
+cek("tanpa ctx v2", !plug.includes("ctx.event.subscribe") && !plug.includes("ctx.location"));
+cek("hook event + tool v1.18", plug.includes('"tool.execute.after"'));
 cek("plugin session.created/idle/error", plug.includes("session.created") && plug.includes("session.idle") && plug.includes("session.error"));
 cek("repo gagal bersuara + retry denyut #99", plug.includes("repo tak ter-resolve") && plug.includes("repo pulih saat denyut"));
 cek("plugin denyut interval + deleted", plug.includes("setInterval") && plug.includes("60000") && plug.includes("session.deleted"));
