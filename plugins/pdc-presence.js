@@ -42,10 +42,25 @@ export const PdcPresence = async (input) => {
   // Set PDC_DEBUG=1 untuk log detail lengkap seperti dulu.
   const DEBUG = process.env.PDC_DEBUG === "1";
 
-  // Tanpa client mentah — log via stdout (server menangkap ke opencode.log).
+  // Log via client.app.log (server logs) agar TUI steril — console.log
+  // dari proses plugin bocor ke area ketikan saat ngelag (#168). stdout
+  // hanya fallback bila client tak ada. Fire-and-forget: tak pernah
+  // di-await di jalur panas, tak pernah throw.
   const log = (level, message, extra) => {
     try {
       if (level === "info" && !DEBUG) return; // sukses diam
+      const body = {
+        service: "pdc-presence",
+        level: level === "warn" || level === "error" ? level : "info",
+        message: `[pdc-presence] ${message}`,
+        extra: extra ?? {},
+      };
+      if (client?.app?.log) {
+        void Promise.resolve()
+          .then(() => client.app.log({ body }))
+          .catch(() => {});
+        return;
+      }
       const tag = level === "warn" ? "WARN" : level === "error" ? "ERROR" : "INFO";
       console.log(`[pdc-presence] ${tag} ${message} ${JSON.stringify(extra ?? {})}`);
     } catch {
@@ -63,8 +78,7 @@ export const PdcPresence = async (input) => {
     }
   })();
   if (DEBUG) {
-    console.log(`[pdc-presence] siap (v1) dir=${dirRingkas} mode=${MODE}`);
-    log("info", "pdc-presence loaded (v1)", {
+    log("info", `siap (v1) dir=${dirRingkas} mode=${MODE}`, {
       directory,
       directorySumber,
       mode: MODE,
@@ -74,7 +88,7 @@ export const PdcPresence = async (input) => {
     });
   }
   if (!directory) {
-    console.log(`[pdc-presence] WARN directory kosong total, pelaporan repo dimatikan`);
+    log("warn", "directory kosong total, pelaporan repo dimatikan", {});
   }
 
   // Direct fetch di proses plugin. Mengembalikan {ok, status} agar
