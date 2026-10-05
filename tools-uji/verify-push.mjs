@@ -25,6 +25,7 @@ cek("unsubscribe bersih", klien.includes("unsubscribe"));
 
 const sw = readFileSync(join(root, "public/sw.js"), "utf8");
 cek("SW push + klik", sw.includes('"push"') && sw.includes("showNotification") && sw.includes("notificationclick"));
+cek("SW ikon PNG + fallback", sw.includes("/apple-icon.png") && !sw.includes("/icon.svg"));
 cek("SW tanpa cache manual", !sw.includes("caches.open") && !sw.includes("cache.addAll"));
 
 const api = readFileSync(join(root, "app/api/push/route.ts"), "utf8");

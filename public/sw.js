@@ -8,15 +8,27 @@ self.addEventListener("push", (event) => {
   } catch {
     /* abaikan: pakai default */
   }
-  const p = self.registration.showNotification(data.judul, {
+  // Ikon PNG (SVG digagalkan sebagian WebView) + fallback tanpa ikon:
+  // teks polos tetap muncul daripada sunyi total.
+  const dasar = {
     body: data.body || "",
-    icon: "/icon.svg",
-    badge: "/icon.svg",
     tag: data.tag,
     vibrate: [200, 100, 200],
     data: { url: data.url || "/notifikasi" },
-  });
-  if (event.waitUntil) event.waitUntil(p);
+  };
+  const tampil = async () => {
+    try {
+      await self.registration.showNotification(data.judul, {
+        ...dasar,
+        icon: "/apple-icon.png",
+        badge: "/apple-icon.png",
+      });
+    } catch {
+      await self.registration.showNotification(data.judul, dasar);
+    }
+  };
+  if (event.waitUntil) event.waitUntil(tampil());
+  else void tampil();
 });
 
 self.addEventListener("notificationclick", (event) => {
