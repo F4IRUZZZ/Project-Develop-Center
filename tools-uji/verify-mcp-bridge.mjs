@@ -28,7 +28,7 @@ cek("API default lama utuh", api.includes("LIMIT 100"));
 
 const plug = readFileSync(join(root, "plugins/pdc-presence.js"), "utf8");
 cek("presence default prod", plug.includes("https://project-develop-center.vercel.app") && !plug.includes('|| "http://localhost:3000"'));
-cek("presence versi cocok status (v1.18: 2026.10.05)", plug.includes('VERSI_PLUGIN = "2026.10.05"'));
+cek("presence versi cocok status (v1.18: 2026.10.06)", plug.includes('VERSI_PLUGIN = "2026.10.06"'));
 
 const readme = readFileSync(join(root, "mcp-server/README.md"), "utf8");
 cek("readme contoh prod", readme.includes("https://project-develop-center.vercel.app"));
