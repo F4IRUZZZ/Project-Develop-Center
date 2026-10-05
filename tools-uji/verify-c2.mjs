@@ -29,6 +29,7 @@ const card = readFileSync(join(root, "components/dashboard/ProjectCard.tsx"), "u
 cek("kartu tanpa Merge PR (dihapus E3)", !card.includes("Merge PR"));
 cek("kartu aksi Stop", card.includes("Stop"));
 cek("kartu aksi Perintah (kamus)", card.includes("kartu.perintah"));
+cek("chip aktif dot tanpa teks", card.includes('role="img"') && card.includes("h-5 w-5"));
 
 const page = readFileSync(join(root, "app/page.tsx"), "utf8");
 cek("page pakai Dashboard", page.includes("Dashboard"));

@@ -54,10 +54,11 @@ export function ProjectCard({ project, readOnly, sembunyiAktif, onCommand, onSto
                 project.sesiAktif && !sembunyiAktif && (
                   <span
                     title={`${teks("kartu.titleAktif")}${project.sesiRingkasan ? `: ${project.sesiRingkasan}` : ""}`}
-                    className="ml-1.5 inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-500"
+                    aria-label={teks("kartu.aiAktif")}
+                    role="img"
+                    className="ml-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500"
                   >
                     <span className="h-[6px] w-[6px] animate-pulse rounded-full bg-emerald-500" />
-                    {teks("kartu.aiAktif")}
                   </span>
                 )
               )}
