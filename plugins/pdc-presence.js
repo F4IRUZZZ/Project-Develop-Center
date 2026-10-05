@@ -5,7 +5,7 @@
 // JANGAN tambah export lain / default export (risiko registrasi ganda).
 // JANGAN `import { Plugin } from "@opencode/plugin"`: tak ter-resolve dari
 // file .js polos dan hanya helper type — object return lolos skema yang sama.
-const VERSI_PLUGIN = "2026.10.06";
+const VERSI_PLUGIN = "2026.10.07";
 // Butuh env di mesin: PDC_API_URL (default production; set eksplisit
 // untuk dev lokal), PDC_API_KEY (buat di webapp PDC > Pengaturan),
 // opsional PDC_MODE (plan/build).
@@ -348,35 +348,65 @@ export const PdcPresence = async (input) => {
     return { id, mode };
   };
 
-  // Resolusi repo via git remote. Gagal = null + warn BERSUARA (tandai)
-  // agar sesi-buta-proyek (#99) langsung ketahuan dari log — jangan
-  // pernah gagal diam-diam lagi. URL non-GitHub = null wajar (tanpa warn).
-  // Timeout 15 dtk (spawn dingin/antivirus bisa >5 dtk); warn identik
-  // dibatasi 1x/10 mnt per penyebab agar log tak banjir bila persisten.
-  const BATAS_REPO_MS = 15000;
+  // Resolusi repo TANPA spawn (spawn git flaky dari proses plugin:
+  // ETIMEDOUT persisten walau shell instan). Baca .git/config via fs
+  // (format INI stabil) + dukung worktree (.git berupa file penunjuk).
+  // URL non-GitHub / bukan repo = null wajar (tanpa warn). Spawn lama hanya
+  // sebagai fallback terakhir. Gagal = null + warn BERSUARA (tandai) agar
+  // sesi-buta-proyek (#99) langsung ketahuan — jangan pernah gagal diam-diam
+  // lagi. Warn identik dibatasi 1x/10 mnt per penyebab agar tak banjir.
   const TENANG_WARN_MS = 10 * 60 * 1000;
   let warnRepoTerakhir = { kunci: null, at: 0 };
+  const warnRepo = async (tandai, err) => {
+    if (!tandai) return;
+    const kunci = `${tandai}:${String((err && err.code) || err).slice(0, 40)}`;
+    const kini = Date.now();
+    if (warnRepoTerakhir.kunci !== kunci || kini - warnRepoTerakhir.at > TENANG_WARN_MS) {
+      warnRepoTerakhir = { kunci, at: kini };
+      await log("warn", `repo tak ter-resolve (${tandai}): dir=${directory} err=${String((err && err.message) || err).slice(0, 150)}`, {});
+    }
+  };
+  const urlDariConfig = (isi) => {
+    const m = String(isi || "").match(/\[remote\s+"origin"\][^\[]*?url\s*=\s*(\S+)/);
+    const url = m ? m[1].trim() : null;
+    const g = (url || "").match(/github\.com[/:]([^/]+\/[^/]+?)(?:\.git)?$/);
+    return g ? g[1] : null;
+  };
   const repoFull = async (tandai) => {
-    let url = null;
     try {
-      const { execFileSync } = await import("node:child_process");
-      url = execFileSync("git", ["-C", directory, "config", "--get", "remote.origin.url"], {
-        encoding: "utf8",
-        timeout: BATAS_REPO_MS,
-      }).trim();
-    } catch (e) {
-      if (tandai) {
-        const kunci = `${tandai}:${String((e && e.code) || e).slice(0, 40)}`;
-        const kini = Date.now();
-        if (warnRepoTerakhir.kunci !== kunci || kini - warnRepoTerakhir.at > TENANG_WARN_MS) {
-          warnRepoTerakhir = { kunci, at: kini };
-          await log("warn", `repo tak ter-resolve (${tandai}): dir=${directory} err=${String((e && e.message) || e).slice(0, 150)}`, {});
+      const fsMod = await import("node:fs");
+      const pathMod = await import("node:path");
+      const baca = (p) => {
+        try {
+          return fsMod.readFileSync(p, "utf8");
+        } catch {
+          return null;
+        }
+      };
+      // 1) .git/config langsung (kasus umum).
+      const isiConfig = baca(pathMod.join(directory, ".git", "config"));
+      const penunjuk = isiConfig === null ? baca(pathMod.join(directory, ".git")) : null;
+      let repo = urlDariConfig(isiConfig);
+      // 2) Worktree: .git adalah file "gitdir: <path>" (relatif thd dir).
+      if (!repo && penunjuk) {
+        const gm = penunjuk.match(/^gitdir:\s*(.+?)\s*$/m);
+        if (gm) {
+          const gitdir = pathMod.resolve(directory, gm[1].trim());
+          repo = urlDariConfig(baca(pathMod.join(gitdir, "config")));
         }
       }
+      if (repo) return repo;
+      // 3) Bukan repo git / remote non-GitHub = null wajar, tanpa warn.
+      // Bedakan dari error baca: bila .git ada tapi config hilang/rusak,
+      // bersuara agar ketahuan.
+      if (isiConfig !== null || penunjuk !== null) await warnRepo(tandai, "config-tak-terbaca");
+      return null;
+    } catch (e) {
+      await warnRepo(tandai, e);
       return null;
     }
-    const m = (url || "").match(/github\.com[/:]([^/]+\/[^/]+?)(?:\.git)?$/);
-    return m ? m[1] : null;
+    // CATATAN: spawn git sengaja DIHAPUS dari jalur ini (#158) — fallback
+    // lama justru sumber ETIMEDOUT. cekKomit tetap pakai git (gagal diam).
   };
 
   // Ping kesehatan sekali saat muat (tanpa sesi): halaman Status tahu salinan

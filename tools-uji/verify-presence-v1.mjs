@@ -22,12 +22,14 @@ cek("deteksi tool tulis", src.includes("edit|write|patch|apply"));
 cek("rekonsiliasi client.session.list", src.includes("client.session.list"));
 cek("denyut 60 dtk tetap", src.includes("DENYUT_MS = 60000") || src.includes("60000"));
 cek("tanpa kirim isi file", !src.includes("readFile") || src.includes("isi file tak pernah"));
-cek("versi 2026.10.06", src.includes('VERSI_PLUGIN = "2026.10.06"'));
-cek("timeout resolve 15s", src.includes("BATAS_REPO_MS = 15000") || src.includes("timeout: BATAS_REPO_MS"));
+cek("versi 2026.10.07", src.includes('VERSI_PLUGIN = "2026.10.07"'));
+cek("resolve via fs + worktree", src.includes(".git") && src.includes("gitdir:"));
+cek("spawn git dihapus dari repoFull", !src.match(/repoFull[\s\S]{0,2000}execFileSync/));
+cek("throttle warn repo", src.includes("TENANG_WARN_MS") && src.includes("warnRepoTerakhir"));
 cek("throttle warn 10 mnt", src.includes("TENANG_WARN_MS") && src.includes("warnRepoTerakhir"));
 
 const st = readFileSync(join(root, "app/api/status/route.ts"), "utf8");
-cek("status samakan versi", st.includes('VERSI_PLUGIN_TERKINI = "2026.10.06"'));
+cek("status samakan versi", st.includes('VERSI_PLUGIN_TERKINI = "2026.10.07"'));
 
 const norm = (s) => s.replace(/\r\n/g, "\n");
 for (const salinan of [

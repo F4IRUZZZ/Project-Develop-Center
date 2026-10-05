@@ -56,7 +56,7 @@ tanpa perintah PDC pun tetap terlacak per repo.
 
 - `file.edited` → path diantre, dikirim batch 30 dtk ke `POST /api/sessions/activity`.
 - Tiap denyut 60 dtk: cek `git rev-parse HEAD` → komit baru = milestone (sha + shortstat).
-- **Isi file tak pernah dibaca/dikirim** — hanya path, angka stat, sha. Kontrak privasi ini dikunci suite `verify-p`.
+- **Isi file tak pernah dibaca/dikirim** — hanya path, angka stat, sha. Pengecualian satu-satunya: `.git/config` dibaca via `fs` untuk resolve repo (pengganti spawn git yang flaky) — itu metadata repo, bukan isi kerja. Kontrak privasi ini dikunci suite `verify-p`.
 - Tab Sesi menampilkan: badge `Bekerja` (<2 mnt sejak sunting) / `Siaga` (hening >5 mnt) / `Nonaktif`, file terakhir, komit terakhir.
 
 ## Cara kerja & batas
