@@ -109,7 +109,6 @@ export default function Home() {
                 projects={aktif}
                 judul={teks("dash.sedangAktif")}
                 readOnly
-                sembunyiAktif
                 sembunyiStats
                 sembunyiAksiHeader
                 teksKosong={teks("dash.kosongSesi")}

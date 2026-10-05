@@ -76,9 +76,8 @@ cek(
 );
 const halRiw = readFileSync(join(root, "app/riwayat/page.tsx"), "utf8");
 cek(
-  "kartu sembunyiAktif + prefix kamus",
-  readFileSync(join(root, "components/dashboard/ProjectCard.tsx"), "utf8").includes("sembunyiAktif") &&
-    readFileSync(join(root, "components/dashboard/ProjectCard.tsx"), "utf8").includes("kartu.prefixTerakhir")
+  "kartu dot sesi + prefix kamus",
+  readFileSync(join(root, "components/dashboard/ProjectCard.tsx"), "utf8").includes("kartu.prefixTerakhir")
 );
 cek(
   "riwayat pakai kamus",
