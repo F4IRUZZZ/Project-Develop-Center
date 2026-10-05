@@ -1,8 +1,10 @@
 # Plugin pdc-presence — sesi AI terlihat di PDC
 
-> Format OpenCode **V2** (Issue #143): `export default { id, setup }` +
-> `ctx.event.subscribe()`. V1 (`export const ...` + `client.*` mentah)
-> DITOLAK server v2 saat load — jangan kembalikan pola itu.
+> Format OpenCode **v1.18** (Issue #154): SATU named export
+> `export const PdcPresence = async (input) => ({ event, "tool.execute.after" })`
+> (lihat `node_modules/@opencode-ai/plugin/dist/example.js`). Format V2 lama
+> (`export default { id, setup }` + `ctx.event.subscribe()`) TIDAK dimuat
+> v1.18 — jangan kembalikan pola itu.
 
 Plugin OpenCode yang melaporkan lifecycle sesi (buka/tutup) ke PDC secara
 otomatis, tanpa campur tangan LLM. Dengan ini revisi/sesi lanjutan yang
@@ -30,9 +32,11 @@ tanpa perintah PDC pun tetap terlacak per repo.
   baris final + menulis feed "Sesi AI dilanjutkan". Denyut biasa tanpa flag
   tak pernah membuka ulang (anti-reopen-palsu).
 - ID sesi diekstrak anti-rapuh: field umum dulu, lalu deep-scan rekursif
-  cari string `^ses_[A-Za-z0-9]+` (bentuk payload v2 tak terdokumentasi).
-- Rekonsiliasi via daftar sesi server DITIADAKAN di v2 (tak ada padanannya
-  di ctx) — sesi resume nol-event selamanya tak terlihat; diterima sadar.
+  cari string `^ses_[A-Za-z0-9]+` (format ID sesi OpenCode, stabil lintas versi).
+- Rekonsiliasi via `input.client.session.list()` (v1.18 punya) — sesi resume
+  nol-event tetap ketahuan bila se-direktori/proyek; tanpa cocok = dilewati.
+- Deteksi edit ganda: `file.edited` + `tool.execute.after` (edit/write/patch)
+  sebagai cadangan. Hanya path metadata — isi file tak pernah dibaca/dikirim.
 - Batas: resume yang nol event selamanya + bukan di daftar tak terlihat —
   tidak ada yang bisa diamati.
 

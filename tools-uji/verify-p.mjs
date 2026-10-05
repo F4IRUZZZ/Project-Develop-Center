@@ -28,7 +28,7 @@ const plug = readFileSync(join(root, "plugins/pdc-presence.js"), "utf8");
 cek("plugin file.edited batch", plug.includes("file.edited") && plug.includes("/api/sessions/activity"));
 cek("plugin deteksi komit", plug.includes("rev-parse") && plug.includes("shortstat"));
 cek("plugin lazy-register + reopen", plug.includes("lazy-register") && plug.includes("reopen"));
-cek("rekonsiliasi v1 diganti lazy-register (v2 tanpa session.list)", !plug.includes("session.list") && plug.includes("lazy-register"));
+cek("rekonsiliasi via client.session.list (v1.18)", plug.includes("client.session.list") && plug.includes("lazy-register"));
 cek("POST reopen + feed dilanjutkan", api.includes("reopen") && api.includes("Sesi AI dilanjutkan"));
 cek("plugin tak baca isi file (privasi)",
   !plug.includes("readFile") && !plug.includes("Bun.file") && !plug.includes("readFileSync"));
@@ -70,7 +70,7 @@ cek("route status ada", existsSync(stRoute));
 const stIsi = existsSync(stRoute) ? readFileSync(stRoute, "utf8") : "";
 cek("status read-only + versi cocok",
   stIsi.includes("export async function GET") && !stIsi.includes("export async function POST") &&
-  stIsi.includes('VERSI_PLUGIN_TERKINI = "2026.10.04"') && plug.includes('VERSI_PLUGIN = "2026.10.04"'));
+  stIsi.includes('VERSI_PLUGIN_TERKINI = "2026.10.05"') && plug.includes('VERSI_PLUGIN = "2026.10.05"'));
 cek("tabel repo_health", schema.includes("CREATE TABLE IF NOT EXISTS repo_health"));
 const stPage = join(root, "app/status/page.tsx");
 cek("halaman Status 4 seksi (kamus)", existsSync(stPage) && readFileSync(stPage, "utf8").includes("status.pluginJudul"));
