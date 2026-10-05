@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { buatId, isErr, sesiUser } from "@/lib/server-auth";
 import { galat } from "@/lib/galat-api";
 import { siarTelegram } from "@/lib/telegram";
+import { kirimPush } from "@/lib/push";
 import { TANDA_STOP } from "@/lib/tasks";
 
 // Hentikan kerja proyek: batalkan command pending/processing -> failed,
@@ -25,6 +26,7 @@ export async function POST(req: NextRequest) {
   await sql`UPDATE tasks SET status = 'failed', completed_at = now(), updated_at = now(), result_summary = ${TANDA_STOP} WHERE user_id = ${ctx.userId} AND project_id = ${projectId} AND status IN ('idle', 'working', 'waiting', 'stuck')`;
   await sql`INSERT INTO activity_log (id, user_id, project_id, type, message) VALUES (${buatId("act")}, ${ctx.userId}, ${projectId}, 'error', 'Stop: kerja AI dihentikan pengguna.')`;
   void siarTelegram(ctx.userId, "[PDC] Stop: kerja AI dihentikan pengguna.").catch(() => {});
+  void kirimPush(ctx.userId, "PDC: AI dihentikan", "Stop: kerja AI dihentikan pengguna.").catch(() => {});
 
   return NextResponse.json({ ok: true, dibatalkan: cmds.length });
 }

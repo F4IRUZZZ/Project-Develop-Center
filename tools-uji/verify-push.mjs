@@ -39,6 +39,20 @@ cek("UI seksi push", atur.includes("push.judul") && atur.includes("nyalakanPush"
 
 const kamus = readFileSync(join(root, "lib/kamus.ts"), "utf8");
 cek("kamus push.*", kamus.includes("push.judul") && kamus.includes("push.nyalakan") && kamus.includes("push.tanpaKunci"));
+cek("kamus tombol tes", kamus.includes("push.tes") && kamus.includes("push.tesOk"));
+
+const act = readFileSync(join(root, "app/api/activity/route.ts"), "utf8");
+cek("trigger activity error/Selesai", act.includes("kirimPush") && act.includes("Selesai:"));
+const batal = readFileSync(join(root, "app/api/commands/cancel/route.ts"), "utf8");
+cek("trigger cancel Stop", batal.includes("kirimPush"));
+const sapu = readFileSync(join(root, "lib/stuck-sweep.ts"), "utf8");
+cek("trigger sweep stuck+yatim", sapu.includes("kirimPush") && sapu.includes("AI macet"));
+cek("ringkasan harian tak tersentuh", !readFileSync(join(root, "app/api/ringkasan-harian/route.ts"), "utf8").includes("kirimPush"));
+
+const tes = readFileSync(join(root, "app/api/push/tes/route.ts"), "utf8");
+cek("API tes rate-limit 1/mnt", tes.includes("60 * 1000") && tes.includes("429"));
+cek("API tes 404 tanpa perangkat", tes.includes("404"));
+cek("UI tombol tes", readFileSync(join(root, "app/pengaturan/page.tsx"), "utf8").includes("/api/push/tes"));
 
 const contoh = readFileSync(join(root, ".env.example"), "utf8");
 cek("env contoh tanpa nilai", contoh.includes("PUSH_VAPID_PRIVATE=isi-") && !contoh.includes("zDnSYPuik"));

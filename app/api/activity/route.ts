@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { buatId, isErr, sesiUser } from "@/lib/server-auth";
 import { galat } from "@/lib/galat-api";
 import { siarTelegram } from "@/lib/telegram";
+import { kirimPush } from "@/lib/push";
 import type { ActivityEvent } from "@/lib/types";
 
 const BOLEH = new Set(["progress", "commit", "pr", "issue", "error", "info"]);
@@ -69,6 +70,7 @@ export async function POST(req: NextRequest) {
   // penyelesaian "Selesai:" — selaras filter notifikasi in-app (P3).
   if (tipe === "error" || (tipe === "info" && pesan.startsWith("Selesai:"))) {
     void siarTelegram(ctx.userId, `[PDC] ${pesan}`).catch(() => {});
+    void kirimPush(ctx.userId, tipe === "error" ? "PDC: AI perlu perhatian" : "PDC: AI selesai", pesan).catch(() => {});
   }
   return NextResponse.json({ id }, { status: 201 });
 }
