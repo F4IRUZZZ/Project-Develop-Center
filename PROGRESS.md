@@ -47,8 +47,12 @@
 ## H. Riwayat Perubahan
 
 | Tanggal    | Perubahan                                                                                       | Uji                                                               |
+| 2026-10-05 | Denyut lapor transisi (#160/#161, warn mulai-gagal + info pulih, anti banjir ngelag)            | presence-v1 ALL-OK + 33 suite + tsc + build + live user           |
+| 2026-10-05 | repoFull tanpa spawn (#158/#159, baca .git/config via fs, parsing terbukti 3 repo)              | presence-v1 ALL-OK + 33 suite + tsc + build                       |
+| 2026-10-05 | Hardening repo-resolve (#156/#157, timeout 15s + throttle warn, self-healed live)                | 33 suite hijau + tsc + build                                       |
+| 2026-10-05 | Port plugin presence v1.18 (#154/#155, named export + tool hook + rekonsiliasi client)          | presence-v1 ALL-OK + 33 suite + tsc + build + live indikator      |
 | 2026-10-04 | QA follow-up (#146/#147, sinkron sibling + kosmetik verify)                                      | 37 suite hijau + tsc + build                                      |
-| 2026-10-04 | Plugin v2 presence (#143/#144 port + #145 parser ses_ anti-rapuh, live sesiAktif)               | PRESENCE ALL-OK + 36 suite + tsc + build + live PDC               |
+| 2026-10-04 | Plugin v2 presence (#143/#144 port + #145 parser ses_ anti-rapuh, live sesiAktif) — HISTORIS, diganti kontrak v1.18 (#154) | PRESENCE ALL-OK + 36 suite + tsc + build + live PDC               |
 | 2026-10-04 | Bundle analyzer opt-in (#141/#142, ANALYZE=1 + verify-bundle)                                    | BUNDLE ALL-OK + 37 suite hijau + tsc + build                      |
 | 2026-10-04 | Playwright E2E smoke (#139/#140, 8 test + runner ephemeral + test:e2e)                          | E2E 8/8 + 35 suite hijau + tsc + build                            |
 | 2026-10-04 | Adaptive polling backoff (#137/#138, 8 titik + hormati hidden)                                   | POLLING ALL-OK + 34 suite hijau + tsc + build                     |
