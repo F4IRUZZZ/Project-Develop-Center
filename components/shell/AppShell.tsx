@@ -2,6 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { BahasaProvider, useBahasa } from "./BahasaProvider";
+import { ToastNotifikasi } from "./ToastNotifikasi";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
 import { LoginLanding } from "./LoginLanding";
@@ -31,6 +32,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Topbar />
             <div className="flex-1 overflow-auto">{children}</div>
           </div>
+          <ToastNotifikasi />
         </div>
       )}
     </BahasaProvider>

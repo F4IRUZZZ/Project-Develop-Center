@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { fetchNotifikasi, EVENT_NOTIF } from "@/lib/notifikasi";
+import { cekPeringatan } from "@/lib/peringatan";
 import { mulaiPolling } from "@/lib/polling";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +23,7 @@ export function NotifBadge({ className }: { className?: string }) {
       try {
         const rows = await fetchNotifikasi();
         setN(rows.filter((r) => !r.dibaca).length);
+        cekPeringatan(rows);
         return true;
       } catch {
         return false;

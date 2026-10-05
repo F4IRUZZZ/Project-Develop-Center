@@ -8,6 +8,8 @@ import { LoginCard } from "@/components/dashboard/LoginCard";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { PemilihBahasa } from "@/components/shell/PemilihBahasa";
 import { useBahasa } from "@/components/shell/BahasaProvider";
+import { bacaBisu, bukaKunciAudio, simpanBisu } from "@/lib/bunyi";
+import { mintaIzinNotifikasi, statusIzinNotifikasi } from "@/lib/peringatan";
 
 interface ApiKey {
   id: string;
@@ -39,6 +41,8 @@ export default function Pengaturan() {
   const [tema, setTema] = useState<Tema>("gelap");
   const [tersimpan, setTersimpan] = useState<string[]>([]);
   const [gagalSimpan, setGagalSimpan] = useState<string | null>(null);
+  const [bisu, setBisu] = useState<boolean>(false);
+  const [izinNotif, setIzinNotif] = useState<string>("tanya");
   const [tgList, setTgList] = useState<TujuanTg[]>([]);
   const [tgLabel, setTgLabel] = useState("Telegram");
   const [tgToken, setTgToken] = useState("");
@@ -71,6 +75,8 @@ export default function Pengaturan() {
 
   useEffect(() => {
     setTema(bacaTema());
+    setBisu(bacaBisu());
+    setIzinNotif(statusIzinNotifikasi());
   }, []);
 
   useEffect(() => {
@@ -508,6 +514,57 @@ export default function Pengaturan() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* SEKSI NOTIFIKASI SUARA + POP-UP */}
+      <div className="mb-6 rounded-2xl border border-border bg-card p-[18px]">
+        <div className="mb-2 flex items-center gap-2 text-[15px] font-semibold">
+          <BellRing className="h-4 w-4" /> {teks("notifSuara.judul")}
+        </div>
+        <p className="mb-4 text-[13px] text-muted-foreground">{teks("notifSuara.sub")}</p>
+        <div className="flex flex-col gap-3">
+          <label className="flex cursor-pointer items-center justify-between gap-3">
+            <span className="text-[13px] font-medium text-foreground">{teks("notifSuara.bunyi")}</span>
+            <button
+              role="switch"
+              aria-checked={!bisu}
+              onClick={() => {
+                const v = !bisu;
+                setBisu(v);
+                simpanBisu(v);
+                if (!v) bukaKunciAudio();
+              }}
+              className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${bisu ? "bg-muted" : "bg-primary"}`}
+            >
+              <span
+                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${bisu ? "left-0.5" : "left-[22px]"}`}
+              />
+            </button>
+          </label>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-[13px] font-medium text-foreground">
+              {teks("notifSuara.izin")} ·{" "}
+              <span className="font-mono text-[11px] text-muted-foreground">
+                {izinNotif === "granted"
+                  ? teks("notifSuara.izinOk")
+                  : izinNotif === "denied"
+                    ? teks("notifSuara.izinTolak")
+                    : izinNotif === "tak-dukung"
+                      ? teks("notifSuara.izinTakDukung")
+                      : teks("notifSuara.izinTanya")}
+              </span>
+            </span>
+            <button
+              onClick={async () => {
+                bukaKunciAudio();
+                setIzinNotif(await mintaIzinNotifikasi());
+              }}
+              className="shrink-0 rounded-[9px] border border-border px-4 py-2 text-[12px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
+              {teks("notifSuara.izin")}
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* SEKSI DANGER ZONE */}
