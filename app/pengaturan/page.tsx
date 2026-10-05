@@ -45,6 +45,7 @@ export default function Pengaturan() {
   const [bisu, setBisu] = useState<boolean>(false);
   const [izinNotif, setIzinNotif] = useState<string>("tanya");
   const [push, setPush] = useState<string>("tanya");
+  const [tesPush, setTesPush] = useState<string | null>(null);
   const [tgList, setTgList] = useState<TujuanTg[]>([]);
   const [tgLabel, setTgLabel] = useState("Telegram");
   const [tgToken, setTgToken] = useState("");
@@ -580,19 +581,36 @@ export default function Pengaturan() {
           <Smartphone className="h-4 w-4" /> {teks("push.judul")}
         </div>
         <p className="mb-4 text-[13px] text-muted-foreground">{teks("push.sub")}</p>
+        {tesPush && (
+          <p className={`mb-3 text-[12.5px] ${tesPush === "ok" ? "text-emerald-500" : "text-red-500"}`}>
+            {teks(tesPush === "ok" ? "push.tesOk" : "push.tesGagal")}
+          </p>
+        )}
         <div className="flex items-center justify-between gap-3">
           <span className="text-[13px] font-medium text-foreground">
             {push === "aktif" ? teks("push.nyala") : push === "tak-dukung" || push === "tanpa-kunci" ? teks(push === "tak-dukung" ? "push.takDukung" : "push.tanpaKunci") : teks("push.mati")}
           </span>
           {push === "aktif" ? (
-            <button
-              onClick={async () => {
-                if (await matikanPush()) setPush("mati");
-              }}
-              className="shrink-0 rounded-[9px] border border-border px-4 py-2 text-[12px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-            >
-              {teks("push.matikan")}
-            </button>
+            <div className="flex shrink-0 gap-2">
+              <button
+                onClick={async () => {
+                  const res = await fetch("/api/push/tes", { method: "POST" });
+                  setTesPush(res.ok ? "ok" : "gagal");
+                  window.setTimeout(() => setTesPush(null), 5000);
+                }}
+                className="rounded-[9px] border border-border px-4 py-2 text-[12px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                {teks("push.tes")}
+              </button>
+              <button
+                onClick={async () => {
+                  if (await matikanPush()) setPush("mati");
+                }}
+                className="rounded-[9px] border border-border px-4 py-2 text-[12px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                {teks("push.matikan")}
+              </button>
+            </div>
           ) : (
             <button
               onClick={async () => {

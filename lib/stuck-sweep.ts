@@ -7,6 +7,7 @@
 
 import { db } from "@/lib/db";
 import { buatId } from "@/lib/id";
+import { kirimPush } from "@/lib/push";
 import { siarTelegram } from "@/lib/telegram";
 
 export const STUCK_MNT = 30;
@@ -37,6 +38,7 @@ export async function sapuStuck(userId: string): Promise<HasilSweep> {
   }
   if (tasks > 0) {
     void siarTelegram(userId, `[PDC] ${tasks} tugas macet (stuck) tanpa update >30 mnt.`).catch(() => {});
+    void kirimPush(userId, "PDC: AI macet", `${tasks} tugas stuck tanpa update >30 mnt.`).catch(() => {});
   }
 
   // 2. command pending/processing yatim (bridge mati): status TIDAK diubah
@@ -60,6 +62,7 @@ export async function sapuStuck(userId: string): Promise<HasilSweep> {
   }
   if (pendingYatim > 0) {
     void siarTelegram(userId, `[PDC] ${pendingYatim} perintah yatim tanpa update >30 mnt.`).catch(() => {});
+    void kirimPush(userId, "PDC: perintah yatim", `${pendingYatim} perintah tanpa update >30 mnt.`).catch(() => {});
   }
 
   return { tasks, pendingYatim };
