@@ -5,7 +5,7 @@
 // JANGAN tambah export lain / default export (risiko registrasi ganda).
 // JANGAN `import { Plugin } from "@opencode/plugin"`: tak ter-resolve dari
 // file .js polos dan hanya helper type — object return lolos skema yang sama.
-const VERSI_PLUGIN = "2026.10.07";
+const VERSI_PLUGIN = "2026.10.08";
 // Butuh env di mesin: PDC_API_URL (default production; set eksplisit
 // untuk dev lokal), PDC_API_KEY (buat di webapp PDC > Pengaturan),
 // opsional PDC_MODE (plan/build).
@@ -120,6 +120,10 @@ export const PdcPresence = async (input) => {
     log(hasil.ok ? "info" : "warn", `lazy-register -> ${hasil.status} (${lewat})`, { sessionId: id });
   };
 
+  // Status denyut terakhir per sesi untuk lapor TRANSISI saja:
+  // gagal-pertama -> warn 1x, pulih -> info 1x, selebihnya diam (#160).
+  // Outage panjang meninggalkan 2 baris, bukan tembok tiap 60 dtk.
+  const denyutOk = new Map();
   const denyut = async () => {
     if (!KEY) return;
     await rekonsiliasi();
@@ -143,7 +147,13 @@ export const PdcPresence = async (input) => {
         mode: meta.mode,
         plugin_version: VERSI_PLUGIN,
       });
-      log(hasil.ok ? "info" : "warn", `denyut -> ${hasil.status}`, { sessionId: id });
+      const dulu = denyutOk.get(id);
+      denyutOk.set(id, hasil.ok);
+      if (!hasil.ok && dulu !== false) {
+        log("warn", `denyut gagal (mulai): ${hasil.status}`, { sessionId: id });
+      } else if (hasil.ok && dulu === false) {
+        log("info", `denyut pulih: ${hasil.status}`, { sessionId: id });
+      }
     }
     await cekKomit();
   };
@@ -529,7 +539,10 @@ export const PdcPresence = async (input) => {
           session_id: s.id,
           status: akhir,
         });
-        if (hasilTutup.ok) dikenal.delete(s.id);
+        if (hasilTutup.ok) {
+          dikenal.delete(s.id);
+          denyutOk.delete(s.id);
+        }
         log(hasilTutup.ok ? "info" : "warn", `PATCH /api/sessions -> ${hasilTutup.status} (${tipe})`, {
           sessionId: s.id,
         });
