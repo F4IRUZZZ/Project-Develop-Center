@@ -8,6 +8,7 @@ interface Props {
   judul?: string;
   stats?: { proyekAktif: number; aiBekerja: number; tugasSelesai: number };
   readOnly?: boolean;
+  sembunyiAktif?: boolean;
   sembunyiStats?: boolean;
   sembunyiAksiHeader?: boolean;
   teksKosong?: string;
@@ -23,6 +24,7 @@ export function Dashboard({
   judul = "Proyek Dipantau",
   stats,
   readOnly,
+  sembunyiAktif,
   sembunyiStats,
   sembunyiAksiHeader,
   teksKosong = "Belum ada proyek.",
@@ -52,7 +54,7 @@ export function Dashboard({
       ) : (
         <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4">
           {projects.map((p) => (
-            <ProjectCard key={p.id} project={p} readOnly={readOnly} onCommand={onCommand} onStop={onStop} onVisibility={onVisibility} onPulls={onPulls} />
+            <ProjectCard key={p.id} project={p} readOnly={readOnly} sembunyiAktif={sembunyiAktif} onCommand={onCommand} onStop={onStop} onVisibility={onVisibility} onPulls={onPulls} />
           ))}
         </div>
       )}
