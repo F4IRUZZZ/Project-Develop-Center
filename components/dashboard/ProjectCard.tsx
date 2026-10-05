@@ -16,13 +16,16 @@ const BAR: Record<Project["progressTone"], string> = {
 interface CardProps {
   project: Project;
   readOnly?: boolean;
+  // Sembunyikan chip hijau sesi-aktif (untuk seksi yang per definisi semua
+  // sesinya hidup, mis. Sedang Aktif — chipnya redundan di sana).
+  sembunyiAktif?: boolean;
   onCommand?: (projectId: string) => void;
   onStop?: (projectId: string) => void;
   onVisibility?: (projectId: string, saatIniPrivate: boolean) => void;
   onPulls?: (projectId: string) => void;
 }
 
-export function ProjectCard({ project, readOnly, onCommand, onStop, onVisibility, onPulls }: CardProps) {
+export function ProjectCard({ project, readOnly, sembunyiAktif, onCommand, onStop, onVisibility, onPulls }: CardProps) {
   const { teks } = useBahasa();
   const aksi = readOnly ? [] : project.actions;
   const tampilPr = project.status === "waiting" && onPulls && !readOnly;
@@ -48,7 +51,7 @@ export function ProjectCard({ project, readOnly, onCommand, onStop, onVisibility
                   {teks("kartu.aiBekerja")}
                 </span>
               ) : (
-                project.sesiAktif && (
+                project.sesiAktif && !sembunyiAktif && (
                   <span
                     title={`${teks("kartu.titleAktif")}${project.sesiRingkasan ? `: ${project.sesiRingkasan}` : ""}`}
                     className="ml-1.5 inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-500"
@@ -84,7 +87,9 @@ export function ProjectCard({ project, readOnly, onCommand, onStop, onVisibility
             </span>
           ))}
         <div>
-          <span className="text-muted-foreground">{project.taskPrefix}: </span>
+          <span className="text-muted-foreground">
+            {project.taskPrefix === "Terakhir" ? teks("kartu.prefixTerakhir") : teks("kartu.prefixTugas")}:{" "}
+          </span>
           {project.taskLabel}
         </div>
       </div>

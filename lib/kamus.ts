@@ -98,6 +98,8 @@ const KAMUS = {
   "kartu.jadikanPrivate": { id: "Jadikan private", en: "Make private" },
   "kartu.perintah": { id: "Perintah", en: "Command" },
   "kartu.stop": { id: "Stop", en: "Stop" },
+  "kartu.prefixTugas": { id: "Tugas", en: "Task" },
+  "kartu.prefixTerakhir": { id: "Terakhir", en: "Latest" },
   "antre.perintahDiAntre": { id: "perintah dalam antrian", en: "commands in queue" },
   "notif.judul": { id: "Notifikasi", en: "Notifications" },
   "notif.baru": { id: "baru", en: "new" },
