@@ -27,6 +27,11 @@ cek("denyut lapor transisi", src.includes("denyutOk") && src.includes("denyut ga
 cek("resolve via fs + worktree", src.includes(".git") && src.includes("gitdir:"));
 cek("spawn git dihapus dari repoFull", !src.match(/repoFull[\s\S]{0,2000}execFileSync/));
 cek("throttle warn repo", src.includes("TENANG_WARN_MS") && src.includes("warnRepoTerakhir"));
+cek("log via client.app.log", src.includes("client.app.log") && src.includes("pdc-presence"));
+cek(
+  "stdout hanya 1 fallback",
+  (src.match(/console\.log\(/g) || []).length === 1 && src.includes("hanya fallback bila client tak ada")
+);
 cek("throttle warn 10 mnt", src.includes("TENANG_WARN_MS") && src.includes("warnRepoTerakhir"));
 
 const st = readFileSync(join(root, "app/api/status/route.ts"), "utf8");
