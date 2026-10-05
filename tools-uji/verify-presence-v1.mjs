@@ -27,6 +27,7 @@ cek("versi 2026.10.05", src.includes('VERSI_PLUGIN = "2026.10.05"'));
 const st = readFileSync(join(root, "app/api/status/route.ts"), "utf8");
 cek("status samakan versi", st.includes('VERSI_PLUGIN_TERKINI = "2026.10.05"'));
 
+const norm = (s) => s.replace(/\r\n/g, "\n");
 for (const salinan of [
   ".opencode/plugins/pdc-presence.js",
   "../Webapp Keuangan(Ga Tuntas)/.opencode/plugins/pdc-presence.js",
@@ -35,7 +36,7 @@ for (const salinan of [
   const p = join(root, salinan);
   cek(
     `salinan ${salinan.split("/")[1] ?? salinan} identik`,
-    existsSync(p) && readFileSync(p, "utf8") === src
+    existsSync(p) && norm(readFileSync(p, "utf8")) === norm(src)
   );
 }
 
