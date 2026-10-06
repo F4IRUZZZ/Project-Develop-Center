@@ -28,14 +28,18 @@ export function ProjectCard({ project, readOnly, onCommand, onStop, onVisibility
   const tampilPr = project.status === "waiting" && onPulls && !readOnly;
   return (
     <article className="rounded-2xl border border-border bg-card p-[17px_18px] transition-all hover:-translate-y-px hover:border-[#34344A] hover:shadow-[0_6px_18px_rgba(0,0,0,0.4)]">
-      <div className="mb-3.5 flex items-start justify-between">
-        <div className="flex items-center gap-2.5">
+      <div className="mb-3.5 flex items-start justify-between gap-3">
+        <div className="flex min-w-0 flex-1 items-center gap-2.5">
           <div className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-[9px] border border-border bg-muted text-muted-foreground">
             <FolderGit2 className="h-[17px] w-[17px]" />
           </div>
-          <div>
+          <div className="min-w-0 flex-1">
             <div className="flex items-center text-sm font-semibold tracking-tight">
-              <Link href={`/proyek/${project.id}`} className="hover:text-primary hover:underline">
+              <Link
+                href={`/proyek/${project.id}`}
+                title={project.repoName}
+                className="min-w-0 flex-1 truncate hover:text-primary hover:underline"
+              >
                 {project.repoName}
               </Link>
               <PendingBadge projectId={project.id} />
@@ -44,7 +48,7 @@ export function ProjectCard({ project, readOnly, onCommand, onStop, onVisibility
                   title={`${teks("kartu.titleBekerja")}${project.sesiRingkasan ? `: ${project.sesiRingkasan}` : ""}`}
                   aria-label={teks("kartu.aiBekerja")}
                   role="img"
-                  className="ml-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-sky-500/10 text-sky-500"
+                  className="ml-1.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-sky-500/10 text-sky-500"
                 >
                   <span className="h-[6px] w-[6px] animate-pulse rounded-full bg-sky-500" />
                 </span>
@@ -54,14 +58,16 @@ export function ProjectCard({ project, readOnly, onCommand, onStop, onVisibility
                     title={`${teks("kartu.titleAktif")}${project.sesiRingkasan ? `: ${project.sesiRingkasan}` : ""}`}
                     aria-label={teks("kartu.aiAktif")}
                     role="img"
-                    className="ml-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500"
+                    className="ml-1.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500"
                   >
                     <span className="h-[6px] w-[6px] animate-pulse rounded-full bg-emerald-500" />
                   </span>
                 )
               )}
             </div>
-            <div className="font-mono text-[11px] text-muted-foreground">{project.repoFull}</div>
+            <div title={project.repoFull} className="truncate font-mono text-[11px] text-muted-foreground">
+              {project.repoFull}
+            </div>
           </div>
         </div>
         <StatusBadge status={project.status} label={project.statusLabel} />

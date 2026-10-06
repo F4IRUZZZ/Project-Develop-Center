@@ -21,7 +21,7 @@ const TEXT: Record<AIStatus, string> = {
 
 export function StatusBadge({ status, label }: { status: AIStatus; label: string }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium">
+    <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium">
       <span className={cn("h-[7px] w-[7px] shrink-0 rounded-full", DOT[status])} />
       <span className={cn(TEXT[status])}>{label}</span>
     </span>
