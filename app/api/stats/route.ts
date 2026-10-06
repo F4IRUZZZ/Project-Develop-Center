@@ -22,6 +22,7 @@ export async function GET(req: NextRequest) {
       WHERE user_id = ${ctx.userId} AND status = 'active'
         AND last_seen_at > now() - interval '3 minutes'
         AND COALESCE(last_work_at, last_edit_at) > now() - interval '2 minutes'
+        AND (last_idle_at IS NULL OR COALESCE(last_work_at, last_edit_at) > last_idle_at)
         AND project_id IS NOT NULL
     ) t`,
     sql`SELECT COUNT(*)::int AS n FROM tasks WHERE user_id = ${ctx.userId} AND status = 'completed'`,

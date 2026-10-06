@@ -112,6 +112,7 @@ CREATE TABLE IF NOT EXISTS agent_sessions (
   last_seen_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   last_edit_at TIMESTAMPTZ,
   last_work_at TIMESTAMPTZ,
+  last_idle_at TIMESTAMPTZ,
   ringkasan_terakhir TEXT,
   ringkasan_waktu TIMESTAMPTZ,
   done_at TIMESTAMPTZ,
@@ -125,6 +126,9 @@ ALTER TABLE agent_sessions ADD COLUMN IF NOT EXISTS last_work_at TIMESTAMPTZ;
 ALTER TABLE agent_sessions ADD COLUMN IF NOT EXISTS done_at TIMESTAMPTZ;
 ALTER TABLE agent_sessions ADD COLUMN IF NOT EXISTS done_task_id TEXT REFERENCES tasks(id) ON DELETE SET NULL;
 UPDATE agent_sessions SET last_work_at = COALESCE(last_edit_at, last_seen_at) WHERE last_work_at IS NULL;
+-- Flip real-time (#202): stempel idle-akhir giliran. Bekerja = kerja segar
+-- DAN (belum pernah idle ATAU kerja lebih baru dari idle). Idempoten.
+ALTER TABLE agent_sessions ADD COLUMN IF NOT EXISTS last_idle_at TIMESTAMPTZ;
 
 CREATE INDEX IF NOT EXISTS idx_agent_sessions_user
   ON agent_sessions (user_id, last_seen_at DESC);

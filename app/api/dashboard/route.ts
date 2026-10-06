@@ -74,22 +74,27 @@ export async function GET(req: NextRequest) {
   `) as unknown as Array<{ project_id: string | null }>;
   const sesiSet = new Set(sesi.map((r) => r.project_id));
 
-  // Tingkat kerja per proyek: bekerja (sinyal kerja <2 mnt) vs siaga
-  // (denyut segar tapi hening). COALESCE agar plugin lama (sunting-saja)
-  // tetap terhitung. Satu query agregat, ambang sama dengan tab Sesi.
+  // Tingkat kerja per proyek: bekerja (sinyal kerja <2 mnt DAN lebih baru
+  // dari idle-terakhir, #202) vs siaga. COALESCE agar plugin lama
+  // (sunting-saja) tetap terhitung. Satu query agregat, ambang sama dengan
+  // tab Sesi.
   const kerjaRows = (await sql`
-    SELECT project_id, MAX(COALESCE(last_work_at, last_edit_at)) AS sunting
+    SELECT project_id, MAX(COALESCE(last_work_at, last_edit_at)) AS sunting, MAX(last_idle_at) AS henti
     FROM agent_sessions
     WHERE user_id = ${ctx.userId} AND status = 'active'
       AND last_seen_at > now() - interval '3 minutes'
       AND project_id IS NOT NULL
     GROUP BY project_id
-  `) as unknown as Array<{ project_id: string; sunting: string | null }>;
+  `) as unknown as Array<{ project_id: string; sunting: string | null; henti: string | null }>;
   const kini = Date.now();
   const kerjaMap = new Map(
     kerjaRows.map((r) => [
       r.project_id,
-      r.sunting && kini - new Date(r.sunting).getTime() <= 2 * 60 * 1000 ? "bekerja" : "siaga",
+      r.sunting &&
+      kini - new Date(r.sunting).getTime() <= 2 * 60 * 1000 &&
+      (!r.henti || new Date(r.sunting).getTime() > new Date(r.henti).getTime())
+        ? "bekerja"
+        : "siaga",
     ] as const),
   );
 

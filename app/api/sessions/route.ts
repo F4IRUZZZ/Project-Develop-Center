@@ -132,8 +132,9 @@ export async function PATCH(req: NextRequest) {
   // Heartbeat murni (#184): idle TAK PERNAH mencatat done (tiap akhir
   // giliran fire idle+status ganda + sesi multi-turn = spam per-giliran).
   // Done dicatat tepat-sekali oleh sapuSelesai() (hening 3 mnt) atau cabang
-  // tutup-eksplisit di atas. Flag selesai:false menjaga bentuk respons.
-  const denyut = await sql`UPDATE agent_sessions SET status = 'active', ended_at = NULL, last_seen_at = now() WHERE session_id = ${sessionId} AND user_id = ${ctx.userId} RETURNING session_id`;
+  // tutup-eksplisit di atas. Stempel last_idle_at (#202) = flip real-time
+  // working->aktif di semua indikator. Flag selesai:false menjaga respons.
+  const denyut = await sql`UPDATE agent_sessions SET status = 'active', ended_at = NULL, last_seen_at = now(), last_idle_at = now() WHERE session_id = ${sessionId} AND user_id = ${ctx.userId} RETURNING session_id`;
   if (denyut.length === 0) return NextResponse.json({ error: galat(req, "sesiHilang") }, { status: 404 });
   return NextResponse.json({ ok: true, selesai: false });
 }
@@ -160,8 +161,9 @@ export async function DELETE(req: NextRequest) {
 
 // Riwayat sesi (filter opsional ?project_id=), terbaru dulu.
 // Diperkaya jejak metadata: file terakhir disentuh, komit terakhir, dan
-// status turunan (bekerja <2 mnt sejak sinyal kerja | siaga = buka tapi
-// hening | nonaktif = denyut mati >3 mnt / sudah ditutup).
+// status turunan (bekerja <2 mnt sejak sinyal kerja DAN lebih baru dari
+// idle-terakhir | siaga = buka tapi hening/sudah idle | nonaktif = denyut
+// mati >3 mnt / sudah ditutup).
 export async function GET(req: NextRequest) {
   const ctx = await sesiUser(req);
   if (isErr(ctx)) return NextResponse.json({ error: ctx.error }, { status: ctx.status });
@@ -170,8 +172,8 @@ export async function GET(req: NextRequest) {
   const projectId = new URL(req.url).searchParams.get("project_id");
   const rows = (
     projectId
-      ? await sql`SELECT session_id, project_id, repo_full, mode, status, started_at, last_seen_at, last_edit_at, last_work_at, ringkasan_terakhir, ringkasan_waktu, ended_at FROM agent_sessions WHERE user_id = ${ctx.userId} AND project_id = ${projectId} ORDER BY last_seen_at DESC LIMIT 20`
-      : await sql`SELECT session_id, project_id, repo_full, mode, status, started_at, last_seen_at, last_edit_at, last_work_at, ringkasan_terakhir, ringkasan_waktu, ended_at FROM agent_sessions WHERE user_id = ${ctx.userId} ORDER BY last_seen_at DESC LIMIT 50`
+      ? await sql`SELECT session_id, project_id, repo_full, mode, status, started_at, last_seen_at, last_edit_at, last_work_at, last_idle_at, ringkasan_terakhir, ringkasan_waktu, ended_at FROM agent_sessions WHERE user_id = ${ctx.userId} AND project_id = ${projectId} ORDER BY last_seen_at DESC LIMIT 20`
+      : await sql`SELECT session_id, project_id, repo_full, mode, status, started_at, last_seen_at, last_edit_at, last_work_at, last_idle_at, ringkasan_terakhir, ringkasan_waktu, ended_at FROM agent_sessions WHERE user_id = ${ctx.userId} ORDER BY last_seen_at DESC LIMIT 50`
   ) as Array<{
     session_id: string;
     project_id: string | null;
@@ -182,6 +184,7 @@ export async function GET(req: NextRequest) {
     last_seen_at: string;
     last_edit_at: string | null;
     last_work_at: string | null;
+    last_idle_at: string | null;
     ringkasan_terakhir: string | null;
     ringkasan_waktu: string | null;
     ended_at: string | null;
@@ -212,10 +215,13 @@ export async function GET(req: NextRequest) {
     const lihatMs = kini - new Date(r.last_seen_at).getTime();
     const kerjaTs = r.last_work_at ?? r.last_edit_at;
     const suntingMs = kerjaTs ? kini - new Date(kerjaTs).getTime() : null;
+    // Flip real-time (#202): kerja segar tapi idle lebih baru = sudah turun.
+    const sudahTurun =
+      r.last_idle_at !== null && kerjaTs !== null && new Date(kerjaTs).getTime() <= new Date(r.last_idle_at).getTime();
     const kerja =
       r.ended_at || r.status !== "active" || lihatMs > 3 * 60 * 1000
         ? "nonaktif"
-        : suntingMs !== null && suntingMs <= 2 * 60 * 1000
+        : suntingMs !== null && suntingMs <= 2 * 60 * 1000 && !sudahTurun
           ? "bekerja"
           : "siaga";
     return {
