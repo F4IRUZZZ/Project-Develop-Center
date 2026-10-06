@@ -31,6 +31,12 @@ cek("kartu aksi Stop", card.includes("Stop"));
 cek("kartu aksi Perintah (kamus)", card.includes("kartu.perintah"));
 cek("chip aktif dot tanpa teks", card.includes('role="img"') && card.includes("h-5 w-5"));
 cek("chip bekerja dot + aria", card.includes("kartu.titleBekerja") && card.includes('aria-label={teks("kartu.aiBekerja")}'));
+cek("header kartu anti-jepit (#192)", card.includes("min-w-0 flex-1") && card.includes("justify-between gap-3"));
+cek("nama + repoFull truncate + title", card.includes("flex-1 truncate") && card.includes("title={project.repoName}") && card.includes("title={project.repoFull}"));
+cek("dot sesi shrink-0", card.includes("h-5 w-5 shrink-0"));
+
+const badge = readFileSync(join(root, "components/dashboard/StatusBadge.tsx"), "utf8");
+cek("badge utuh anti-lipat", badge.includes("shrink-0") && badge.includes("whitespace-nowrap"));
 
 const page = readFileSync(join(root, "app/page.tsx"), "utf8");
 cek("page pakai Dashboard", page.includes("Dashboard"));
