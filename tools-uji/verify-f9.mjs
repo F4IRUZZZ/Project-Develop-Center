@@ -16,6 +16,9 @@ const hook = readFileSync(join(root, "app/api/github/hook/route.ts"), "utf8");
 cek("verifikasi signature", hook.includes("verifikasiSignature"));
 cek("mapping push/pr/issues/ping", hook.includes('"push"') && hook.includes("pull_request") && hook.includes('"issues"') && hook.includes('"ping"'));
 cek("merge tutup waiting", hook.includes("'waiting'") && hook.includes("'completed'"));
+cek("merge tutup working juga (#190)", hook.includes("'waiting', 'working'"));
+cek("merge Telegram webhook (#190)", hook.includes("void siarTelegram("));
+cek("merge anti-ganda 10 mnt (#190)", hook.includes("act-merge-webapp-") && hook.includes("interval '10 minutes'") && hook.includes("sudah dicatat webapp"));
 cek("abaikan repo tak dipantau", hook.includes("tak dipantau"));
 
 const lib = readFileSync(join(root, "lib/github-hook.ts"), "utf8");

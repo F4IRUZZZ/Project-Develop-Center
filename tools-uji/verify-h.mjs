@@ -17,6 +17,9 @@ cek("merge via PUT GitHub", merge.includes("/merge") && merge.includes('method: 
 cek("merge_method merge commit", merge.includes('"merge"'));
 cek("merge tulis activity", merge.includes("activity_log"));
 cek("merge tutup task waiting", merge.includes("status = 'completed'") && merge.includes("'waiting'"));
+cek("merge tutup working juga (#190)", merge.includes("'waiting', 'working'"));
+cek("merge feed Selesai: deterministik", merge.includes("Selesai: PR #") && merge.includes("act-merge-webapp-") && merge.includes("ON CONFLICT"));
+cek("merge Telegram best-effort", merge.includes("void siarTelegram("));
 cek("merge 405 jelas", merge.includes("405"));
 
 const modal = readFileSync(join(root, "components/command/PullModal.tsx"), "utf8");
