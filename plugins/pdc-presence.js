@@ -5,7 +5,7 @@
 // JANGAN tambah export lain / default export (risiko registrasi ganda).
 // JANGAN `import { Plugin } from "@opencode/plugin"`: tak ter-resolve dari
 // file .js polos dan hanya helper type — object return lolos skema yang sama.
-const VERSI_PLUGIN = "2026.10.10";
+const VERSI_PLUGIN = "2026.10.11";
 // Butuh env di mesin: PDC_API_URL (default production; set eksplisit
 // untuk dev lokal), PDC_API_KEY (buat di webapp PDC > Pengaturan),
 // opsional PDC_MODE (plan/build).
@@ -137,12 +137,14 @@ export const PdcPresence = async (input) => {
     log(hasil.ok ? "info" : "warn", `lazy-register -> ${hasil.status} (${lewat})`, { sessionId: id });
   };
 
-  // Throttle PATCH idle (#184): OpenCode memancarkan session.idle DAN
-  // session.status di tiap akhir giliran — tanpa ini 1 giliran = 2 PATCH
-  // balapan (feed kembar). Maks 1 PATCH per sesi per 90 dtk; ringkasan yang
-  // tertunda ikut flush di PATCH berikutnya (buffer dipertahankan).
+  // Throttle PATCH idle (#184, dipangkas #204): OpenCode memancarkan
+  // session.idle DAN session.status di tiap akhir giliran. Sejak PATCH jadi
+  // heartbeat murni (done pindah ke sweep), double-PATCH tak berbahaya —
+  // throttle tinggal anti-flapping 15 dtk agar cap last_idle_at (flip
+  // real-time #202) tak terlewat. Ringkasan tertunda ikut flush di PATCH
+  // berikutnya (buffer dipertahankan).
   const idleTerkirim = new Map(); // sessionId -> epoch ms
-  const SELA_IDLE_MS = 90000;
+  const SELA_IDLE_MS = 15000;
 
   // Status denyut terakhir per sesi untuk lapor TRANSISI saja:
   // gagal-pertama -> warn 1x, pulih -> info 1x, selebihnya diam (#160).
