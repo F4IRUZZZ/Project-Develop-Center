@@ -68,6 +68,23 @@ export default function Home() {
     return () => window.removeEventListener(EVENT_SEARCH, onSearch);
   }, []);
 
+  // Pulang ke tab = segar seketika (#204): polling menahan diri saat hidden
+  // + browser me-throttle timer background, jadi tanpa ini flip real-time
+  // (#202) baru terlihat puluhan detik setelah tab dibuka kembali.
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    const onNampak = () => {
+      if (document.hidden) return;
+      fetchDashboard().then(setLive).catch(() => {});
+      fetch("/api/stats", { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : Promise.reject()))
+        .then((d) => setAngka(d as { proyekAktif: number; aiBekerja: number; tugasSelesai: number }))
+        .catch(() => {});
+    };
+    document.addEventListener("visibilitychange", onNampak);
+    return () => document.removeEventListener("visibilitychange", onNampak);
+  }, [status]);
+
   const muatUlang = () => {
     fetchDashboard()
       .then(setLive)
