@@ -211,12 +211,12 @@ const KAMUS = {
   "pro.mulaiLabel": { id: "mulai ", en: "started " },
   "pro.stopJudul": { id: "Hentikan kerja AI?", en: "Stop AI work?" },
   "pro.stopPesan": {
-    id: "Kerja AI di {repo} dihentikan. Perintah pending dibatalkan dan task ditandai gagal.",
-    en: "AI work in {repo} will be stopped. Pending commands are cancelled and tasks marked failed.",
+    id: "Kerja di {repo} ditandai berhenti di PDC: perintah pending dibatalkan dan task ditandai gagal. Proses OpenCode yang sedang berjalan tidak dimatikan otomatis.",
+    en: "Work in {repo} is marked stopped in PDC: pending commands are cancelled and tasks marked failed. A running OpenCode process is not killed automatically.",
   },
   "pro.stopPesanDetail": {
-    id: "Kerja AI di {repo} dihentikan. Perintah pending dibatalkan.",
-    en: "AI work in {repo} will be stopped. Pending commands are cancelled.",
+    id: "Kerja di {repo} ditandai berhenti di PDC: perintah pending dibatalkan. Proses OpenCode tidak dimatikan otomatis.",
+    en: "Work in {repo} is marked stopped in PDC: pending commands are cancelled. A running OpenCode process is not killed automatically.",
   },
   "pro.stopYa": { id: "Ya, hentikan", en: "Yes, stop it" },
   "pro.visJudul": { id: "Ubah visibilitas repo?", en: "Change repo visibility?" },

@@ -54,13 +54,14 @@ export async function GET(req: NextRequest) {
   `) as unknown as TaskRow[];
   const perProyek = new Map(tasks.map((t) => [t.project_id, t]));
 
-  // Proyek "jalan": ada command pending/processing ATAU task working/stuck.
-  const jalan = (await sql`
+  // Syarat tombol Stop (#196): HANYA bila ada yang benar-benar bisa
+  // dihentikan — command pending/processing ATAU sesi AI live. Task
+  // working/stuck basi (tanpa sesi live) tak menampilkan Stop: disembunyikan
+  // saja, DB dan riwayat tak disentuh.
+  const cmd = (await sql`
     SELECT project_id FROM command_queue WHERE user_id = ${ctx.userId} AND status IN ('pending', 'processing')
-    UNION
-    SELECT project_id FROM tasks WHERE user_id = ${ctx.userId} AND status IN ('working', 'stuck')
   `) as unknown as Array<{ project_id: string }>;
-  const jalanSet = new Set(jalan.map((r) => r.project_id));
+  const cmdSet = new Set(cmd.map((r) => r.project_id));
 
   // Sesi AI aktif: status active + denyut <3 mnt. Denyut dikirim plugin tiap
   // 60 dtk selama proses OpenCode hidup, jadi timeout pendek aman dari kedip
@@ -138,7 +139,11 @@ export async function GET(req: NextRequest) {
       sesiAktif: sesiSet.has(id),
       sesiKerja: (kerjaMap.get(id) ?? null) as Project["sesiKerja"],
       sesiRingkasan: ringkasMap.get(id) ?? null,
-      actions: (status === "waiting" ? [] : jalanSet.has(id) ? (["command", "stop"] as Project["actions"]) : (["command"] as Project["actions"])),
+      actions: (status === "waiting"
+        ? []
+        : cmdSet.has(id) || sesiSet.has(id)
+          ? (["command", "stop"] as Project["actions"])
+          : (["command"] as Project["actions"])),
     };
   });
 
