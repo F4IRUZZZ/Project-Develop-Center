@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { buatId, isErr, sesiUser } from "@/lib/server-auth";
 import { galat } from "@/lib/galat-api";
-import { siarTelegram } from "@/lib/telegram";
+import { catatSelesai } from "@/lib/selesai";
 
 // Daftarkan/segarkan sesi AI (dipanggil plugin OpenCode, auth Bearer key mesin).
 // Upsert by session_id: buka sesi baru atau segarkan yang hidup.
@@ -85,9 +85,9 @@ export async function POST(req: NextRequest) {
 
 // Heartbeat (idle) vs tutup (error/selesai).
 // session.idle/session.status fire tiap agent selesai menjawab (menunggu
-// input) — BUKAN sesi berakhir — jadi menyegarkan status active +
-// last_seen_at (ended_at dibersihkan) PLUS deteksi transisi bekerja->
-// selesai (#182): idle dari sesi yang sedang bekerja mencatat 1x task done.
+// input) — BUKAN sesi berakhir — jadi heartbeat murni: status active +
+// last_seen_at (ended_at dibersihkan). Done TEPAT-SEKALI dicatat
+// sapuSelesai() setelah hening 3 mnt (#184), bukan di sini.
 // Tutup sejati: session.error (final,
 // butuh perhatian), session.deleted (selesai eksplisit), atau timeout 3 mnt
 // di flag sesiAktif dashboard (untuk close/kill/crash tanpa event).
@@ -107,6 +107,15 @@ export async function PATCH(req: NextRequest) {
   const sql = db();
   if (body.status === "error" || body.status === "selesai") {
     const akhir = body.status === "error" ? "error" : "selesai";
+    // Tutup eksplisit = pasti selesai: catat done DULU (sesi masih active
+    // agar lolos mutex), baru tutup. Error tak mencatat task completed.
+    if (akhir === "selesai") {
+      try {
+        await catatSelesai(ctx.userId, sessionId);
+      } catch {
+        /* abaikan: penutupan tetap jalan */
+      }
+    }
     const tutup = (await sql`UPDATE agent_sessions SET status = ${akhir}, ended_at = now(), last_seen_at = now() WHERE session_id = ${sessionId} AND user_id = ${ctx.userId} RETURNING session_id, project_id`) as Array<{
       session_id: string;
       project_id: string | null;
@@ -120,56 +129,13 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
-  // Transisi bekerja -> selesai (#182): idle dari sesi yang SEDANG bekerja
-  // (sinyal kerja segar) = 1x task done + feed "Selesai:" (picu bunyi/popup)
-  // + ping Telegram. Idle tanpa kerja baru = diam (dedupe via done_at yang
-  // re-arm otomatis saat sinyal kerja lebih baru masuk).
-  const AMBANG_KERJA_MS = 2 * 60 * 1000;
-  const baris = (await sql`SELECT last_work_at, last_edit_at, done_at, project_id, ringkasan_terakhir
-    FROM agent_sessions WHERE session_id = ${sessionId} AND user_id = ${ctx.userId} LIMIT 1`) as Array<{
-    last_work_at: string | null;
-    last_edit_at: string | null;
-    done_at: string | null;
-    project_id: string | null;
-    ringkasan_terakhir: string | null;
-  }>;
-  if (baris.length === 0) return NextResponse.json({ error: galat(req, "sesiHilang") }, { status: 404 });
-  const s = baris[0];
-  const kerjaTs = s.last_work_at ?? s.last_edit_at;
-  const sedangKerja = kerjaTs !== null && Date.now() - new Date(kerjaTs).getTime() <= AMBANG_KERJA_MS;
-  const sudahDicatat = s.done_at !== null && kerjaTs !== null && new Date(kerjaTs).getTime() <= new Date(s.done_at).getTime();
-
-  let selesai = false;
-  if (sedangKerja && !sudahDicatat && s.project_id) {
-    const ringkas = (s.ringkasan_terakhir ?? "").trim().slice(0, 200);
-    const judul = ringkas || "Sesi AI selesai bekerja";
-    const taskId = buatId("task");
-    await sql`INSERT INTO tasks (id, user_id, project_id, title, status, progress, result_summary, completed_at, updated_at)
-      VALUES (${taskId}, ${ctx.userId}, ${s.project_id}, ${judul.slice(0, 200)}, 'completed', 100, ${ringkas || null}, now(), now())`;
-    let repo = "";
-    try {
-      const pj = (await sql`SELECT repo_name FROM projects WHERE id = ${s.project_id} AND user_id = ${ctx.userId} LIMIT 1`) as Array<{
-        repo_name: string;
-      }>;
-      repo = pj[0]?.repo_name ?? "";
-    } catch {
-      /* abaikan: pesan tanpa nama repo tetap valid */
-    }
-    // Kontrak /api/notifications: prefix "Selesai:" = masuk filter penting.
-    const pesanFeed = `Selesai: AI selesai bekerja${repo ? ` di ${repo}` : ""}${ringkas ? ` — ${ringkas}` : ""}`;
-    await sql`INSERT INTO activity_log (id, user_id, project_id, type, message)
-      VALUES (${buatId("act")}, ${ctx.userId}, ${s.project_id}, 'info', ${pesanFeed})`;
-    await sql`UPDATE agent_sessions SET done_at = now(), done_task_id = ${taskId} WHERE session_id = ${sessionId} AND user_id = ${ctx.userId}`;
-    try {
-      await siarTelegram(ctx.userId, pesanFeed);
-    } catch {
-      /* abaikan: Telegram best-effort, feed + task sudah tercatat */
-    }
-    selesai = true;
-  }
-
-  await sql`UPDATE agent_sessions SET status = 'active', ended_at = NULL, last_seen_at = now() WHERE session_id = ${sessionId} AND user_id = ${ctx.userId}`;
-  return NextResponse.json({ ok: true, selesai });
+  // Heartbeat murni (#184): idle TAK PERNAH mencatat done (tiap akhir
+  // giliran fire idle+status ganda + sesi multi-turn = spam per-giliran).
+  // Done dicatat tepat-sekali oleh sapuSelesai() (hening 3 mnt) atau cabang
+  // tutup-eksplisit di atas. Flag selesai:false menjaga bentuk respons.
+  const denyut = await sql`UPDATE agent_sessions SET status = 'active', ended_at = NULL, last_seen_at = now() WHERE session_id = ${sessionId} AND user_id = ${ctx.userId} RETURNING session_id`;
+  if (denyut.length === 0) return NextResponse.json({ error: galat(req, "sesiHilang") }, { status: 404 });
+  return NextResponse.json({ ok: true, selesai: false });
 }
 
 // Hapus 1 sesi milik user (jejak file ikut via CASCADE; feed riwayat abadi
