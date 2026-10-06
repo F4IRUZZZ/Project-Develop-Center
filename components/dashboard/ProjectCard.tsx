@@ -25,10 +25,13 @@ interface CardProps {
 export function ProjectCard({ project, readOnly, onCommand, onStop, onVisibility, onPulls }: CardProps) {
   const { teks } = useBahasa();
   const aksi = readOnly ? [] : project.actions;
-  // Tombol PR selalu tampil (bukan cuma status waiting — task tak pernah
-  // masuk waiting sehingga tombol praktis tak pernah ada, #194). Modal
-  // memuat daftar PR live + state kosong bila tak ada.
+  // Tiga tombol independen (#200): PR selalu tampil bila handler ada (modal
+  // memuat daftar live + state kosong); Perintah dari actions; Stop HANYA
+  // bila actions berisi "stop" (syarat server #198). Regresi #194: cabang
+  // tampilPr menelan Perintah + memaksa Stop tanpa syarat — jangan diulang.
   const tampilPr = !readOnly && !!onPulls;
+  const bolehPerintah = aksi.includes("command" as Project["actions"][number]);
+  const bolehStop = aksi.includes("stop" as Project["actions"][number]) && !!onStop && !readOnly;
   return (
     <article className="rounded-2xl border border-border bg-card p-[17px_18px] transition-all hover:-translate-y-px hover:border-[#34344A] hover:shadow-[0_6px_18px_rgba(0,0,0,0.4)]">
       <div className="mb-3.5 flex items-start justify-between gap-3">
@@ -109,21 +112,8 @@ export function ProjectCard({ project, readOnly, onCommand, onStop, onVisibility
       </div>
       {(aksi.length > 0 || tampilPr) && (
         <div className="flex gap-2">
-          {tampilPr ? (
-            <>
-              <PrButton onClick={() => onPulls?.(project.id)} />
-              {onStop && !readOnly && (
-                <button
-                  onClick={() => onStop(project.id)}
-                  className="flex flex-1 items-center justify-center gap-1.5 rounded-[9px] bg-red-500/10 px-0 py-2 text-xs font-medium text-red-500 transition-colors hover:bg-red-500/20"
-                >
-                  <Square className="h-3.5 w-3.5" /> {teks("kartu.stop")}
-                </button>
-              )}
-            </>
-          ) : (
-            <>
-              {aksi.includes("command" as Project["actions"][number]) && (
+          {tampilPr && <PrButton onClick={() => onPulls?.(project.id)} />}
+          {bolehPerintah && (
             <button
               onClick={() => onCommand?.(project.id)}
               className="flex flex-1 items-center justify-center gap-1.5 rounded-[9px] bg-primary/10 px-0 py-2 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
@@ -131,15 +121,13 @@ export function ProjectCard({ project, readOnly, onCommand, onStop, onVisibility
               <Terminal className="h-3.5 w-3.5" /> {teks("kartu.perintah")}
             </button>
           )}
-          {aksi.includes("stop" as Project["actions"][number]) && (
+          {bolehStop && (
             <button
               onClick={() => onStop?.(project.id)}
               className="flex flex-1 items-center justify-center gap-1.5 rounded-[9px] bg-red-500/10 px-0 py-2 text-xs font-medium text-red-500 transition-colors hover:bg-red-500/20"
             >
               <Square className="h-3.5 w-3.5" /> {teks("kartu.stop")}
             </button>
-          )}
-            </>
           )}
         </div>
       )}
