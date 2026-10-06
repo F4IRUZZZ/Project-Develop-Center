@@ -20,6 +20,7 @@ const DRAWER: Array<{ kunci: Kunci; icon: typeof LayoutDashboard; href: string; 
   { kunci: "nav.status", icon: HeartPulse, href: "/status" },
   { kunci: "nav.riwayat", icon: History, href: "/riwayat" },
   { kunci: "nav.statistik", icon: ChartColumn, href: "/statistik" },
+  { kunci: "nav.profil", icon: User, href: "/profil" },
   { kunci: "nav.notifikasi", icon: Bell, href: "/notifikasi", live: true },
   { kunci: "nav.pengaturan", icon: Settings, href: "/pengaturan" },
 ];
