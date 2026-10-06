@@ -5,7 +5,7 @@
 // JANGAN tambah export lain / default export (risiko registrasi ganda).
 // JANGAN `import { Plugin } from "@opencode/plugin"`: tak ter-resolve dari
 // file .js polos dan hanya helper type — object return lolos skema yang sama.
-const VERSI_PLUGIN = "2026.10.08";
+const VERSI_PLUGIN = "2026.10.09";
 // Butuh env di mesin: PDC_API_URL (default production; set eksplisit
 // untuk dev lokal), PDC_API_KEY (buat di webapp PDC > Pengaturan),
 // opsional PDC_MODE (plan/build).
@@ -14,9 +14,12 @@ const VERSI_PLUGIN = "2026.10.08";
 // (denyut interval — selama proses hidup, sesi dianggap aktif walau user diam);
 // session.deleted -> PATCH selesai (tutup eksplisit); session.error -> PATCH
 // error (final, butuh perhatian); session.idle/session.status -> PATCH idle
-// (heartbeat, bukan tutup). tool.execute.after (edit/write/patch) -> antre
-// path suntingan (cadangan bila event file.edited tak datang). Tanpa interaksi
-// LLM, jadi sesi revisi/lanjutan yang tanpa perintah PDC pun tetap terlacak.
+// (heartbeat + deteksi transisi bekerja->selesai di server). tool.execute.after
+// (edit/write/patch) -> antre path suntingan (cadangan bila event file.edited
+// tak datang); tool APA PUN + part pesan asisten -> sinyal "kerja" throttled
+// (bukti sibuk walau tanpa suntingan — indikator AI Working jujur).
+// Tanpa interaksi LLM, jadi sesi revisi/lanjutan yang tanpa perintah PDC
+// pun tetap terlacak.
 // Selesai sejati saat close/kill/crash terdeteksi via timeout 3 menit di flag
 // sesiAktif dashboard (tak ada event tutup-proses di OpenCode, jadi
 // goodbye-message tak bisa diandalkan).
@@ -234,6 +237,28 @@ export const PdcPresence = async (input) => {
       events: [{ kind: "ringkasan", teks }],
     });
     log(hasil.ok ? "info" : "warn", `ringkasan -> ${hasil.status}`, { sessionId });
+  };
+
+  // Sinyal kerja (#182): bukti AI sibuk ke server (kind "kerja",
+  // latest-only, tanpa isi/payload). Throttle per sesi agar deretan tool
+  // cepat tak membanjiri API. Tanpa sinyal ini indikator PDC hanya naik
+  // saat ada suntingan file.
+  const kerjaTerakhir = new Map(); // sessionId -> epoch ms
+  const SELA_KERJA_MS = 45000;
+  const sinyalKerja = async (id) => {
+    try {
+      if (!id || !KEY || !dikenal.has(id)) return;
+      const kini = Date.now();
+      if (kini - (kerjaTerakhir.get(id) ?? 0) < SELA_KERJA_MS) return;
+      kerjaTerakhir.set(id, kini);
+      const hasil = await kirim("/api/sessions/activity", "POST", {
+        session_id: id,
+        events: [{ kind: "kerja" }],
+      });
+      log(hasil.ok ? "info" : "warn", `kerja -> ${hasil.status}`, { sessionId: id });
+    } catch {
+      /* abaikan */
+    }
   };
 
   // Jejak metadata (opsi A): antre path suntingan, flush batch tiap 30 dtk.
@@ -535,6 +560,11 @@ export const PdcPresence = async (input) => {
       }
       if (tipe === "message.part.updated") {
         catatPart(event);
+        try {
+          await sinyalKerja(infoSesi(event).id);
+        } catch {
+          /* abaikan */
+        }
         return;
       }
       if (tipe === "session.error" || tipe === "session.deleted") {
@@ -633,6 +663,7 @@ export const PdcPresence = async (input) => {
           await daftarkan(sid, { lewat: `tool:${namaTool || "?"}`, reopen: true, mode: MODE });
         }
         if (sid) terakhir = sid;
+        if (sid) await sinyalKerja(sid); // tool apa pun = bukti sibuk
         if (paths.length > 0 && alatTulis.test(namaTool)) {
           for (const p of paths) await antrekan(p);
           log("info", `tool tulis -> ${paths.length} path (${namaTool})`, { sessionId: sid });

@@ -3,8 +3,9 @@ import { db } from "@/lib/db";
 import { isErr, sesiUser } from "@/lib/server-auth";
 
 // Angka dashboard dari DB (bukan mock): proyek aktif, AI bekerja, task selesai.
-// AI Bekerja = UNION front sesi-bekerja (active + denyut <3 mnt + sunting
-// <2 mnt — ambang identik definisi "bekerja" di tab/kartu/beranda) dan task
+// AI Bekerja = UNION front sesi-bekerja (active + denyut <3 mnt + sinyal
+// kerja <2 mnt — ambang identik definisi "bekerja" di tab/kartu/beranda;
+// COALESCE agar plugin lama (sunting-saja) tetap terhitung) dan task
 // working/stuck, DISTINCT per proyek (tanpa duplikat bila beriringan).
 export async function GET(req: NextRequest) {
   const ctx = await sesiUser(req);
@@ -20,7 +21,7 @@ export async function GET(req: NextRequest) {
       SELECT project_id FROM agent_sessions
       WHERE user_id = ${ctx.userId} AND status = 'active'
         AND last_seen_at > now() - interval '3 minutes'
-        AND last_edit_at > now() - interval '2 minutes'
+        AND COALESCE(last_work_at, last_edit_at) > now() - interval '2 minutes'
         AND project_id IS NOT NULL
     ) t`,
     sql`SELECT COUNT(*)::int AS n FROM tasks WHERE user_id = ${ctx.userId} AND status = 'completed'`,

@@ -111,10 +111,20 @@ CREATE TABLE IF NOT EXISTS agent_sessions (
   started_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   last_seen_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   last_edit_at TIMESTAMPTZ,
+  last_work_at TIMESTAMPTZ,
   ringkasan_terakhir TEXT,
   ringkasan_waktu TIMESTAMPTZ,
+  done_at TIMESTAMPTZ,
+  done_task_id TEXT REFERENCES tasks(id) ON DELETE SET NULL,
   ended_at TIMESTAMPTZ
 );
+
+-- Presence jujur (#182): sinyal kerja (tool/pesan apa pun, bukan cuma
+-- suntingan) + dedupe task-done per transisi. Idempoten (replay aman).
+ALTER TABLE agent_sessions ADD COLUMN IF NOT EXISTS last_work_at TIMESTAMPTZ;
+ALTER TABLE agent_sessions ADD COLUMN IF NOT EXISTS done_at TIMESTAMPTZ;
+ALTER TABLE agent_sessions ADD COLUMN IF NOT EXISTS done_task_id TEXT REFERENCES tasks(id) ON DELETE SET NULL;
+UPDATE agent_sessions SET last_work_at = COALESCE(last_edit_at, last_seen_at) WHERE last_work_at IS NULL;
 
 CREATE INDEX IF NOT EXISTS idx_agent_sessions_user
   ON agent_sessions (user_id, last_seen_at DESC);
