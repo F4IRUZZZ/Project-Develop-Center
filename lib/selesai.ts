@@ -28,7 +28,7 @@ async function klaim(
   const menang = (await sql`
     UPDATE agent_sessions SET done_at = now()
     WHERE session_id = ${sessionId} AND user_id = ${userId}
-      AND status = 'active' AND project_id IS NOT NULL
+      AND status = 'active' AND mode = 'build' AND project_id IS NOT NULL
       AND COALESCE(last_work_at, last_edit_at) IS NOT NULL
       AND (done_at IS NULL OR COALESCE(last_work_at, last_edit_at) > done_at)
     RETURNING session_id, project_id, ringkasan_terakhir
@@ -81,7 +81,7 @@ export async function sapuSelesai(userId: string): Promise<number> {
   const sql = db();
   const calon = (await sql`
     SELECT session_id FROM agent_sessions
-    WHERE user_id = ${userId} AND status = 'active' AND project_id IS NOT NULL
+    WHERE user_id = ${userId} AND status = 'active' AND mode = 'build' AND project_id IS NOT NULL
       AND COALESCE(last_work_at, last_edit_at) < now() - interval '3 minutes'
       AND (done_at IS NULL OR COALESCE(last_work_at, last_edit_at) > done_at)
     ORDER BY last_seen_at ASC LIMIT ${SWEEP_LIMIT}

@@ -8,6 +8,7 @@ import { galat } from "@/lib/galat-api";
 // dikirim (kontrak privasi opsi A) — route ini menolak field di luar skema.
 type Masuk = {
   kind?: string;
+  mode?: string;
   file_path?: string;
   files_changed?: number;
   lines_added?: number;
@@ -15,6 +16,13 @@ type Masuk = {
   commit_sha?: string;
   teks?: string;
 };
+
+// Mode sesi terkini dari plugin (#206): hanya plan/build literal yang
+// dipercaya; selain itu null = jangan sentuh kolom (kontrak: unknown = build,
+// dan baris sudah default build saat dibuat).
+function modeDari(e: Masuk | undefined): string | null {
+  return e?.mode === "plan" || e?.mode === "build" ? (e.mode as string) : null;
+}
 
 // Redaksi sisi server (lapis kedua; plugin sudah meredaksi duluan): buang
 // blok kode, rapatkan whitespace, cap 1000 + ellipsis bila terpotong.
@@ -66,8 +74,14 @@ export async function POST(req: NextRequest) {
     }
     // Sinyal kerja (#182): bukti AI sibuk (tool/pesan apa pun, tanpa isi).
     // Latest-only: sentuh last_work_at, tanpa baris event, tanpa feed.
+    // Mode sesi ikut disegarkan bila plugin membawanya (#206).
     if (e?.kind === "kerja") {
-      await sql`UPDATE agent_sessions SET last_work_at = now(), last_seen_at = now() WHERE session_id = ${sessionId}`;
+      const modeBaru = modeDari(e);
+      if (modeBaru) {
+        await sql`UPDATE agent_sessions SET last_work_at = now(), last_seen_at = now(), mode = ${modeBaru} WHERE session_id = ${sessionId}`;
+      } else {
+        await sql`UPDATE agent_sessions SET last_work_at = now(), last_seen_at = now() WHERE session_id = ${sessionId}`;
+      }
       continue;
     }
     const kind = e?.kind === "commit" ? "commit" : "edit";

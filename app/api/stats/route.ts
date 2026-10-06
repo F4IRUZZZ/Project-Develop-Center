@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
       WHERE user_id = ${ctx.userId} AND status IN ('working', 'stuck') AND project_id IS NOT NULL
       UNION
       SELECT project_id FROM agent_sessions
-      WHERE user_id = ${ctx.userId} AND status = 'active'
+      WHERE user_id = ${ctx.userId} AND status = 'active' AND mode = 'build'
         AND last_seen_at > now() - interval '3 minutes'
         AND COALESCE(last_work_at, last_edit_at) > now() - interval '2 minutes'
         AND (last_idle_at IS NULL OR COALESCE(last_work_at, last_edit_at) > last_idle_at)

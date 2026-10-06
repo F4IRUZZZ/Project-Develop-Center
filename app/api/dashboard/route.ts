@@ -81,7 +81,7 @@ export async function GET(req: NextRequest) {
   const kerjaRows = (await sql`
     SELECT project_id, MAX(COALESCE(last_work_at, last_edit_at)) AS sunting, MAX(last_idle_at) AS henti
     FROM agent_sessions
-    WHERE user_id = ${ctx.userId} AND status = 'active'
+    WHERE user_id = ${ctx.userId} AND status = 'active' AND mode = 'build'
       AND last_seen_at > now() - interval '3 minutes'
       AND project_id IS NOT NULL
     GROUP BY project_id

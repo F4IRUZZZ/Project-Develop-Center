@@ -78,6 +78,18 @@ cek("plugin sinyalKerja", plug.includes("sinyalKerja") && plug.includes('kind: "
 cek("plugin throttle 45 dtk", plug.includes("SELA_KERJA_MS = 45000"));
 cek("plugin throttle idle 15 dtk (#204)", plug.includes("SELA_IDLE_MS = 15000") && plug.includes("idle dobel dilewati"));
 cek("beranda refetch on-visible (#204)", baca("app/page.tsx").includes("visibilitychange") && baca("app/page.tsx").includes("/api/stats"));
+
+// 4d. Build-only (#206): plan dikecualikan dari working + done.
+const plug2 = plug;
+cek("plugin mode eksplisit", plug2.includes("eksplisit") && plug2.includes("mode sesi ->"));
+cek("plugin kerja bawa mode", plug2.includes('kind: "kerja", mode: modeKirim'));
+cek("plugin idle bawa mode", plug2.includes("mode: dikenal.get(s.id)?.mode"));
+cek("activity terima mode", act.includes("modeDari") && act.includes("mode = ${modeBaru}"));
+cek("idle terima mode", ses.includes('body.mode === "plan"'));
+cek("stats build-only", baca("app/api/stats/route.ts").includes("mode = 'build'"));
+cek("dashboard build-only", baca("app/api/dashboard/route.ts").includes("AND mode = 'build'"));
+cek("sesi plan = siaga", ses.includes('r.mode !== "build"'));
+cek("klaim + sweep build-only", baca("lib/selesai.ts").includes("AND mode = 'build'"));
 cek("plugin reset throttle saat tutup", plug.includes("idleTerkirim.delete(s.id)"));
 cek("plugin tool hook sinyal", plug.includes("await sinyalKerja(sid)"));
 cek("plugin part pesan sinyal", plug.includes("await sinyalKerja(infoSesi(event).id)"));

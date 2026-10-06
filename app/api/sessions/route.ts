@@ -95,7 +95,7 @@ export async function PATCH(req: NextRequest) {
   const ctx = await sesiUser(req);
   if (isErr(ctx)) return NextResponse.json({ error: ctx.error }, { status: ctx.status });
 
-  let body: { session_id?: string; status?: string };
+  let body: { session_id?: string; status?: string; mode?: string };
   try {
     body = await req.json();
   } catch {
@@ -133,8 +133,12 @@ export async function PATCH(req: NextRequest) {
   // giliran fire idle+status ganda + sesi multi-turn = spam per-giliran).
   // Done dicatat tepat-sekali oleh sapuSelesai() (hening 3 mnt) atau cabang
   // tutup-eksplisit di atas. Stempel last_idle_at (#202) = flip real-time
-  // working->aktif di semua indikator. Flag selesai:false menjaga respons.
-  const denyut = await sql`UPDATE agent_sessions SET status = 'active', ended_at = NULL, last_seen_at = now(), last_idle_at = now() WHERE session_id = ${sessionId} AND user_id = ${ctx.userId} RETURNING session_id`;
+  // working->aktif di semua indikator. Mode ikut disegarkan bila dibawa
+  // plugin (#206). Flag selesai:false menjaga respons.
+  const modeBaru = body.mode === "plan" || body.mode === "build" ? body.mode : null;
+  const denyut = modeBaru
+    ? await sql`UPDATE agent_sessions SET status = 'active', ended_at = NULL, last_seen_at = now(), last_idle_at = now(), mode = ${modeBaru} WHERE session_id = ${sessionId} AND user_id = ${ctx.userId} RETURNING session_id`
+    : await sql`UPDATE agent_sessions SET status = 'active', ended_at = NULL, last_seen_at = now(), last_idle_at = now() WHERE session_id = ${sessionId} AND user_id = ${ctx.userId} RETURNING session_id`;
   if (denyut.length === 0) return NextResponse.json({ error: galat(req, "sesiHilang") }, { status: 404 });
   return NextResponse.json({ ok: true, selesai: false });
 }
@@ -218,12 +222,15 @@ export async function GET(req: NextRequest) {
     // Flip real-time (#202): kerja segar tapi idle lebih baru = sudah turun.
     const sudahTurun =
       r.last_idle_at !== null && kerjaTs !== null && new Date(kerjaTs).getTime() <= new Date(r.last_idle_at).getTime();
+    // Sesi plan-mode tak pernah "bekerja" (#206): siaga walau sinyal segar.
     const kerja =
       r.ended_at || r.status !== "active" || lihatMs > 3 * 60 * 1000
         ? "nonaktif"
-        : suntingMs !== null && suntingMs <= 2 * 60 * 1000 && !sudahTurun
-          ? "bekerja"
-          : "siaga";
+        : r.mode !== "build"
+          ? "siaga"
+          : suntingMs !== null && suntingMs <= 2 * 60 * 1000 && !sudahTurun
+            ? "bekerja"
+            : "siaga";
     return {
       ...r,
       aktivitas: {
