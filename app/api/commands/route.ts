@@ -67,7 +67,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: galat(req, "proyekSyncDulu") }, { status: 404 });
   }
   await sql`INSERT INTO command_queue (id, user_id, project_id, command_text, status) VALUES (${id}, ${ctx.userId}, ${projectId}, ${text}, 'pending')`;
-  await sql`INSERT INTO tasks (id, user_id, project_id, command_id, title, status, progress) VALUES (${taskId}, ${ctx.userId}, ${projectId}, ${id}, ${text}, 'working', 0)`;
+  // Task lahir idle (bukan working): AI Working naik hanya setelah bridge
+  // (report_progress) PATCH jadi working. waiting tak dipakai (arti PR-merge).
+  await sql`INSERT INTO tasks (id, user_id, project_id, command_id, title, status, progress) VALUES (${taskId}, ${ctx.userId}, ${projectId}, ${id}, ${text}, 'idle', 0)`;
   await sql`INSERT INTO activity_log (id, user_id, project_id, type, message) VALUES (${buatId("act")}, ${ctx.userId}, ${projectId}, 'info', ${`Perintah baru: ${text}`})`;
   const rows = await sql`SELECT * FROM command_queue WHERE id = ${id}`;
   return NextResponse.json({ ...baris(rows[0] as Record<string, unknown>), task_id: taskId }, { status: 201 });

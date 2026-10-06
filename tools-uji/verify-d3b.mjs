@@ -32,6 +32,7 @@ cek("dashboard auto-sync", dash.includes("syncProjects"));
 
 const cmd = readFileSync(join(root, "app/api/commands/route.ts"), "utf8");
 cek("enqueue buat task", cmd.includes("INSERT INTO tasks"));
+cek("task lahir idle (jujur, #178)", cmd.includes("${text}, 'idle', 0") || cmd.includes(", 'idle', 0"));
 cek("enqueue tulis activity", cmd.includes("INSERT INTO activity_log"));
 
 const queue = readFileSync(join(root, "lib/queue.ts"), "utf8");
