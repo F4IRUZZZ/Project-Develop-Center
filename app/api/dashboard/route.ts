@@ -54,10 +54,11 @@ export async function GET(req: NextRequest) {
   `) as unknown as TaskRow[];
   const perProyek = new Map(tasks.map((t) => [t.project_id, t]));
 
-  // Syarat tombol Stop (#196): HANYA bila ada yang benar-benar bisa
-  // dihentikan — command pending/processing ATAU sesi AI live. Task
-  // working/stuck basi (tanpa sesi live) tak menampilkan Stop: disembunyikan
-  // saja, DB dan riwayat tak disentuh.
+  // Syarat tombol Stop (#196, diperketat #198): HANYA bila ada yang
+  // benar-benar bisa dihentikan — command pending/processing ATAU sesi
+  // benar-benar BEKERJA (sinyal kerja <2 mnt). Sesi terbuka-tapi-diam
+  // (siaga), task basi, dan repo sepi hanya dapat tombol Perintah.
+  // DB dan riwayat tak disentuh.
   const cmd = (await sql`
     SELECT project_id FROM command_queue WHERE user_id = ${ctx.userId} AND status IN ('pending', 'processing')
   `) as unknown as Array<{ project_id: string }>;
@@ -141,7 +142,7 @@ export async function GET(req: NextRequest) {
       sesiRingkasan: ringkasMap.get(id) ?? null,
       actions: (status === "waiting"
         ? []
-        : cmdSet.has(id) || sesiSet.has(id)
+        : cmdSet.has(id) || kerjaMap.get(id) === "bekerja"
           ? (["command", "stop"] as Project["actions"])
           : (["command"] as Project["actions"])),
     };
