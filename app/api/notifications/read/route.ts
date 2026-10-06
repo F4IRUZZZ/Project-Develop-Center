@@ -17,10 +17,14 @@ export async function POST(req: NextRequest) {
 
   const sql = db();
   if (body.semua) {
+    // Filter WAJIB identik daftar /api/notifications (pr/error + info
+    // "Selesai:") — sebelumnya baris Selesai: tak pernah tertandai sehingga
+    // tombol tandai-semua seolah tak berfungsi (#194).
     await sql`
       INSERT INTO notification_reads (activity_id, user_id)
       SELECT a.id, a.user_id FROM activity_log a
-      WHERE a.user_id = ${ctx.userId} AND a.type IN ('pr', 'error')
+      WHERE a.user_id = ${ctx.userId}
+        AND (a.type IN ('pr', 'error') OR (a.type = 'info' AND a.message LIKE 'Selesai:%'))
         AND a.created_at > now() - interval '24 hours'
       ON CONFLICT DO NOTHING
     `;

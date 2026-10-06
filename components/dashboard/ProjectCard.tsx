@@ -25,7 +25,10 @@ interface CardProps {
 export function ProjectCard({ project, readOnly, onCommand, onStop, onVisibility, onPulls }: CardProps) {
   const { teks } = useBahasa();
   const aksi = readOnly ? [] : project.actions;
-  const tampilPr = project.status === "waiting" && onPulls && !readOnly;
+  // Tombol PR selalu tampil (bukan cuma status waiting — task tak pernah
+  // masuk waiting sehingga tombol praktis tak pernah ada, #194). Modal
+  // memuat daftar PR live + state kosong bila tak ada.
+  const tampilPr = !readOnly && !!onPulls;
   return (
     <article className="rounded-2xl border border-border bg-card p-[17px_18px] transition-all hover:-translate-y-px hover:border-[#34344A] hover:shadow-[0_6px_18px_rgba(0,0,0,0.4)]">
       <div className="mb-3.5 flex items-start justify-between gap-3">
