@@ -21,7 +21,7 @@ cek("proyek stats asli (bukan mock)", halProyek.includes("/api/stats"));
 
 // J2
 const dash = readFileSync(join(root, "app/api/dashboard/route.ts"), "utf8");
-cek("stop hanya sesi live (#196)", dash.includes("cmdSet") && dash.includes("sesiSet.has(id)") && !dash.includes("jalanSet"));
+cek("stop hanya sesi bekerja (#198)", dash.includes("cmdSet") && dash.includes('kerjaMap.get(id) === "bekerja"') && !dash.includes("jalanSet"));
 
 // J3
 cek("app/proyek/[id]/page.tsx", existsSync(join(root, "app/proyek/[id]/page.tsx")));
