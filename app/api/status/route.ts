@@ -6,7 +6,7 @@ import { galat } from "@/lib/galat-api";
 // Status sistem read-only (halaman /status, auth sesi web): deploy production,
 // bridge MCP->production, database, dan kesehatan plugin per repo. Tanpa aksi,
 // tanpa kredensial baru. Deploy di-cache 5 menit per user.
-export const VERSI_PLUGIN_TERKINI = "2026.10.11";
+export const VERSI_PLUGIN_TERKINI = "2026.10.12";
 const PRODUKSI_URL = "https://project-develop-center.vercel.app";
 const CACHE_DEPLOY_MS = 5 * 60 * 1000;
 

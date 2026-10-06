@@ -5,7 +5,7 @@
 // JANGAN tambah export lain / default export (risiko registrasi ganda).
 // JANGAN `import { Plugin } from "@opencode/plugin"`: tak ter-resolve dari
 // file .js polos dan hanya helper type — object return lolos skema yang sama.
-const VERSI_PLUGIN = "2026.10.11";
+const VERSI_PLUGIN = "2026.10.12";
 // Butuh env di mesin: PDC_API_URL (default production; set eksplisit
 // untuk dev lokal), PDC_API_KEY (buat di webapp PDC > Pengaturan),
 // opsional PDC_MODE (plan/build).
@@ -260,9 +260,10 @@ export const PdcPresence = async (input) => {
       const kini = Date.now();
       if (kini - (kerjaTerakhir.get(id) ?? 0) < SELA_KERJA_MS) return;
       kerjaTerakhir.set(id, kini);
+      const modeKirim = dikenal.get(id)?.mode ?? MODE;
       const hasil = await kirim("/api/sessions/activity", "POST", {
         session_id: id,
-        events: [{ kind: "kerja" }],
+        events: [{ kind: "kerja", mode: modeKirim }],
       });
       log(hasil.ok ? "info" : "warn", `kerja -> ${hasil.status}`, { sessionId: id });
     } catch {
@@ -393,17 +394,22 @@ export const PdcPresence = async (input) => {
       ambil(event) ??
       (typeof p.info?.id === "string" && p.info.id ? p.info.id : null) ??
       cariIdDalam(event);
+    // Mode eksplisit (#206): hanya dari env atau field event. Tanpa keduanya
+    // = tak-terdeteksi -> fallback build (kontrak: unknown dihitung build).
+    // Pembedaan ini penting agar mode basi tak menimpa mode segar.
     let mode = MODE;
+    let eksplisit = Boolean(ENV_MODE);
     if (!ENV_MODE) {
       for (const o of [p, p?.info, p?.message]) {
         const m = o?.mode ?? o?.sessionMode;
         if (m === "plan" || m === "build") {
           mode = m;
+          eksplisit = true;
           break;
         }
       }
     }
-    return { id, mode };
+    return { id, mode, eksplisit };
   };
 
   // Resolusi repo TANPA spawn (spawn git flaky dari proses plugin:
@@ -504,6 +510,16 @@ export const PdcPresence = async (input) => {
         if (sAwal.id && !dikenal.has(sAwal.id) && KEY) {
           await daftarkan(sAwal.id, { lewat: tipe, reopen: true, mode: sAwal.mode });
         }
+        // Segarkan mode sesi (#206): TUI bisa pindah plan/build mid-session.
+        // Hanya mode EKSPLISIT yang menimpa (fallback build tak boleh
+        // menghapus plan yang sudah terdeteksi).
+        if (sAwal.id && sAwal.eksplisit && dikenal.has(sAwal.id)) {
+          const meta0 = dikenal.get(sAwal.id);
+          if (meta0 && meta0.mode !== sAwal.mode) {
+            meta0.mode = sAwal.mode;
+            log("info", `mode sesi -> ${sAwal.mode} (${tipe})`, { sessionId: sAwal.id });
+          }
+        }
       }
       if (tipe === "session.created") {
         const s = infoSesi(event);
@@ -563,6 +579,7 @@ export const PdcPresence = async (input) => {
         const hasilPatch = await kirim("/api/sessions", "PATCH", {
           session_id: s.id,
           status: "idle",
+          mode: dikenal.get(s.id)?.mode ?? s.mode,
         });
         log(hasilPatch.ok ? "info" : "warn", `PATCH /api/sessions -> ${hasilPatch.status} (${tipe})`, {
           sessionId: s.id,
