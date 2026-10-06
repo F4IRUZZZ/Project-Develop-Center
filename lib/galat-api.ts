@@ -47,9 +47,7 @@ const ERR = {
   notifReadWajib: { id: "activity_id / semua wajib", en: "activity_id / semua is required" },
   hookBesar: { id: "Body terlalu besar", en: "Body too large" },
   hookSig: { id: "Signature tidak valid", en: "Invalid signature" },
-  pushDataWajib: { id: "endpoint + p256dh + auth wajib", en: "endpoint + p256dh + auth are required" },
-  pushTesSabar: { id: "Tunggu 1 menit sebelum tes lagi", en: "Wait 1 minute before testing again" },
-  pushTanpaPerangkat: { id: "Belum ada perangkat terdaftar", en: "No registered devices" },
+
   statsGagal: { id: "Gagal mengambil statistik GitHub", en: "Failed to fetch GitHub statistics" },
   statusRepoTakTerdaftar: { id: "Repo PDC tidak terdaftar sebagai proyek.", en: "PDC repo is not registered as a project." },
   statusDeployTakTerbaca: { id: "Deploy production tidak terbaca.", en: "Production deploy unreadable." },

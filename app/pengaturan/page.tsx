@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { signOut, useSession } from "next-auth/react";
-import { Copy, KeyRound, Trash2, GitBranch, AlertTriangle, ShieldCheck, User, Palette, Sparkles, Sun, Moon, Monitor, Send, BellRing, Smartphone } from "lucide-react";
+import { Copy, KeyRound, Trash2, GitBranch, AlertTriangle, ShieldCheck, User, Palette, Sparkles, Sun, Moon, Monitor, Send, BellRing } from "lucide-react";
 import { bacaTema, terapkanTema, type Tema } from "@/lib/tema";
 import { LoginCard } from "@/components/dashboard/LoginCard";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
@@ -10,7 +10,6 @@ import { PemilihBahasa } from "@/components/shell/PemilihBahasa";
 import { useBahasa } from "@/components/shell/BahasaProvider";
 import { bacaBisu, bukaKunciAudio, simpanBisu } from "@/lib/bunyi";
 import { mintaIzinNotifikasi, statusIzinNotifikasi } from "@/lib/peringatan";
-import { matikanPush, nyalakanPush, pushDidukung, statusPush } from "@/lib/push-client";
 
 interface ApiKey {
   id: string;
@@ -44,8 +43,7 @@ export default function Pengaturan() {
   const [gagalSimpan, setGagalSimpan] = useState<string | null>(null);
   const [bisu, setBisu] = useState<boolean>(false);
   const [izinNotif, setIzinNotif] = useState<string>("tanya");
-  const [push, setPush] = useState<string>("tanya");
-  const [tesPush, setTesPush] = useState<string | null>(null);
+
   const [tgList, setTgList] = useState<TujuanTg[]>([]);
   const [tgLabel, setTgLabel] = useState("Telegram");
   const [tgToken, setTgToken] = useState("");
@@ -80,11 +78,6 @@ export default function Pengaturan() {
     setTema(bacaTema());
     setBisu(bacaBisu());
     setIzinNotif(statusIzinNotifikasi());
-    if (pushDidukung()) {
-      void statusPush().then(setPush);
-    } else {
-      setPush("tak-dukung");
-    }
   }, []);
 
   useEffect(() => {
@@ -572,57 +565,6 @@ export default function Pengaturan() {
               {teks("notifSuara.izin")}
             </button>
           </div>
-        </div>
-      </div>
-
-      {/* SEKSI PUSH TRAY HP */}
-      <div className="mb-6 rounded-2xl border border-border bg-card p-[18px]">
-        <div className="mb-2 flex items-center gap-2 text-[15px] font-semibold">
-          <Smartphone className="h-4 w-4" /> {teks("push.judul")}
-        </div>
-        <p className="mb-4 text-[13px] text-muted-foreground">{teks("push.sub")}</p>
-        {tesPush && (
-          <p className={`mb-3 text-[12.5px] ${tesPush === "ok" ? "text-emerald-500" : "text-red-500"}`}>
-            {teks(tesPush === "ok" ? "push.tesOk" : "push.tesGagal")}
-          </p>
-        )}
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-[13px] font-medium text-foreground">
-            {push === "aktif" ? teks("push.nyala") : push === "tak-dukung" || push === "tanpa-kunci" ? teks(push === "tak-dukung" ? "push.takDukung" : "push.tanpaKunci") : teks("push.mati")}
-          </span>
-          {push === "aktif" ? (
-            <div className="flex shrink-0 gap-2">
-              <button
-                onClick={async () => {
-                  const res = await fetch("/api/push/tes", { method: "POST" });
-                  setTesPush(res.ok ? "ok" : "gagal");
-                  window.setTimeout(() => setTesPush(null), 5000);
-                }}
-                className="rounded-[9px] border border-border px-4 py-2 text-[12px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-              >
-                {teks("push.tes")}
-              </button>
-              <button
-                onClick={async () => {
-                  if (await matikanPush()) setPush("mati");
-                }}
-                className="rounded-[9px] border border-border px-4 py-2 text-[12px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-              >
-                {teks("push.matikan")}
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={async () => {
-                if (await nyalakanPush()) setPush("aktif");
-                else setPush(await statusPush());
-              }}
-              disabled={push === "tak-dukung" || push === "tanpa-kunci"}
-              className="shrink-0 rounded-[9px] bg-primary px-4 py-2 text-[12px] font-medium text-white hover:bg-[#5457E5] disabled:opacity-50"
-            >
-              {teks("push.nyalakan")}
-            </button>
-          )}
         </div>
       </div>
 

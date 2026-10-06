@@ -147,17 +147,16 @@ CREATE TABLE IF NOT EXISTS repo_health (
   PRIMARY KEY (user_id, repo_full)
 );
 
--- Push browser (Web Push): langganan per perangkat user.
-CREATE TABLE IF NOT EXISTS push_langganan (
-  endpoint TEXT PRIMARY KEY,
-  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  p256dh TEXT NOT NULL,
-  auth TEXT NOT NULL,
-  dibuat TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE INDEX IF NOT EXISTS idx_push_langganan_user
-  ON push_langganan (user_id);
+-- PENSIUN: Web Push tray HP dicabut (tetap ada datanya, tak dipakai).
+-- Tabel push_langganan dibiarkan (tanpa DROP — hapus butuh migrasi prod
+-- berisiko untuk nol manfaat). Baris yatim diam selamanya.
+-- CREATE TABLE IF NOT EXISTS push_langganan (
+--   endpoint TEXT PRIMARY KEY,
+--   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+--   p256dh TEXT NOT NULL,
+--   auth TEXT NOT NULL,
+--   dibuat TIMESTAMPTZ NOT NULL DEFAULT now()
+-- );
 
 -- D4: API keys untuk MCP bridge (hash, bukan secret mentah).
 
