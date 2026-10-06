@@ -37,6 +37,7 @@ cek("dot sesi shrink-0", card.includes("h-5 w-5 shrink-0"));
 
 const badge = readFileSync(join(root, "components/dashboard/StatusBadge.tsx"), "utf8");
 cek("badge utuh anti-lipat", badge.includes("shrink-0") && badge.includes("whitespace-nowrap"));
+cek("tombol PR selalu tampil (#194)", card.includes("tampilPr = !readOnly") && !card.includes('status === "waiting"'));
 
 const page = readFileSync(join(root, "app/page.tsx"), "utf8");
 cek("page pakai Dashboard", page.includes("Dashboard"));
