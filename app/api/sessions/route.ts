@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
-import { isErr, sesiUser } from "@/lib/server-auth";
+import { buatId, isErr, sesiUser } from "@/lib/server-auth";
 import { galat } from "@/lib/galat-api";
+import { siarTelegram } from "@/lib/telegram";
 
 // Daftarkan/segarkan sesi AI (dipanggil plugin OpenCode, auth Bearer key mesin).
 // Upsert by session_id: buka sesi baru atau segarkan yang hidup.
@@ -84,8 +85,10 @@ export async function POST(req: NextRequest) {
 
 // Heartbeat (idle) vs tutup (error/selesai).
 // session.idle/session.status fire tiap agent selesai menjawab (menunggu
-// input) — BUKAN sesi berakhir — jadi hanya menyegarkan status active +
-// last_seen_at (ended_at dibersihkan). Tutup sejati: session.error (final,
+// input) — BUKAN sesi berakhir — jadi menyegarkan status active +
+// last_seen_at (ended_at dibersihkan) PLUS deteksi transisi bekerja->
+// selesai (#182): idle dari sesi yang sedang bekerja mencatat 1x task done.
+// Tutup sejati: session.error (final,
 // butuh perhatian), session.deleted (selesai eksplisit), atau timeout 3 mnt
 // di flag sesiAktif dashboard (untuk close/kill/crash tanpa event).
 export async function PATCH(req: NextRequest) {
@@ -117,9 +120,56 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
-  const denyut = await sql`UPDATE agent_sessions SET status = 'active', ended_at = NULL, last_seen_at = now() WHERE session_id = ${sessionId} AND user_id = ${ctx.userId} RETURNING session_id`;
-  if (denyut.length === 0) return NextResponse.json({ error: galat(req, "sesiHilang") }, { status: 404 });
-  return NextResponse.json({ ok: true });
+  // Transisi bekerja -> selesai (#182): idle dari sesi yang SEDANG bekerja
+  // (sinyal kerja segar) = 1x task done + feed "Selesai:" (picu bunyi/popup)
+  // + ping Telegram. Idle tanpa kerja baru = diam (dedupe via done_at yang
+  // re-arm otomatis saat sinyal kerja lebih baru masuk).
+  const AMBANG_KERJA_MS = 2 * 60 * 1000;
+  const baris = (await sql`SELECT last_work_at, last_edit_at, done_at, project_id, ringkasan_terakhir
+    FROM agent_sessions WHERE session_id = ${sessionId} AND user_id = ${ctx.userId} LIMIT 1`) as Array<{
+    last_work_at: string | null;
+    last_edit_at: string | null;
+    done_at: string | null;
+    project_id: string | null;
+    ringkasan_terakhir: string | null;
+  }>;
+  if (baris.length === 0) return NextResponse.json({ error: galat(req, "sesiHilang") }, { status: 404 });
+  const s = baris[0];
+  const kerjaTs = s.last_work_at ?? s.last_edit_at;
+  const sedangKerja = kerjaTs !== null && Date.now() - new Date(kerjaTs).getTime() <= AMBANG_KERJA_MS;
+  const sudahDicatat = s.done_at !== null && kerjaTs !== null && new Date(kerjaTs).getTime() <= new Date(s.done_at).getTime();
+
+  let selesai = false;
+  if (sedangKerja && !sudahDicatat && s.project_id) {
+    const ringkas = (s.ringkasan_terakhir ?? "").trim().slice(0, 200);
+    const judul = ringkas || "Sesi AI selesai bekerja";
+    const taskId = buatId("task");
+    await sql`INSERT INTO tasks (id, user_id, project_id, title, status, progress, result_summary, completed_at, updated_at)
+      VALUES (${taskId}, ${ctx.userId}, ${s.project_id}, ${judul.slice(0, 200)}, 'completed', 100, ${ringkas || null}, now(), now())`;
+    let repo = "";
+    try {
+      const pj = (await sql`SELECT repo_name FROM projects WHERE id = ${s.project_id} AND user_id = ${ctx.userId} LIMIT 1`) as Array<{
+        repo_name: string;
+      }>;
+      repo = pj[0]?.repo_name ?? "";
+    } catch {
+      /* abaikan: pesan tanpa nama repo tetap valid */
+    }
+    // Kontrak /api/notifications: prefix "Selesai:" = masuk filter penting.
+    const pesanFeed = `Selesai: AI selesai bekerja${repo ? ` di ${repo}` : ""}${ringkas ? ` — ${ringkas}` : ""}`;
+    await sql`INSERT INTO activity_log (id, user_id, project_id, type, message)
+      VALUES (${buatId("act")}, ${ctx.userId}, ${s.project_id}, 'info', ${pesanFeed})`;
+    await sql`UPDATE agent_sessions SET done_at = now(), done_task_id = ${taskId} WHERE session_id = ${sessionId} AND user_id = ${ctx.userId}`;
+    try {
+      await siarTelegram(ctx.userId, pesanFeed);
+    } catch {
+      /* abaikan: Telegram best-effort, feed + task sudah tercatat */
+    }
+    selesai = true;
+  }
+
+  await sql`UPDATE agent_sessions SET status = 'active', ended_at = NULL, last_seen_at = now() WHERE session_id = ${sessionId} AND user_id = ${ctx.userId}`;
+  return NextResponse.json({ ok: true, selesai });
 }
 
 // Hapus 1 sesi milik user (jejak file ikut via CASCADE; feed riwayat abadi
@@ -144,8 +194,8 @@ export async function DELETE(req: NextRequest) {
 
 // Riwayat sesi (filter opsional ?project_id=), terbaru dulu.
 // Diperkaya jejak metadata: file terakhir disentuh, komit terakhir, dan
-// status turunan (bekerja <2 mnt sejak sunting | siaga = buka tapi hening
-// | nonaktif = denyut mati >3 mnt / sudah ditutup).
+// status turunan (bekerja <2 mnt sejak sinyal kerja | siaga = buka tapi
+// hening | nonaktif = denyut mati >3 mnt / sudah ditutup).
 export async function GET(req: NextRequest) {
   const ctx = await sesiUser(req);
   if (isErr(ctx)) return NextResponse.json({ error: ctx.error }, { status: ctx.status });
@@ -154,8 +204,8 @@ export async function GET(req: NextRequest) {
   const projectId = new URL(req.url).searchParams.get("project_id");
   const rows = (
     projectId
-      ? await sql`SELECT session_id, project_id, repo_full, mode, status, started_at, last_seen_at, last_edit_at, ringkasan_terakhir, ringkasan_waktu, ended_at FROM agent_sessions WHERE user_id = ${ctx.userId} AND project_id = ${projectId} ORDER BY last_seen_at DESC LIMIT 20`
-      : await sql`SELECT session_id, project_id, repo_full, mode, status, started_at, last_seen_at, last_edit_at, ringkasan_terakhir, ringkasan_waktu, ended_at FROM agent_sessions WHERE user_id = ${ctx.userId} ORDER BY last_seen_at DESC LIMIT 50`
+      ? await sql`SELECT session_id, project_id, repo_full, mode, status, started_at, last_seen_at, last_edit_at, last_work_at, ringkasan_terakhir, ringkasan_waktu, ended_at FROM agent_sessions WHERE user_id = ${ctx.userId} AND project_id = ${projectId} ORDER BY last_seen_at DESC LIMIT 20`
+      : await sql`SELECT session_id, project_id, repo_full, mode, status, started_at, last_seen_at, last_edit_at, last_work_at, ringkasan_terakhir, ringkasan_waktu, ended_at FROM agent_sessions WHERE user_id = ${ctx.userId} ORDER BY last_seen_at DESC LIMIT 50`
   ) as Array<{
     session_id: string;
     project_id: string | null;
@@ -165,6 +215,7 @@ export async function GET(req: NextRequest) {
     started_at: string;
     last_seen_at: string;
     last_edit_at: string | null;
+    last_work_at: string | null;
     ringkasan_terakhir: string | null;
     ringkasan_waktu: string | null;
     ended_at: string | null;
@@ -193,7 +244,8 @@ export async function GET(req: NextRequest) {
     const sunting = ev.filter((j) => j.kind !== "commit" && j.file_path).slice(0, 5);
     const komit = ev.find((j) => j.kind === "commit") ?? null;
     const lihatMs = kini - new Date(r.last_seen_at).getTime();
-    const suntingMs = r.last_edit_at ? kini - new Date(r.last_edit_at).getTime() : null;
+    const kerjaTs = r.last_work_at ?? r.last_edit_at;
+    const suntingMs = kerjaTs ? kini - new Date(kerjaTs).getTime() : null;
     const kerja =
       r.ended_at || r.status !== "active" || lihatMs > 3 * 60 * 1000
         ? "nonaktif"

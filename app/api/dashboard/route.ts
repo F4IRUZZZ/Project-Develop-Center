@@ -65,10 +65,11 @@ export async function GET(req: NextRequest) {
   `) as unknown as Array<{ project_id: string | null }>;
   const sesiSet = new Set(sesi.map((r) => r.project_id));
 
-  // Tingkat kerja per proyek: bekerja (sunting <2 mnt) vs siaga (denyut
-  // segar tapi hening). Satu query agregat, ambang sama dengan tab Sesi.
+  // Tingkat kerja per proyek: bekerja (sinyal kerja <2 mnt) vs siaga
+  // (denyut segar tapi hening). COALESCE agar plugin lama (sunting-saja)
+  // tetap terhitung. Satu query agregat, ambang sama dengan tab Sesi.
   const kerjaRows = (await sql`
-    SELECT project_id, MAX(last_edit_at) AS sunting
+    SELECT project_id, MAX(COALESCE(last_work_at, last_edit_at)) AS sunting
     FROM agent_sessions
     WHERE user_id = ${ctx.userId} AND status = 'active'
       AND last_seen_at > now() - interval '3 minutes'

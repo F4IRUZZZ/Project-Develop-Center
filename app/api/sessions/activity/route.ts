@@ -64,6 +64,12 @@ export async function POST(req: NextRequest) {
       }
       continue;
     }
+    // Sinyal kerja (#182): bukti AI sibuk (tool/pesan apa pun, tanpa isi).
+    // Latest-only: sentuh last_work_at, tanpa baris event, tanpa feed.
+    if (e?.kind === "kerja") {
+      await sql`UPDATE agent_sessions SET last_work_at = now(), last_seen_at = now() WHERE session_id = ${sessionId}`;
+      continue;
+    }
     const kind = e?.kind === "commit" ? "commit" : "edit";
     const path = typeof e?.file_path === "string" ? e.file_path.slice(0, 500) : null;
     const sha = typeof e?.commit_sha === "string" ? e.commit_sha.slice(0, 40) : null;
@@ -76,7 +82,7 @@ export async function POST(req: NextRequest) {
     masuk += 1;
   }
   if (adaSunting) {
-    await sql`UPDATE agent_sessions SET last_edit_at = now(), last_seen_at = now() WHERE session_id = ${sessionId}`;
+    await sql`UPDATE agent_sessions SET last_edit_at = now(), last_work_at = now(), last_seen_at = now() WHERE session_id = ${sessionId}`;
   }
   // Milestone komit dicerminkan ke feed (suntingan per-event tidak: noise).
   // project_id null (repo tak terdaftar) dilewati — kolom NOT NULL.
