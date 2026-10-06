@@ -1,6 +1,6 @@
 // P2: writer stuck. Display-level di dashboard (working >30 mnt) tetap ada
 // sebagai fallback, tapi sweep ini MENULIS ke DB agar stuck tercatat di
-// /api/tasks, ikut query jalanSet/cancel, dan berbunyi via notif (activity
+// /api/tasks, ikut aksi kartu/cancel, dan berbunyi via notif (activity
 // type error masuk filter pr,error 24 jam).
 // Dipakai oportunistik oleh GET /api/dashboard + manual/cron via
 // /api/tasks/sweep (dry-run: ?dry=1). Best-effort: gagal = diam.
