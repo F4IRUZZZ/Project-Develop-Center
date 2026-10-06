@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { buatId, isErr, sesiUser, tokenGitHub } from "@/lib/server-auth";
 import { galat } from "@/lib/galat-api";
+import { siarTelegram } from "@/lib/telegram";
 
 // Merge PR terbuka (satu-satunya aksi write ke GitHub dari webapp, PRD F15).
 // Metode: merge commit. Tidak bisa dibatalkan — UI wajib konfirmasi dulu.
@@ -47,8 +48,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: jelas }, { status: 502 });
   }
 
+  // Judul PR untuk pesan notif (best-effort: tanpa judul tetap jalan).
+  let judul = "";
+  try {
+    const info = await fetch(`https://api.github.com/repos/${row.repo_full}/pulls/${prNumber}`, {
+      headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" },
+      signal: AbortSignal.timeout(10000),
+    });
+    if (info.ok) judul = ((await info.json()) as { title?: string }).title?.slice(0, 120) ?? "";
+  } catch {
+    /* abaikan */
+  }
+
   const sql = db();
-  await sql`INSERT INTO activity_log (id, user_id, project_id, type, message) VALUES (${buatId("act")}, ${ctx.userId}, ${projectId}, 'pr', ${`Merge PR #${prNumber} dari webapp.`})`;
-  await sql`UPDATE tasks SET status = 'completed', progress = 100, completed_at = now(), updated_at = now(), result_summary = ${`Merged via webapp PR #${prNumber}.`} WHERE user_id = ${ctx.userId} AND project_id = ${projectId} AND status = 'waiting'`;
+  // Perlakuan selesai penuh (#190): SATU feed "Selesai:" (picu bunyi+popup,
+  // id deterministik anti-ganda) + task waiting/working selesai + Telegram.
+  // Webhook GitHub yang datang belakangan untuk PR yang sama diam via
+  // penjaga 10 mnt di hook (tak ada toast kedua).
+  const pesanFeed = `Selesai: PR #${prNumber}${judul ? ` "${judul}"` : ""} di-merge dari PDC.`;
+  await sql`INSERT INTO activity_log (id, user_id, project_id, type, message)
+    VALUES (${`act-merge-webapp-${projectId}-${prNumber}`}, ${ctx.userId}, ${projectId}, 'info', ${pesanFeed})
+    ON CONFLICT (id) DO NOTHING`;
+  await sql`UPDATE tasks SET status = 'completed', progress = 100, completed_at = now(), updated_at = now(), result_summary = ${`Merged via webapp PR #${prNumber}.`} WHERE user_id = ${ctx.userId} AND project_id = ${projectId} AND status IN ('waiting', 'working')`;
+  void siarTelegram(ctx.userId, pesanFeed).catch(() => {});
   return NextResponse.json({ ok: true, merged: true });
 }

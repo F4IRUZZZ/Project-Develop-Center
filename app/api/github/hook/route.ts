@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { galat } from "@/lib/galat-api";
+import { siarTelegram } from "@/lib/telegram";
 import {
   bacaBatas,
   proyekUntukRepo,
@@ -51,10 +52,19 @@ export async function POST(req: Request) {
   if (event === "pull_request") {
     const r = ringkasPull(body as never);
     if (!r) return NextResponse.json({ ok: true, abaikan: "aksi pr tak relevan" });
-    await tulisActivity(proyek.user_id, proyek.id, "pr", r.message);
-    if (r.merged) {
-      await db()`UPDATE tasks SET status = 'completed', progress = 100, completed_at = now(), updated_at = now(), result_summary = 'PR di-merge (webhook GitHub).' WHERE user_id = ${proyek.user_id} AND project_id = ${proyek.id} AND status = 'waiting'`;
+    const n = Number((body as { number?: unknown }).number) || 0;
+    if (r.merged && n > 0) {
+      // Penjaga anti-ganda (#190): merge dari tombol PDC sudah mencatat
+      // + memberitahu ≤10 mnt lalu -> diam total (bunuh toast kedua).
+      const pdc = await db()`SELECT id FROM activity_log
+        WHERE id = ${`act-merge-webapp-${proyek.id}-${n}`} AND created_at > now() - interval '10 minutes' LIMIT 1`;
+      if (pdc.length > 0) return NextResponse.json({ ok: true, abaikan: "merge sudah dicatat webapp" });
+      await tulisActivity(proyek.user_id, proyek.id, "pr", r.message);
+      await db()`UPDATE tasks SET status = 'completed', progress = 100, completed_at = now(), updated_at = now(), result_summary = 'PR di-merge (webhook GitHub).' WHERE user_id = ${proyek.user_id} AND project_id = ${proyek.id} AND status IN ('waiting', 'working')`;
+      void siarTelegram(proyek.user_id, `${r.message} (webhook GitHub).`).catch(() => {});
+      return NextResponse.json({ ok: true });
     }
+    await tulisActivity(proyek.user_id, proyek.id, "pr", r.message);
     return NextResponse.json({ ok: true });
   }
 
