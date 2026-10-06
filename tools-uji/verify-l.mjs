@@ -14,7 +14,8 @@ cek("BottomNav dihapus", !existsSync(join(root, "components/shell/BottomNav.tsx"
 
 const nav = readFileSync(join(root, "components/shell/Topbar.tsx"), "utf8");
 cek("hamburger HP (lg:hidden)", nav.includes("menu.navigasi") && nav.includes("lg:hidden"));
-cek("drawer 8 menu (kamus)", ["nav.dashboard", "nav.proyek", "nav.sesi", "nav.status", "nav.riwayat", "nav.statistik", "nav.notifikasi", "nav.pengaturan"].every((s) => nav.includes(s)));
+cek("drawer 7 menu ramping (kamus)", ["nav.dashboard", "nav.proyek", "nav.sesi", "nav.status", "nav.riwayat", "nav.notifikasi", "nav.pengaturan"].every((s) => nav.includes(s)));
+cek("drawer tanpa statistik/profil (#188)", !nav.includes('"/statistik"') && !nav.includes('"/profil"'));
 cek("drawer tutup cerdas", nav.includes("setBuka(false)") && nav.includes("Escape"));
 cek("drawer di dalam ref #121", nav.includes("nav drawer WAJIB di dalam div ref") && nav.indexOf("ref={ref}") < nav.indexOf("<nav"));
 cek("drawer solid + scroll (#131)", nav.includes("bg-card p-2") && nav.includes("max-h-[70dvh]") && nav.includes("min-h-[44px]"));

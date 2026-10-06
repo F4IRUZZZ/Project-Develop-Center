@@ -83,7 +83,7 @@ cek(
   "riwayat pakai kamus",
   halRiw.includes("useBahasa") && halRiw.includes("riw.kosongTugas") && halRiw.includes("riw.kosongPerintah") && halRiw.includes("riw.semuaProyek")
 );
-const halStat = readFileSync(join(root, "app/statistik/page.tsx"), "utf8");
+const halStat = readFileSync(join(root, "app/profil/page.tsx"), "utf8");
 cek("statistik pakai kamus", halStat.includes("useBahasa") && halStat.includes("stat.terpanjang") && halStat.includes("stat.cobaLagi"));
 for (const [f, kunci] of [
   ["components/dashboard/Stats.tsx", "dash.proyekAktif"],
@@ -101,3 +101,4 @@ if (gagal > 0) {
   process.exit(1);
 }
 console.log("\nI18N: ALL-OK");
+

@@ -17,12 +17,18 @@ export interface Bahasa {
   persen: number;
 }
 
-export interface RepoTop {
+// Repo yang DIBINTANGI user (tab Stars GitHub) — beda dari perolehan
+// bintang di repo sendiri. Ditampilkan apa adanya milik orang lain.
+export interface RepoBintang {
   nama: string;
+  pemilik: string;
+  url: string;
+  deskripsi: string | null;
   bintang: number;
-  fork: boolean;
+  fork: number;
   bahasa: string | null;
   warnaBahasa: string | null;
+  diperbarui: string;
 }
 
 export interface StatsGitHub {
@@ -33,8 +39,8 @@ export interface StatsGitHub {
   pengikut: number;
   mengikuti: number;
   totalRepo: number;
-  bintang: number;
-  repoTop: RepoTop[];
+  bintangDiberi: number;
+  repoBintang: RepoBintang[];
   commitSetahun: number;
   pr: number;
   issue: number;
@@ -81,10 +87,6 @@ query($kursor: String) {
       totalCount
       pageInfo { hasNextPage endCursor }
       nodes {
-        name
-        stargazerCount
-        isFork
-        primaryLanguage { name color }
         languages(first: 5, orderBy: {field: SIZE, direction: DESC}) {
           edges { size node { name color } }
         }
@@ -94,10 +96,6 @@ query($kursor: String) {
 }`;
 
 interface NodeRepo {
-  name: string;
-  stargazerCount: number;
-  isFork: boolean;
-  primaryLanguage: { name: string; color: string | null } | null;
   languages: { edges: Array<{ size: number; node: { name: string; color: string | null } }> };
 }
 
@@ -147,8 +145,6 @@ export async function statsGitHub(userId: string, lang: LangApi = "id", segar = 
   let pengikut = 0;
   let mengikuti = 0;
   let totalRepo = 0;
-  let bintang = 0;
-  const semua: NodeRepo[] = [];
   const perBahasa = new Map<string, { byte: number; warna: string | null }>();
   let kursor: string | null = null;
   interface HalRepo {
@@ -179,8 +175,6 @@ export async function statsGitHub(userId: string, lang: LangApi = "id", segar = 
       totalRepo = v.repositories.totalCount;
     }
     for (const r of v.repositories.nodes) {
-      bintang += r.stargazerCount;
-      semua.push(r);
       for (const e of r.languages.edges) {
         const s = perBahasa.get(e.node.name) ?? { byte: 0, warna: e.node.color };
         s.byte += e.size;
@@ -190,19 +184,64 @@ export async function statsGitHub(userId: string, lang: LangApi = "id", segar = 
     if (!v.repositories.pageInfo.hasNextPage) break;
     kursor = v.repositories.pageInfo.endCursor;
   }
+
+  // Repo yang dibintangi user (1 query, 100 terbaru + total exact).
+  const dStar = await gql<{
+    viewer: {
+      starredRepositories: {
+        totalCount: number;
+        nodes: Array<{
+          nameWithOwner: string;
+          url: string;
+          description: string | null;
+          stargazerCount: number;
+          forkCount: number;
+          updatedAt: string;
+          primaryLanguage: { name: string; color: string | null } | null;
+        }>;
+      };
+    };
+  }>(
+    token,
+    `query {
+      viewer {
+        starredRepositories(first: 100, orderBy: {field: STARRED_AT, direction: DESC}) {
+          totalCount
+          nodes {
+            nameWithOwner
+            url
+            description
+            stargazerCount
+            forkCount
+            updatedAt
+            primaryLanguage { name color }
+          }
+        }
+      }
+    }`,
+    {}
+  );
+  const bintangDiberi = dStar.viewer.starredRepositories.totalCount;
+  const repoBintang: RepoBintang[] = dStar.viewer.starredRepositories.nodes.map((r) => {
+    const [pemilik = "", ...sisa] = r.nameWithOwner.split("/");
+    return {
+      nama: sisa.join("/") || r.nameWithOwner,
+      pemilik,
+      url: r.url,
+      deskripsi: r.description,
+      bintang: r.stargazerCount,
+      fork: r.forkCount,
+      bahasa: r.primaryLanguage?.name ?? null,
+      warnaBahasa: r.primaryLanguage?.color ?? null,
+      diperbarui: r.updatedAt,
+    };
+  });
   const totalByte = [...perBahasa.values()].reduce((s, b) => s + b.byte, 0);
   const bahasa: Bahasa[] = [...perBahasa.entries()]
     .map(([n, b]) => ({ nama: n, warna: b.warna, byte: b.byte, persen: totalByte > 0 ? (b.byte / totalByte) * 100 : 0 }))
     .sort((a, b) => b.byte - a.byte)
     .slice(0, 8);
-  // Urut STARGAZERS DESC dari server dipertahankan lintas halaman.
-  const repoTop: RepoTop[] = semua.slice(0, 10).map((r) => ({
-    nama: r.name,
-    bintang: r.stargazerCount,
-    fork: r.isFork,
-    bahasa: r.primaryLanguage?.name ?? null,
-    warnaBahasa: r.primaryLanguage?.color ?? null,
-  }));
+
 
   const kini = new Date().toISOString();
   const data: StatsGitHub = {
@@ -213,8 +252,8 @@ export async function statsGitHub(userId: string, lang: LangApi = "id", segar = 
     pengikut,
     mengikuti,
     totalRepo,
-    bintang,
-    repoTop,
+    bintangDiberi,
+    repoBintang,
     commitSetahun: cc.totalCommitContributions,
     pr: cc.totalPullRequestContributions,
     issue: cc.totalIssueContributions,
