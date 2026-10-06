@@ -13,6 +13,7 @@ import {
   LogIn,
   LogOut,
   Settings,
+  User,
 } from "lucide-react";
 import { signIn, signOut, useSession } from "next-auth/react";
 import Link from "next/link";
@@ -33,6 +34,7 @@ const NAV: Array<{ kunci: Kunci; icon: typeof LayoutDashboard; href: string; bad
   { kunci: "nav.status", icon: HeartPulse, href: "/status", badge: null },
   { kunci: "nav.riwayat", icon: History, href: "/riwayat", badge: null },
   { kunci: "nav.statistik", icon: ChartColumn, href: "/statistik", badge: null },
+  { kunci: "nav.profil", icon: User, href: "/profil", badge: null },
   { kunci: "nav.notifikasi", icon: Bell, href: "/notifikasi", badge: "live" },
   { kunci: "nav.pengaturan", icon: Settings, href: "/pengaturan", badge: null },
 ];
@@ -73,16 +75,18 @@ function UserBox({ ciut }: { ciut?: boolean }) {
   return (
     <div className={cn("mt-auto border-t border-border pt-2.5", ciut ? "px-0" : "px-2")}>
       <div className={cn("flex items-center gap-2.5", ciut && "flex-col justify-center gap-2")}>
-        <div
+        <Link
+          href="/profil"
           title={nama}
-          className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted text-xs font-semibold text-muted-foreground"
+          aria-label={teks("nav.profil")}
+          className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted text-xs font-semibold text-muted-foreground transition-colors hover:ring-2 hover:ring-primary"
         >
           {session.user.image ? (
             <Image src={session.user.image} alt={nama} width={32} height={32} className="h-full w-full object-cover" />
           ) : (
             inisial
           )}
-        </div>
+        </Link>
         {!ciut && (
           <div className="min-w-0 flex-1">
             <div className="truncate text-[13px] font-medium">{nama}</div>

@@ -10,20 +10,44 @@ function cek(nama, ok, detail = "") {
   if (!ok) gagal += 1;
 }
 
-for (const f of ["lib/streak.ts", "lib/github-stats.ts", "app/api/github/stats/route.ts", "app/statistik/page.tsx"]) {
+for (const f of ["lib/streak.ts", "lib/github-stats.ts", "app/api/github/stats/route.ts", "app/statistik/page.tsx", "app/profil/page.tsx"]) {
   cek(f, existsSync(join(root, f)));
 }
 
 const lib = readFileSync(join(root, "lib/github-stats.ts"), "utf8");
 cek("query contributionsCollection", lib.includes("contributionsCollection") && lib.includes("contributionCalendar"));
 cek("query languages", lib.includes("languages(first: 5") && lib.includes("stargazerCount"));
+cek("query profil (avatar+bio+follow)", lib.includes("avatarUrl") && lib.includes("followers { totalCount }") && lib.includes("following { totalCount }"));
+cek("query totalCount repo", lib.includes("repositories(first: 100") && lib.includes("totalCount"));
+cek("pagination penuh pageInfo", lib.includes("pageInfo") && lib.includes("hasNextPage") && lib.includes("endCursor"));
+cek("repoTop + fork + bahasa utama", lib.includes("repoTop") && lib.includes("isFork") && lib.includes("primaryLanguage"));
+cek("segar bypass cache", lib.includes("segar = false") && lib.includes("!segar && lawas"));
 cek("token server-side", lib.includes("tokenGitHub") && !lib.includes("localStorage"));
-cek("cache 1 jam", lib.includes("TTL_MS") && lib.includes("60 * 60 * 1000"));
+cek("cache 15 mnt", lib.includes("TTL_MS") && lib.includes("15 * 60 * 1000"));
+cek("cap halaman anti-ledak", lib.includes("hal < 20"));
+cek("stempel diperbarui", lib.includes("diperbarui"));
 cek("timeout 15 dtk", lib.includes("AbortSignal.timeout(15000)"));
 
 const route = readFileSync(join(root, "app/api/github/stats/route.ts"), "utf8");
 cek("route auth sesiUser", route.includes("sesiUser"));
 cek("route 401/502 jujur", route.includes("401") && route.includes("502"));
+cek("route teruskan segar", route.includes('get("segar") === "1"') && route.includes("max-age=900"));
+
+const prof = readFileSync(join(root, "app/profil/page.tsx"), "utf8");
+cek("profil header ala GitHub (kamus)", prof.includes("profil.pengikut") && prof.includes("profil.mengikuti") && prof.includes("profil.repo"));
+cek("profil definisi bintang jujur", prof.includes("profil.definisiBintang"));
+cek("profil repoTop + fork", prof.includes("profil.repoTop") && prof.includes("profil.fork"));
+cek("profil tombol Segarkan", prof.includes("profil.segarkan") && prof.includes("?segar=1") && prof.includes("profil.diperbarui"));
+cek("profil link github + statistik", prof.includes("https://github.com/") && prof.includes('href="/statistik"'));
+cek("profil gate login", prof.includes("LoginCard"));
+
+const kamus = readFileSync(join(root, "lib/kamus.ts"), "utf8");
+cek(
+  "kamus profil ID+EN",
+  ["nav.profil", "profil.judul", "profil.pengikut", "profil.mengikuti", "profil.repo", "profil.segarkan", "profil.diperbarui", "profil.definisiBintang", "profil.repoTop", "profil.fork", "profil.lihatStatistik"].every(
+    (k) => kamus.includes(`"${k}"`)
+  )
+);
 
 const hal = readFileSync(join(root, "app/statistik/page.tsx"), "utf8");
 cek("halaman streak+bahasa (kamus)", hal.includes("stat.kini") && hal.includes("stat.bahasa"));
@@ -33,8 +57,13 @@ cek("halaman gate login", hal.includes("LoginCard"));
 
 const side = readFileSync(join(root, "components/shell/Sidebar.tsx"), "utf8");
 cek("nav sidebar Statistik", side.includes('"/statistik"') && side.includes("ChartColumn"));
+cek("nav sidebar Profil", side.includes('"/profil"') && side.includes("nav.profil"));
+cek("avatar sidebar link profil", side.includes('href="/profil"'));
 const drawer = readFileSync(join(root, "components/shell/Topbar.tsx"), "utf8");
 cek("nav HP Statistik", drawer.includes('"/statistik"'));
+cek("nav HP Profil", drawer.includes('"/profil"'));
+const umenu = readFileSync(join(root, "components/shell/UserMenu.tsx"), "utf8");
+cek("menu pengguna link profil", umenu.includes('href="/profil"') && umenu.includes("nav.profil"));
 
 // Uji unit streak dengan fixture (bukan assert string).
 const fx = [
