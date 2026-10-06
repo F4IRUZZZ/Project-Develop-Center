@@ -57,6 +57,18 @@ cek("sweep hening 3 menit", sel.includes("sapuSelesai") && sel.includes("interva
 cek("sweep limit anti-ledak", sel.includes("LIMIT ${SWEEP_LIMIT}"));
 cek("dashboard panggil sapuSelesai", baca("app/api/dashboard/route.ts").includes("await sapuSelesai(ctx.userId)"));
 
+// 4c. Flip real-time via last_idle_at (#202): idle stempel + predikat
+// kerja-lebih-baru-dari-idle di SEMUA indikator.
+cek("schema last_idle_at", sch.includes("last_idle_at"));
+cek(
+  "schema ALTER idle idempoten",
+  (sch.match(/ADD COLUMN IF NOT EXISTS last_idle_at/g) ?? []).length === 1
+);
+cek("idle stempel last_idle_at", ses.includes("last_seen_at = now(), last_idle_at = now()"));
+cek("stats hormat idle", baca("app/api/stats/route.ts").includes("last_idle_at IS NULL OR COALESCE(last_work_at, last_edit_at) > last_idle_at"));
+cek("dashboard hormat idle", baca("app/api/dashboard/route.ts").includes("MAX(last_idle_at) AS henti"));
+cek("sesi hormat idle", ses.includes("sudahTurun") && ses.includes("last_idle_at"));
+
 // 5. Plugin: sinyal throttled + versi cocok status.
 const plug = baca("plugins/pdc-presence.js");
 const st = baca("app/api/status/route.ts");
