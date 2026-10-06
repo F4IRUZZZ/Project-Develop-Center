@@ -5,7 +5,7 @@
 // JANGAN tambah export lain / default export (risiko registrasi ganda).
 // JANGAN `import { Plugin } from "@opencode/plugin"`: tak ter-resolve dari
 // file .js polos dan hanya helper type — object return lolos skema yang sama.
-const VERSI_PLUGIN = "2026.10.09";
+const VERSI_PLUGIN = "2026.10.10";
 // Butuh env di mesin: PDC_API_URL (default production; set eksplisit
 // untuk dev lokal), PDC_API_KEY (buat di webapp PDC > Pengaturan),
 // opsional PDC_MODE (plan/build).
@@ -136,6 +136,13 @@ export const PdcPresence = async (input) => {
     }
     log(hasil.ok ? "info" : "warn", `lazy-register -> ${hasil.status} (${lewat})`, { sessionId: id });
   };
+
+  // Throttle PATCH idle (#184): OpenCode memancarkan session.idle DAN
+  // session.status di tiap akhir giliran — tanpa ini 1 giliran = 2 PATCH
+  // balapan (feed kembar). Maks 1 PATCH per sesi per 90 dtk; ringkasan yang
+  // tertunda ikut flush di PATCH berikutnya (buffer dipertahankan).
+  const idleTerkirim = new Map(); // sessionId -> epoch ms
+  const SELA_IDLE_MS = 90000;
 
   // Status denyut terakhir per sesi untuk lapor TRANSISI saja:
   // gagal-pertama -> warn 1x, pulih -> info 1x, selebihnya diam (#160).
@@ -541,6 +548,12 @@ export const PdcPresence = async (input) => {
           log("warn", `${tipe} tanpa id sesi, dilewati`);
           return;
         }
+        const kiniIdle = Date.now();
+        if (kiniIdle - (idleTerkirim.get(s.id) ?? 0) < SELA_IDLE_MS) {
+          log("info", `idle dobel dilewati (${tipe})`, { sessionId: s.id });
+          return;
+        }
+        idleTerkirim.set(s.id, kiniIdle);
         if (!KEY) {
           log("warn", "PDC_API_KEY kosong, lewati lapor (set env User PDC_API_KEY)");
           return;
@@ -586,6 +599,7 @@ export const PdcPresence = async (input) => {
         if (hasilTutup.ok) {
           dikenal.delete(s.id);
           denyutOk.delete(s.id);
+          idleTerkirim.delete(s.id);
         }
         log(hasilTutup.ok ? "info" : "warn", `PATCH /api/sessions -> ${hasilTutup.status} (${tipe})`, {
           sessionId: s.id,

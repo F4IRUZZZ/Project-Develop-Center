@@ -34,16 +34,28 @@ const ses = baca("app/api/sessions/route.ts");
 cek("sessions GET COALESCE kerja", ses.includes("r.last_work_at ?? r.last_edit_at"));
 cek("sessions GET select last_work_at", ses.includes("last_edit_at, last_work_at"));
 
-// 4. PATCH idle: transisi -> task done sekali + feed + Telegram.
-cek("idle ambang kerja", ses.includes("AMBANG_KERJA_MS"));
-cek("idle dedupe done_at", ses.includes("sudahDicatat") && ses.includes("done_at"));
-cek("idle INSERT task completed", ses.includes("INSERT INTO tasks") && ses.includes("'completed'"));
-cek("idle feed Selesai:", ses.includes("Selesai: AI selesai bekerja"));
-cek("idle siarTelegram", ses.includes("siarTelegram(ctx.userId"));
-cek("idle catat done_at+task", ses.includes("SET done_at = now(), done_task_id"));
-cek("idle tanpa project dilewati", ses.includes("!sudahDicatat && s.project_id"));
-cek("idle balas flag selesai", ses.includes("selesai }") || ses.includes("selesai}"));
-cek("idle proyek null = diam", ses.includes("s.project_id"));
+// 4. PATCH idle: heartbeat MURNI (tak pernah mencatat done). Done oleh
+// lib/selesai (sweep hening / tutup eksplisit).
+cek("idle tanpa INSERT task", !ses.includes("INSERT INTO tasks"));
+cek("idle tanpa siarTelegram langsung", !ses.includes("siarTelegram"));
+cek("idle heartbeat active", ses.includes("ended_at = NULL, last_seen_at = now()"));
+cek("idle balas flag selesai:false", ses.includes("selesai: false"));
+cek("tutup panggil catatSelesai", ses.includes("await catatSelesai(ctx.userId, sessionId)"));
+cek("tutup catat sebelum update status", ses.indexOf("catatSelesai") < ses.indexOf("SET status = ${akhir}"));
+cek("error tak catat done", ses.includes('akhir === "selesai"'));
+
+// 4b. lib/selesai: mutex atomik + ambang hening 3 mnt + sweep.
+const sel = baca("lib/selesai.ts");
+cek("selesai mutex UPDATE+RETURNING", sel.includes("UPDATE agent_sessions SET done_at = now()") && sel.includes("RETURNING session_id"));
+cek("selesai syarat klaim lengkap", sel.includes("status = 'active'") && sel.includes("project_id IS NOT NULL") && sel.includes("COALESCE(last_work_at, last_edit_at) IS NOT NULL"));
+cek("selesai klaim kalah diam", sel.includes("if (!m) return false"));
+cek("selesai INSERT task completed", sel.includes("INSERT INTO tasks") && sel.includes("'completed'"));
+cek("selesai feed Selesai:", sel.includes("Selesai: AI selesai bekerja"));
+cek("selesai siarTelegram best-effort", sel.includes("void siarTelegram(userId, pesanFeed)"));
+cek("selesai tulis done_task_id", sel.includes("SET done_task_id ="));
+cek("sweep hening 3 menit", sel.includes("sapuSelesai") && sel.includes("interval '3 minutes'"));
+cek("sweep limit anti-ledak", sel.includes("LIMIT ${SWEEP_LIMIT}"));
+cek("dashboard panggil sapuSelesai", baca("app/api/dashboard/route.ts").includes("await sapuSelesai(ctx.userId)"));
 
 // 5. Plugin: sinyal throttled + versi cocok status.
 const plug = baca("plugins/pdc-presence.js");
@@ -52,6 +64,8 @@ const vPlug = (plug.match(/VERSI_PLUGIN = "([^"]+)"/) ?? [])[1];
 const vSt = (st.match(/VERSI_PLUGIN_TERKINI = "([^"]+)"/) ?? [])[1];
 cek("plugin sinyalKerja", plug.includes("sinyalKerja") && plug.includes('kind: "kerja"'));
 cek("plugin throttle 45 dtk", plug.includes("SELA_KERJA_MS = 45000"));
+cek("plugin throttle idle 90 dtk", plug.includes("SELA_IDLE_MS = 90000") && plug.includes("idle dobel dilewati"));
+cek("plugin reset throttle saat tutup", plug.includes("idleTerkirim.delete(s.id)"));
 cek("plugin tool hook sinyal", plug.includes("await sinyalKerja(sid)"));
 cek("plugin part pesan sinyal", plug.includes("await sinyalKerja(infoSesi(event).id)"));
 cek("versi plugin cocok status", Boolean(vPlug) && vPlug === vSt, `plugin=${vPlug} status=${vSt}`);
