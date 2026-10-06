@@ -19,7 +19,7 @@ cek("nol migrasi DB", !api.includes("CREATE TABLE") && !api.includes("ALTER TABL
 cek("auth sesiUser", api.includes("sesiUser"));
 cek("cache privat", api.includes("max-age"));
 
-const hal = readFileSync(join(root, "app/statistik/page.tsx"), "utf8");
+const hal = readFileSync(join(root, "app/profil/page.tsx"), "utf8");
 cek("seksi analitik", hal.includes("stat.anaJudul") && hal.includes("/api/stats/analytics"));
 cek("bar mingguan CSS", hal.includes("perMinggu") && hal.includes("bg-primary/70"));
 cek("fallback kosong", hal.includes("stat.anaKosong"));
@@ -32,3 +32,4 @@ if (gagal > 0) {
   process.exit(1);
 }
 console.log("\nANALYTICS: ALL-OK");
+

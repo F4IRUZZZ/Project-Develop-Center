@@ -14,7 +14,7 @@ function cek(nama, ok, detail = "") {
 const WAJIB = [
   ["app/notifikasi/page.tsx", "waktuRelatif(e.created_at"],
   ["app/riwayat/page.tsx", "toLocaleString(lang"],
-  ["app/statistik/page.tsx", "fmtTanggal(data.streak.mulai"],
+  ["app/profil/page.tsx", "fmtTanggal(data.streak.mulai"],
   ["app/status/page.tsx", "waktuRelatif(data.deploy.waktu"],
   ["app/proyek/[id]/page.tsx", "toLocaleString(lang"],
   ["components/command/QueuePanel.tsx", "waktuRelatif(c.created_at"],
@@ -52,3 +52,4 @@ if (gagal > 0) {
   process.exit(1);
 }
 console.log("\nHYDRATION: ALL-OK");
+

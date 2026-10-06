@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity, Bell, ChartColumn, FolderGit2, HeartPulse, History, LayoutDashboard, Menu, Settings, User } from "lucide-react";
+import { Activity, Bell, FolderGit2, HeartPulse, History, LayoutDashboard, Menu, Settings, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -19,8 +19,6 @@ const DRAWER: Array<{ kunci: Kunci; icon: typeof LayoutDashboard; href: string; 
   { kunci: "nav.sesi", icon: Activity, href: "/sesi" },
   { kunci: "nav.status", icon: HeartPulse, href: "/status" },
   { kunci: "nav.riwayat", icon: History, href: "/riwayat" },
-  { kunci: "nav.statistik", icon: ChartColumn, href: "/statistik" },
-  { kunci: "nav.profil", icon: User, href: "/profil" },
   { kunci: "nav.notifikasi", icon: Bell, href: "/notifikasi", live: true },
   { kunci: "nav.pengaturan", icon: Settings, href: "/pengaturan" },
 ];

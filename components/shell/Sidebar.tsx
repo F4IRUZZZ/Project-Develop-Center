@@ -3,7 +3,6 @@
 import {
   Activity,
   Bell,
-  ChartColumn,
   ChevronsLeft,
   ChevronsRight,
   FolderGit2,
@@ -13,7 +12,6 @@ import {
   LogIn,
   LogOut,
   Settings,
-  User,
 } from "lucide-react";
 import { signIn, signOut, useSession } from "next-auth/react";
 import Link from "next/link";
@@ -33,8 +31,6 @@ const NAV: Array<{ kunci: Kunci; icon: typeof LayoutDashboard; href: string; bad
   { kunci: "nav.sesi", icon: Activity, href: "/sesi", badge: null },
   { kunci: "nav.status", icon: HeartPulse, href: "/status", badge: null },
   { kunci: "nav.riwayat", icon: History, href: "/riwayat", badge: null },
-  { kunci: "nav.statistik", icon: ChartColumn, href: "/statistik", badge: null },
-  { kunci: "nav.profil", icon: User, href: "/profil", badge: null },
   { kunci: "nav.notifikasi", icon: Bell, href: "/notifikasi", badge: "live" },
   { kunci: "nav.pengaturan", icon: Settings, href: "/pengaturan", badge: null },
 ];
