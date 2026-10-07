@@ -8,16 +8,12 @@ interface Props {
   tugasSelesai?: number;
 }
 
-function nilai(v: number | undefined): string {
-  return v === undefined ? "—" : String(v);
-}
-
 export function Stats({ proyekAktif, aiBekerja, tugasSelesai }: Props) {
   const { teks } = useBahasa();
-  const ITEMS: Array<{ icon: typeof FolderGit2; value: string; kunci: Kunci; tone: string }> = [
-    { icon: FolderGit2, value: nilai(proyekAktif), kunci: "dash.proyekAktif", tone: "bg-primary/10 text-primary" },
-    { icon: Bot, value: nilai(aiBekerja), kunci: "dash.aiBekerja", tone: "bg-sky-500/10 text-sky-500" },
-    { icon: CheckCheck, value: nilai(tugasSelesai), kunci: "dash.tugasSelesai", tone: "bg-emerald-500/10 text-emerald-500" },
+  const ITEMS: Array<{ icon: typeof FolderGit2; value: number | undefined; kunci: Kunci; tone: string }> = [
+    { icon: FolderGit2, value: proyekAktif, kunci: "dash.proyekAktif", tone: "bg-primary/10 text-primary" },
+    { icon: Bot, value: aiBekerja, kunci: "dash.aiBekerja", tone: "bg-sky-500/10 text-sky-500" },
+    { icon: CheckCheck, value: tugasSelesai, kunci: "dash.tugasSelesai", tone: "bg-emerald-500/10 text-emerald-500" },
   ];
 
   return (
@@ -31,7 +27,13 @@ export function Stats({ proyekAktif, aiBekerja, tugasSelesai }: Props) {
             <s.icon className="h-[19px] w-[19px]" strokeWidth={1.75} />
           </div>
           <div>
-            <div className="text-[22px] font-bold leading-none tracking-tight">{s.value}</div>
+            {s.value === undefined ? (
+              // Skeleton pulse saat loading (#214): tanpa lompat layout,
+              // tanpa em-dash berkedip.
+              <div aria-hidden className="h-[22px] w-10 animate-pulse rounded bg-muted" />
+            ) : (
+              <div className="text-[22px] font-bold leading-none tracking-tight">{s.value}</div>
+            )}
             <div className="mt-1 text-[11.5px] font-medium text-muted-foreground">{teks(s.kunci)}</div>
           </div>
         </div>

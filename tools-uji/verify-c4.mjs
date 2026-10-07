@@ -29,6 +29,7 @@ cek("topbar pakai PemilihTema", topbar.includes("PemilihTema"));
 
 const stats = readFileSync(join(root, "components/dashboard/Stats.tsx"), "utf8");
 cek("stats stack HP", stats.includes("grid-cols-1") && stats.includes("sm:grid-cols-3"));
+cek("stats skeleton pulse (#214)", stats.includes("animate-pulse") && stats.includes("value === undefined") && !stats.includes('"—"'));
 
 const dash = readFileSync(join(root, "components/dashboard/Dashboard.tsx"), "utf8");
 cek("grid auto-fill 300px", dash.includes("minmax(300px,1fr)"));

@@ -64,9 +64,11 @@ export async function GET(req: NextRequest) {
   `) as unknown as Array<{ project_id: string }>;
   const cmdSet = new Set(cmd.map((r) => r.project_id));
 
-  // Sesi AI aktif: status active + denyut <3 mnt. Denyut dikirim plugin tiap
-  // 60 dtk selama proses OpenCode hidup, jadi timeout pendek aman dari kedip
-  // dan padam ≤~4 mnt setelah close/kill/crash (tanpa event tutup-proses).
+  // Sesi AI aktif: status active + mode build + denyut <3 mnt (#206:
+  // sesi plan yang terbuka tak menyalakan dot — konsisten dengan predikat
+  // bekerja/done yang build-only). Denyut dikirim plugin tiap 60 dtk selama
+  // proses OpenCode hidup, jadi timeout pendek aman dari kedip dan padam
+  // ≤~4 mnt setelah close/kill/crash.
   const sesi = (await sql`
     SELECT project_id FROM agent_sessions
     WHERE user_id = ${ctx.userId} AND status = 'active' AND mode = 'build'
