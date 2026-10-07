@@ -44,11 +44,14 @@ export default function Home() {
     setModalOpen(true);
   };
 
+  // Satu-satunya penulis kerjaLalu (#212): semua jalur muat (polling,
+  // visible-refetch, manual) wajib lewat sini agar toast flip tak bocor.
+  const catatFlip = (daftar: Project[]) => {
+    kerjaLalu.current = cekFlip(kerjaLalu.current, daftar);
+  };
+
   useEffect(() => {
     if (status !== "authenticated") return;
-    const catatFlip = (daftar: Project[]) => {
-      kerjaLalu.current = cekFlip(kerjaLalu.current, daftar);
-    };
     fetchDashboard()
       .then((d) => {
         setLive(d);
@@ -83,11 +86,18 @@ export default function Home() {
   // Pulang ke tab = segar seketika (#204): polling menahan diri saat hidden
   // + browser me-throttle timer background, jadi tanpa ini flip real-time
   // (#202) baru terlihat puluhan detik setelah tab dibuka kembali.
+  // SEMUA jalur muat dialirkan lewat catatFlip (#212): tanpanya toast flip
+  // hilang di jalur ini lalu muncul basi di polling berikut.
   useEffect(() => {
     if (status !== "authenticated") return;
     const onNampak = () => {
       if (document.hidden) return;
-      fetchDashboard().then(setLive).catch(() => {});
+      fetchDashboard()
+        .then((d) => {
+          setLive(d);
+          catatFlip(d);
+        })
+        .catch(() => {});
       fetch("/api/stats", { cache: "no-store" })
         .then((r) => (r.ok ? r.json() : Promise.reject()))
         .then((d) => setAngka(d as { proyekAktif: number; aiBekerja: number; tugasSelesai: number }))
@@ -99,7 +109,10 @@ export default function Home() {
 
   const muatUlang = () => {
     fetchDashboard()
-      .then(setLive)
+      .then((d) => {
+        setLive(d);
+        catatFlip(d);
+      })
       .catch(() => {});
   };
 

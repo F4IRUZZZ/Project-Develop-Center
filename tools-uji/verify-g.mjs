@@ -36,6 +36,7 @@ const notif = readFileSync(join(root, "lib/notifikasi.ts"), "utf8");
 cek("badge event-driven + poll fallback", notif.includes("EVENT_NOTIF") && badge.includes("EVENT_NOTIF"));
 const bacaSemua = readFileSync(join(root, "app/api/notifications/read/route.ts"), "utf8");
 cek("tandai-semua selaras filter daftar (#194)", bacaSemua.includes("Selesai:%") && bacaSemua.includes("body.semua"));
+cek("notifikasi live 30 dtk + event (#212)", halNotif.includes("mulaiPolling") && halNotif.includes("EVENT_NOTIF") && halNotif.includes("30000"));
 
 // G4
 const modal = readFileSync(join(root, "components/command/CommandModal.tsx"), "utf8");

@@ -30,7 +30,8 @@ cek("detail tab 3", detail.includes('"tugas"') && detail.includes('"perintah"') 
 cek("detail progress task", detail.includes("aktif") && detail.includes("progress"));
 const card = readFileSync(join(root, "components/dashboard/ProjectCard.tsx"), "utf8");
 cek("kartu link detail", card.includes("/proyek/${project.id}") || card.includes("/proyek/"));
-cek("detail stop kondisional", detail.includes("adaJalan"));
+cek("detail PR tanpa gate waiting (#212)", detail.includes("setPullOpen(true)") && !detail.includes('status === "waiting"'));
+cek("detail Stop dari actions (#212)", detail.includes('actions.includes("stop")') && !detail.includes("const adaJalan"));
 
 if (gagal > 0) {
   console.log(`\nJ-CEK: ${gagal} gagal`);

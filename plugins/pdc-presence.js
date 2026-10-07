@@ -5,7 +5,7 @@
 // JANGAN tambah export lain / default export (risiko registrasi ganda).
 // JANGAN `import { Plugin } from "@opencode/plugin"`: tak ter-resolve dari
 // file .js polos dan hanya helper type — object return lolos skema yang sama.
-const VERSI_PLUGIN = "2026.10.13";
+const VERSI_PLUGIN = "2026.10.14";
 // Butuh env di mesin: PDC_API_URL (default production; set eksplisit
 // untuk dev lokal), PDC_API_KEY (buat di webapp PDC > Pengaturan),
 // opsional PDC_MODE (plan/build).
@@ -260,7 +260,13 @@ export const PdcPresence = async (input) => {
     try {
       if (!id || !KEY || !dikenal.has(id)) return;
       const kini = Date.now();
-      if (kini - (kerjaTerakhir.get(id) ?? 0) < SELA_KERJA_MS) return;
+      const kerjaLalu = kerjaTerakhir.get(id) ?? 0;
+      // Bypass cerdas (#212): throttle boleh dilewati bila ada cap idle yang
+      // lebih baru dari kerja-terkirim-terakhir — artinya giliran baru jalan
+      // setelah idle tercatat. Tanpa ini giliran rapat false-siaga (kerja
+      // nyata ter-throttle lalu ketimpa cap idle).
+      const idleBaru = (idleTerkirim.get(id) ?? 0) > kerjaLalu;
+      if (!idleBaru && kini - kerjaLalu < SELA_KERJA_MS) return;
       kerjaTerakhir.set(id, kini);
       const metaKirim = dikenal.get(id);
       const hasil = await kirim("/api/sessions/activity", "POST", {
