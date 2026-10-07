@@ -18,7 +18,7 @@ cek("tanpa Tambah Proyek", !baca("components/dashboard/Dashboard.tsx").includes(
 
 // L2 — skeleton, bukan mock
 const stats = baca("components/dashboard/Stats.tsx");
-cek("skeleton em-dash", stats.includes('"—"') && !stats.includes("mockStats"));
+cek("skeleton pulse (#214)", stats.includes("animate-pulse") && !stats.includes("mockStats") && !stats.includes('"—"'));
 
 // L3 — shadcn di devDependencies
 const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));

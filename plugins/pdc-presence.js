@@ -11,7 +11,9 @@ const VERSI_PLUGIN = "2026.10.14";
 // opsional PDC_MODE (plan/build).
 //
 // Cara kerja: session.created -> POST (buka sesi); tiap 60 detik POST ulang
-// (denyut interval — selama proses hidup, sesi dianggap aktif walau user diam);
+// (denyut interval — selama proses hidup, sesi dianggap aktif walau user diam;
+// denyut membawa mode terkini + flag eksplisit agar server tak mengunci
+// fallback, #210);
 // session.deleted -> PATCH selesai (tutup eksplisit); session.error -> PATCH
 // error (final, butuh perhatian); session.idle/session.status -> PATCH idle
 // (heartbeat + deteksi transisi bekerja->selesai di server). tool.execute.after
