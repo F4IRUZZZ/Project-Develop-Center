@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
   const ctx = await sesiUser(req);
   if (isErr(ctx)) return NextResponse.json({ error: ctx.error }, { status: ctx.status });
 
-  let body: { session_id?: string; repo_full?: string; project_id?: string; mode?: string; reopen?: boolean; plugin_version?: string };
+  let body: { session_id?: string; repo_full?: string; project_id?: string; mode?: string; mode_eksplisit?: boolean; reopen?: boolean; plugin_version?: string };
   try {
     body = await req.json();
   } catch {
@@ -19,6 +19,9 @@ export async function POST(req: NextRequest) {
   const sessionId = body.session_id?.trim() ?? "";
   if (!sessionId) return NextResponse.json({ error: galat(req, "sesiIdWajib") }, { status: 400 });
   const mode = body.mode === "plan" ? "plan" : "build";
+  // Mode hanya menimpa bila pengirim eksplisit (#210): fallback "build"
+  // plugin tak boleh menghapus "plan" yang sudah terdeteksi.
+  const modeUp: string | null = body.mode_eksplisit === true ? mode : null;
   // reopen=true HANYA dari bukti hidup (lazy-register plugin): mengaktifkan
   // kembali baris final. Denyut biasa tanpa flag tak pernah membuka ulang.
   const bukaUlang = body.reopen === true;
@@ -48,6 +51,7 @@ export async function POST(req: NextRequest) {
       last_seen_at = now(),
       status = CASE WHEN ${bukaUlang} THEN 'active' WHEN agent_sessions.status = 'active' THEN 'active' ELSE agent_sessions.status END,
       ended_at = CASE WHEN ${bukaUlang} THEN NULL ELSE agent_sessions.ended_at END,
+      mode = CASE WHEN ${modeUp} IS NULL THEN agent_sessions.mode ELSE ${modeUp} END,
       repo_full = COALESCE(NULLIF(agent_sessions.repo_full, ''), EXCLUDED.repo_full),
       project_id = COALESCE(agent_sessions.project_id, ${projectId})
   `;
@@ -95,7 +99,7 @@ export async function PATCH(req: NextRequest) {
   const ctx = await sesiUser(req);
   if (isErr(ctx)) return NextResponse.json({ error: ctx.error }, { status: ctx.status });
 
-  let body: { session_id?: string; status?: string; mode?: string };
+  let body: { session_id?: string; status?: string; mode?: string; mode_eksplisit?: boolean };
   try {
     body = await req.json();
   } catch {
@@ -135,7 +139,7 @@ export async function PATCH(req: NextRequest) {
   // tutup-eksplisit di atas. Stempel last_idle_at (#202) = flip real-time
   // working->aktif di semua indikator. Mode ikut disegarkan bila dibawa
   // plugin (#206). Flag selesai:false menjaga respons.
-  const modeBaru = body.mode === "plan" || body.mode === "build" ? body.mode : null;
+  const modeBaru = body.mode_eksplisit === true && (body.mode === "plan" || body.mode === "build") ? body.mode : null;
   const denyut = modeBaru
     ? await sql`UPDATE agent_sessions SET status = 'active', ended_at = NULL, last_seen_at = now(), last_idle_at = now(), mode = ${modeBaru} WHERE session_id = ${sessionId} AND user_id = ${ctx.userId} RETURNING session_id`
     : await sql`UPDATE agent_sessions SET status = 'active', ended_at = NULL, last_seen_at = now(), last_idle_at = now() WHERE session_id = ${sessionId} AND user_id = ${ctx.userId} RETURNING session_id`;

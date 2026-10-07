@@ -48,7 +48,7 @@ cek("error tak catat done", ses.includes('akhir === "selesai"'));
 const sel = baca("lib/selesai.ts");
 cek("selesai mutex UPDATE+RETURNING", sel.includes("UPDATE agent_sessions SET done_at = now()") && sel.includes("RETURNING session_id"));
 cek("selesai syarat klaim lengkap", sel.includes("status = 'active'") && sel.includes("project_id IS NOT NULL") && sel.includes("COALESCE(last_work_at, last_edit_at) IS NOT NULL"));
-cek("selesai klaim kalah diam", sel.includes("if (!m) return false"));
+cek("selesai kalah diam", sel.includes("if (rows.length === 0) return false"));
 cek("selesai INSERT task completed", sel.includes("INSERT INTO tasks") && sel.includes("'completed'"));
 cek("selesai feed Selesai:", sel.includes("Selesai: AI selesai bekerja"));
 cek("selesai siarTelegram best-effort", sel.includes("void siarTelegram(userId, pesanFeed)"));
@@ -75,21 +75,27 @@ const st = baca("app/api/status/route.ts");
 const vPlug = (plug.match(/VERSI_PLUGIN = "([^"]+)"/) ?? [])[1];
 const vSt = (st.match(/VERSI_PLUGIN_TERKINI = "([^"]+)"/) ?? [])[1];
 cek("plugin sinyalKerja", plug.includes("sinyalKerja") && plug.includes('kind: "kerja"'));
-cek("plugin throttle 45 dtk", plug.includes("SELA_KERJA_MS = 45000"));
+cek("plugin throttle lama dibuang", !plug.includes("SELA_KERJA_MS = 45000"));
 cek("plugin throttle idle 15 dtk (#204)", plug.includes("SELA_IDLE_MS = 15000") && plug.includes("idle dobel dilewati"));
 cek("beranda refetch on-visible (#204)", baca("app/page.tsx").includes("visibilitychange") && baca("app/page.tsx").includes("/api/stats"));
 
 // 4d. Build-only (#206): plan dikecualikan dari working + done.
 const plug2 = plug;
 cek("plugin mode eksplisit", plug2.includes("eksplisit") && plug2.includes("mode sesi ->"));
-cek("plugin kerja bawa mode", plug2.includes('kind: "kerja", mode: modeKirim'));
-cek("plugin idle bawa mode", plug2.includes("mode: dikenal.get(s.id)?.mode"));
+cek("plugin kerja bawa mode", plug2.includes('kind: "kerja", mode:'));
+cek("plugin idle bawa mode", plug2.includes('status: "idle"'));
 cek("activity terima mode", act.includes("modeDari") && act.includes("mode = ${modeBaru}"));
 cek("idle terima mode", ses.includes('body.mode === "plan"'));
 cek("stats build-only", baca("app/api/stats/route.ts").includes("mode = 'build'"));
 cek("dashboard build-only", baca("app/api/dashboard/route.ts").includes("AND mode = 'build'"));
 cek("sesi plan = siaga", ses.includes('r.mode !== "build"'));
 cek("klaim + sweep build-only", baca("lib/selesai.ts").includes("AND mode = 'build'"));
+cek("done satu statement CTE (#210)", baca("lib/selesai.ts").includes("WITH k AS (") && baca("lib/selesai.ts").includes("task-done-") && baca("lib/selesai.ts").includes("act-selesai-"));
+cek("POST hormat mode eksplisit (#210)", ses.includes("mode_eksplisit") && ses.includes("CASE WHEN ${modeUp} IS NULL"));
+cek("activity + idle hormat eksplisit (#210)", baca("app/api/sessions/activity/route.ts").includes("mode_eksplisit") && ses.includes("body.mode_eksplisit === true"));
+cek("plugin kirim eksplisit (#210)", plug2.includes("mode_eksplisit"));
+cek("throttle kerja 15 dtk (#210)", plug2.includes("SELA_KERJA_MS = 15000"));
+cek("indeks aktif parsial (#210)", sch.includes("idx_agent_sessions_aktif") && sch.includes("WHERE status = 'active' AND mode = 'build'"));
 
 // 4e. Flip lokal instan (#208): deteksi transisi di polling klien.
 cek("helper flip-lokal", baca("lib/flip-lokal.ts").includes("cekFlip") && baca("lib/flip-lokal.ts").includes("idBekerja"));

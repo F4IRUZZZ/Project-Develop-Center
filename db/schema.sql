@@ -133,6 +133,11 @@ ALTER TABLE agent_sessions ADD COLUMN IF NOT EXISTS last_idle_at TIMESTAMPTZ;
 CREATE INDEX IF NOT EXISTS idx_agent_sessions_user
   ON agent_sessions (user_id, last_seen_at DESC);
 
+-- Kerja/done build-only (#210): predikat status+mode per user+proyek.
+-- Idempoten (replay aman via migrate.mjs).
+CREATE INDEX IF NOT EXISTS idx_agent_sessions_aktif
+  ON agent_sessions (user_id, project_id) WHERE status = 'active' AND mode = 'build';
+
 -- Jejak aktivitas sesi (metadata saja: path + angka stat, TANPA isi file).
 -- kind: 'edit' (file disentuh) | 'commit' (milestone komit baru).
 CREATE TABLE IF NOT EXISTS session_file_events (

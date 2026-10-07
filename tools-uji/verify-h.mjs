@@ -21,6 +21,7 @@ cek("merge tutup working juga (#190)", merge.includes("'waiting', 'working'"));
 cek("merge feed Selesai: deterministik", merge.includes("Selesai: PR #") && merge.includes("act-merge-webapp-") && merge.includes("ON CONFLICT"));
 cek("merge Telegram best-effort", merge.includes("void siarTelegram("));
 cek("merge selalu +1 task (#208)", merge.includes("tutup.length === 0") && merge.includes("INSERT INTO tasks"));
+cek("merge task deterministik (#210)", merge.includes("task-merge-webapp-") && merge.includes("ON CONFLICT (id) DO NOTHING"));
 cek("merge 405 jelas", merge.includes("405"));
 
 const modal = readFileSync(join(root, "components/command/PullModal.tsx"), "utf8");

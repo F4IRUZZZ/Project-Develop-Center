@@ -9,6 +9,7 @@ import { galat } from "@/lib/galat-api";
 type Masuk = {
   kind?: string;
   mode?: string;
+  mode_eksplisit?: boolean;
   file_path?: string;
   files_changed?: number;
   lines_added?: number;
@@ -17,10 +18,11 @@ type Masuk = {
   teks?: string;
 };
 
-// Mode sesi terkini dari plugin (#206): hanya plan/build literal yang
-// dipercaya; selain itu null = jangan sentuh kolom (kontrak: unknown = build,
-// dan baris sudah default build saat dibuat).
+// Mode sesi terkini dari plugin (#206, eksplisit #210): hanya plan/build
+// literal + flag eksplisit yang dipercaya; selain itu null = jangan sentuh
+// kolom (kontrak: unknown = build, dan baris sudah default build saat dibuat).
 function modeDari(e: Masuk | undefined): string | null {
+  if (e?.mode_eksplisit !== true) return null;
   return e?.mode === "plan" || e?.mode === "build" ? (e.mode as string) : null;
 }
 
