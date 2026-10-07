@@ -164,6 +164,7 @@ const KAMUS = {
   "profil.diperbarui": { id: "Diperbarui {w}", en: "Updated {w}" },
   "profil.baruSaja": { id: "baru saja", en: "just now" },
   "profil.mntLalu": { id: "{n} mnt lalu", en: "{n} min ago" },
+  "flip.pesan": { id: "Selesai bekerja di {repo}", en: "Finished working in {repo}" },
   "profil.bintangDiberi": { id: "dibintangi", en: "starred" },
   "profil.repoBintang": { id: "Repo yang kubintangi", en: "Starred repos" },
   "profil.repoBintangSub": {

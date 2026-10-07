@@ -90,6 +90,14 @@ cek("stats build-only", baca("app/api/stats/route.ts").includes("mode = 'build'"
 cek("dashboard build-only", baca("app/api/dashboard/route.ts").includes("AND mode = 'build'"));
 cek("sesi plan = siaga", ses.includes('r.mode !== "build"'));
 cek("klaim + sweep build-only", baca("lib/selesai.ts").includes("AND mode = 'build'"));
+
+// 4e. Flip lokal instan (#208): deteksi transisi di polling klien.
+cek("helper flip-lokal", baca("lib/flip-lokal.ts").includes("cekFlip") && baca("lib/flip-lokal.ts").includes("idBekerja"));
+cek("flip inisialisasi diam", baca("lib/flip-lokal.ts").includes("sebelum: Set<string> | null"));
+cek("peringatanLokal tanpa feed", baca("lib/peringatan.ts").includes("peringatanLokal") && baca("lib/peringatan.ts").includes("TANPA"));
+cek("kamus flip.pesan", baca("lib/kamus.ts").includes('"flip.pesan"'));
+cek("beranda pakai cekFlip", baca("app/page.tsx").includes("cekFlip(kerjaLalu.current"));
+cek("proyek pakai cekFlip", baca("app/proyek/page.tsx").includes("cekFlip(kerjaLalu.current"));
 cek("plugin reset throttle saat tutup", plug.includes("idleTerkirim.delete(s.id)"));
 cek("plugin tool hook sinyal", plug.includes("await sinyalKerja(sid)"));
 cek("plugin part pesan sinyal", plug.includes("await sinyalKerja(infoSesi(event).id)"));

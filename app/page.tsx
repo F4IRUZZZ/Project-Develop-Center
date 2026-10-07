@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { ActivityFeed } from "@/components/activity/ActivityFeed";
 import { CommandModal } from "@/components/command/CommandModal";
@@ -14,6 +14,7 @@ import { projects as mockProjects } from "@/lib/mock";
 import { EVENT_SEARCH } from "@/components/shell/SearchBox";
 import { useBahasa } from "@/components/shell/BahasaProvider";
 import { mulaiPolling } from "@/lib/polling";
+import { cekFlip } from "@/lib/flip-lokal";
 import type { Project } from "@/lib/types";
 
 const PERHATIAN = new Set(["working", "waiting", "stuck", "failed"]);
@@ -27,6 +28,9 @@ export default function Home() {
   const [gagalRepo, setGagalRepo] = useState(false);
   const [angka, setAngka] = useState<{ proyekAktif: number; aiBekerja: number; tugasSelesai: number } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  // Himpunan proyek-bekerja polling sebelumnya (flip lokal #208). null =
+  // belum ada polling (diam, anti false positif saat buka halaman).
+  const kerjaLalu = useRef<Set<string> | null>(null);
 
   const muatAngka = () => {
     fetch("/api/stats", { cache: "no-store" })
@@ -42,13 +46,21 @@ export default function Home() {
 
   useEffect(() => {
     if (status !== "authenticated") return;
+    const catatFlip = (daftar: Project[]) => {
+      kerjaLalu.current = cekFlip(kerjaLalu.current, daftar);
+    };
     fetchDashboard()
-      .then(setLive)
+      .then((d) => {
+        setLive(d);
+        catatFlip(d);
+      })
       .catch(() => setGagalRepo(true));
     muatAngka();
     const segarkan = async (): Promise<boolean> => {
       try {
-        setLive(await fetchDashboard());
+        const d = await fetchDashboard();
+        setLive(d);
+        catatFlip(d);
         muatAngka();
         return true;
       } catch {

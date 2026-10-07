@@ -69,7 +69,17 @@ export async function POST(req: NextRequest) {
   await sql`INSERT INTO activity_log (id, user_id, project_id, type, message)
     VALUES (${`act-merge-webapp-${projectId}-${prNumber}`}, ${ctx.userId}, ${projectId}, 'info', ${pesanFeed})
     ON CONFLICT (id) DO NOTHING`;
-  await sql`UPDATE tasks SET status = 'completed', progress = 100, completed_at = now(), updated_at = now(), result_summary = ${`Merged via webapp PR #${prNumber}.`} WHERE user_id = ${ctx.userId} AND project_id = ${projectId} AND status IN ('waiting', 'working')`;
+  const tutup = (await sql`UPDATE tasks SET status = 'completed', progress = 100, completed_at = now(), updated_at = now(), result_summary = ${`Merged via webapp PR #${prNumber}.`} WHERE user_id = ${ctx.userId} AND project_id = ${projectId} AND status IN ('waiting', 'working') RETURNING id`) as Array<{
+    id: string;
+  }>;
+  // Tiap merge PASTI +1 task done (#208): bila tak ada task terbuka yang
+  // diselesaikan, buatkan baris completed-nya (mis. sesi langsung / sudah
+  // auto-done) agar angka Tasks Done selalu bertambah.
+  if (tutup.length === 0) {
+    const judulTask = `Merge PR #${prNumber}${judul ? ` "${judul}"` : ""}`.slice(0, 200);
+    await sql`INSERT INTO tasks (id, user_id, project_id, title, status, progress, result_summary, completed_at, updated_at)
+      VALUES (${buatId("task")}, ${ctx.userId}, ${projectId}, ${judulTask}, 'completed', 100, ${pesanFeed.slice(0, 500)}, now(), now())`;
+  }
   void siarTelegram(ctx.userId, pesanFeed).catch(() => {});
   return NextResponse.json({ ok: true, merged: true });
 }
