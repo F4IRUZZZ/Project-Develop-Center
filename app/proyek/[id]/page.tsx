@@ -145,9 +145,9 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
     );
 
   const aktif = tasks.find((t) => ["working", "waiting", "stuck"].includes(t.status));
-  const adaJalan =
-    tasks.some((t) => ["working", "stuck"].includes(t.status)) ||
-    commands.some((c) => ["pending", "processing"].includes(c.status));
+  // Syarat tombol dari server (#212, selaras kartu): PR selalu (modal
+  // menangani kosong), Stop hanya bila actions berisi "stop". Logika lokal
+  // adaJalan dihapus — pernah divergen dari server (task basi tanpa sesi).
 
   return (
     <div className="mx-auto w-full max-w-3xl p-4 sm:p-6">
@@ -191,15 +191,13 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
           >
             <Terminal className="h-3.5 w-3.5" /> {teks("kartu.perintah")}
           </button>
-          {proyek.status === "waiting" && (
-            <button
-              onClick={() => setPullOpen(true)}
-              className="rounded-[9px] bg-amber-500/10 px-4 py-2 text-xs font-medium text-amber-500 hover:bg-amber-500/20"
-            >
-              PR
-            </button>
-          )}
-          {adaJalan && (
+          <button
+            onClick={() => setPullOpen(true)}
+            className="rounded-[9px] bg-amber-500/10 px-4 py-2 text-xs font-medium text-amber-500 hover:bg-amber-500/20"
+          >
+            PR
+          </button>
+          {proyek.actions.includes("stop") && (
             <button
               onClick={() => setTanyaStop(true)}
               className="rounded-[9px] bg-red-500/10 px-4 py-2 text-xs font-medium text-red-500 hover:bg-red-500/20"

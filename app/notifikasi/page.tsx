@@ -4,7 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { BellOff, CheckCheck, CircleCheck, GitPullRequest, TriangleAlert } from "lucide-react";
 import { LoginCard } from "@/components/dashboard/LoginCard";
-import { fetchNotifikasi, siarNotifikasi, tandaiDibaca, type Notifikasi } from "@/lib/notifikasi";
+import { EVENT_NOTIF, fetchNotifikasi, siarNotifikasi, tandaiDibaca, type Notifikasi } from "@/lib/notifikasi";
+import { mulaiPolling } from "@/lib/polling";
 import { useBahasa } from "@/components/shell/BahasaProvider";
 import type { Kunci, Lang } from "@/lib/kamus";
 import { cn } from "@/lib/utils";
@@ -31,9 +32,21 @@ export default function Notifikasi() {
       .catch(() => setItems([]));
   }, []);
 
+  // Live (#212, cermin NotifBadge): polling 30 dtk + event — daftar ikut
+  // segar saat notifikasi masuk/ditandai dari tempat lain, tanpa reload.
   useEffect(() => {
     if (status !== "authenticated") return;
     muat();
+    const segar = async () => {
+      muat();
+      return true;
+    };
+    const kendali = mulaiPolling(segar, { awalMs: 30000 });
+    window.addEventListener(EVENT_NOTIF, segar);
+    return () => {
+      kendali.berhenti();
+      window.removeEventListener(EVENT_NOTIF, segar);
+    };
   }, [status, muat]);
 
   if (status === "loading") return <p className="font-mono text-xs text-muted-foreground">{teks("shell.muatSesi")}</p>;
