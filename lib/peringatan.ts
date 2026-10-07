@@ -70,6 +70,42 @@ export function cekPeringatan(rows: Notifikasi[]): number {
   return hasil.baru.length;
 }
 
+// Peringatan lokal (#208): toast + bunyi (+ Notification browser) TANPA
+// baris feed — untuk momen flip working->aktif yang terdeteksi klien.
+// Tanpa spam server/feed/Telegram/task; cocok untuk sinyal cepat per giliran.
+export function peringatanLokal(judul: string, pesan: string, jenis: NadaPenting = "selesai"): void {
+  const p: Peringatan = {
+    id: `lokal-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
+    judul,
+    pesan,
+    jenis,
+  };
+  try {
+    bukaKunciAudio();
+  } catch {
+    /* abaikan */
+  }
+  try {
+    bunyikan(p.jenis);
+  } catch {
+    /* abaikan */
+  }
+  if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+    try {
+      new Notification(p.judul, { body: p.pesan, tag: p.id });
+    } catch {
+      /* abaikan */
+    }
+  }
+  pendengar.forEach((fn) => {
+    try {
+      fn(p);
+    } catch {
+      /* abaikan */
+    }
+  });
+}
+
 export function mintaIzinNotifikasi(): Promise<NotificationPermission> {
   if (typeof window === "undefined" || !("Notification" in window)) {
     return Promise.resolve("denied" as NotificationPermission);

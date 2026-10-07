@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { RefreshCw } from "lucide-react";
 import { LoginCard } from "@/components/dashboard/LoginCard";
@@ -11,6 +11,7 @@ import { Dashboard } from "@/components/dashboard/Dashboard";
 import { EVENT_SEARCH } from "@/components/shell/SearchBox";
 import { useBahasa } from "@/components/shell/BahasaProvider";
 import { mulaiPolling } from "@/lib/polling";
+import { cekFlip } from "@/lib/flip-lokal";
 import { siarNotifikasi } from "@/lib/notifikasi";
 import type { Project } from "@/lib/types";
 
@@ -33,13 +34,18 @@ export default function Proyek() {
   const [pullOpen, setPullOpen] = useState(false);
   const [pullId, setPullId] = useState<string | undefined>(undefined);
   const [konfirmasi, setKonfirmasi] = useState<Konfirmasi | null>(null);
+  // Flip lokal #208 (diam pada muat pertama).
+  const kerjaLalu = useRef<Set<string> | null>(null);
 
   const muat = useCallback(async (): Promise<boolean> => {
     let ok = true;
     try {
       const res = await fetch("/api/dashboard", { cache: "no-store" });
-      if (res.ok) setDaftar((await res.json()) as Project[]);
-      else ok = false;
+      if (res.ok) {
+        const d = (await res.json()) as Project[];
+        setDaftar(d);
+        kerjaLalu.current = cekFlip(kerjaLalu.current, d);
+      } else ok = false;
     } catch {
       /* abaikan */
       ok = false;
