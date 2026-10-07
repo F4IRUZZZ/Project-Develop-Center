@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { galat } from "@/lib/galat-api";
+import { potong } from "@/lib/potong";
 import { siarTelegram } from "@/lib/telegram";
 import {
   bacaBatas,
@@ -62,7 +63,7 @@ export async function POST(req: Request) {
       // Kontrak Selesai: (#210, selaras webapp): SATU feed info prefix
       // "Selesai:" + ID deterministik + ON CONFLICT — retry delivery baru
       // tak ganda, filter penting tetap menangkap.
-      const judulWh = (body as { pull_request?: { title?: string } }).pull_request?.title?.slice(0, 120) ?? "";
+      const judulWh = potong((body as { pull_request?: { title?: string } }).pull_request?.title ?? "", 120);
       const pesanWh = `Selesai: PR #${n}${judulWh ? ` "${judulWh}"` : ""} di-merge (webhook GitHub).`;
       await db()`INSERT INTO activity_log (id, user_id, project_id, type, message)
         VALUES (${`act-merge-webhook-${proyek.id}-${n}`}, ${proyek.user_id}, ${proyek.id}, 'info', ${pesanWh})

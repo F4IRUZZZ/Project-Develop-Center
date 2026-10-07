@@ -101,6 +101,17 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
     return () => kendali.berhenti();
   }, [status, muat]);
 
+  // Pulang ke tab = segar (#216, pola beranda): tanpa ini data basi sampai
+  // siklus polling berikut (polling menahan diri saat hidden).
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    const onNampak = () => {
+      if (!document.hidden) void muat();
+    };
+    document.addEventListener("visibilitychange", onNampak);
+    return () => document.removeEventListener("visibilitychange", onNampak);
+  }, [status, muat]);
+
   const stop = async () => {
     await fetch("/api/commands/cancel", {
       method: "POST",
@@ -185,12 +196,14 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
         )}
 
         <div className="mt-4 flex flex-wrap gap-2">
-          <button
-            onClick={() => setModalOpen(true)}
-            className="flex items-center gap-1.5 rounded-[9px] bg-primary/10 px-4 py-2 text-xs font-medium text-primary hover:bg-primary/20"
-          >
-            <Terminal className="h-3.5 w-3.5" /> {teks("kartu.perintah")}
-          </button>
+          {proyek.actions.includes("command") && (
+            <button
+              onClick={() => setModalOpen(true)}
+              className="flex items-center gap-1.5 rounded-[9px] bg-primary/10 px-4 py-2 text-xs font-medium text-primary hover:bg-primary/20"
+            >
+              <Terminal className="h-3.5 w-3.5" /> {teks("kartu.perintah")}
+            </button>
+          )}
           <button
             onClick={() => setPullOpen(true)}
             className="rounded-[9px] bg-amber-500/10 px-4 py-2 text-xs font-medium text-amber-500 hover:bg-amber-500/20"

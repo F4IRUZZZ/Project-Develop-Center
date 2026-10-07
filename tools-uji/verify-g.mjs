@@ -37,6 +37,10 @@ cek("badge event-driven + poll fallback", notif.includes("EVENT_NOTIF") && badge
 const bacaSemua = readFileSync(join(root, "app/api/notifications/read/route.ts"), "utf8");
 cek("tandai-semua selaras filter daftar (#194)", bacaSemua.includes("Selesai:%") && bacaSemua.includes("body.semua"));
 cek("notifikasi live 30 dtk + event (#212)", halNotif.includes("mulaiPolling") && halNotif.includes("EVENT_NOTIF") && halNotif.includes("30000"));
+cek("tandai andalkan event (#216)", halNotif.includes("siarNotifikasi();") && !halNotif.includes("siarNotifikasi();\n    muat();"));
+const ghHook = readFileSync(join(root, "lib/github-hook.ts"), "utf8");
+cek("tulisActivity deterministik (#216)", ghHook.includes("createHash") && ghHook.includes("ON CONFLICT (id) DO NOTHING"));
+cek("potong emoji-safe (#216)", readFileSync(join(root, "lib/potong.ts"), "utf8").includes("[...s]") && readFileSync(join(root, "lib/selesai.ts"), "utf8").includes("potong("));
 
 // G4
 const modal = readFileSync(join(root, "components/command/CommandModal.tsx"), "utf8");

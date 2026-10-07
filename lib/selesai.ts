@@ -7,6 +7,7 @@
 // ID deterministik per (sesi, detik-kerja) + ON CONFLICT: retry dedupe,
 // kerja baru yang sah = baris baru. Best-effort: gagal = diam.
 import { db } from "@/lib/db";
+import { potong } from "@/lib/potong";
 import { siarTelegram } from "@/lib/telegram";
 
 // Ambang hening: tanpa sinyal kerja selama ini = sesi dianggap selesai.
@@ -59,7 +60,7 @@ export async function catatSelesai(userId: string, sessionId: string): Promise<b
   const d = rows[0];
   // Kontrak /api/notifications: prefix "Selesai:" = masuk filter penting
   // (picu bunyi + popup + Notification browser di klien).
-  const pesanFeed = `Selesai: AI selesai bekerja${d.repo ? ` di ${d.repo}` : ""}${d.ringkas ? ` — ${d.ringkas.slice(0, 200)}` : ""}`;
+  const pesanFeed = `Selesai: AI selesai bekerja${d.repo ? ` di ${d.repo}` : ""}${d.ringkas ? ` — ${potong(d.ringkas, 200)}` : ""}`;
   void siarTelegram(userId, pesanFeed).catch(() => {});
   return true;
 }

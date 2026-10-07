@@ -114,6 +114,7 @@ export default function Home() {
         catatFlip(d);
       })
       .catch(() => {});
+    muatAngka();
   };
 
   const semua = live ?? mockProjects;
@@ -142,7 +143,7 @@ export default function Home() {
         ) : live ? (
           <>
             <Stats
-              proyekAktif={angka?.proyekAktif ?? semua.length}
+              proyekAktif={angka?.proyekAktif}
               aiBekerja={angka?.aiBekerja}
               tugasSelesai={angka?.tugasSelesai}
             />

@@ -32,6 +32,8 @@ const card = readFileSync(join(root, "components/dashboard/ProjectCard.tsx"), "u
 cek("kartu link detail", card.includes("/proyek/${project.id}") || card.includes("/proyek/"));
 cek("detail PR tanpa gate waiting (#212)", detail.includes("setPullOpen(true)") && !detail.includes('status === "waiting"'));
 cek("detail Stop dari actions (#212)", detail.includes('actions.includes("stop")') && !detail.includes("const adaJalan"));
+cek("waiting+antre dapat stop (#216)", dash.includes('status === "waiting"') && dash.includes("cmdSet.has(id)"));
+cek("detail Perintah dari actions (#216)", detail.includes('actions.includes("command")'));
 
 if (gagal > 0) {
   console.log(`\nJ-CEK: ${gagal} gagal`);

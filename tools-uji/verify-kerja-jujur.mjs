@@ -80,6 +80,7 @@ cek("plugin throttle idle 15 dtk (#204)", plug.includes("SELA_IDLE_MS = 15000") 
 cek("beranda refetch on-visible (#204)", baca("app/page.tsx").includes("visibilitychange") && baca("app/page.tsx").includes("/api/stats"));
 cek("semua jalur muat lewat catatFlip (#212)", (baca("app/page.tsx").match(/catatFlip\(d\)/g) ?? []).length >= 3);
 cek("plugin bypass cerdas (#212)", plug.includes("idleTerkirim.get(id)") && plug.includes("> kerjaLalu"));
+cek("throttle commit saat ok (#216)", plug.includes("if (hasil.ok) kerjaTerakhir.set(id, kini)") && plug.includes("if (hasilPatch.ok) idleTerkirim.set(s.id, kiniIdle)"));
 
 // 4d. Build-only (#206): plan dikecualikan dari working + done.
 const plug2 = plug;
