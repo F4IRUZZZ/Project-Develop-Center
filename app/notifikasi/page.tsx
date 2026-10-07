@@ -36,7 +36,8 @@ export default function Notifikasi() {
   // segar saat notifikasi masuk/ditandai dari tempat lain, tanpa reload.
   useEffect(() => {
     if (status !== "authenticated") return;
-    muat();
+    // Tanpa muat() eksplisit (#216): tembakan t=0 polling sudah memuat —
+    // panggilan ganda = 2x fetch tiap mount. Gagal = backoff + retry polling.
     const segar = async () => {
       muat();
       return true;
@@ -56,8 +57,9 @@ export default function Notifikasi() {
 
   const tandai = async (id?: string) => {
     await tandaiDibaca(id);
+    // Andalkan event (#216): listener di atas memuat ulang — muat() eksplisit
+    // di sini = fetch ganda (event fire sinkron ke listener sendiri juga).
     siarNotifikasi();
-    muat();
   };
 
   return (

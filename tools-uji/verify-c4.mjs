@@ -30,6 +30,10 @@ cek("topbar pakai PemilihTema", topbar.includes("PemilihTema"));
 const stats = readFileSync(join(root, "components/dashboard/Stats.tsx"), "utf8");
 cek("stats stack HP", stats.includes("grid-cols-1") && stats.includes("sm:grid-cols-3"));
 cek("stats skeleton pulse (#214)", stats.includes("animate-pulse") && stats.includes("value === undefined") && !stats.includes('"—"'));
+const beranda = readFileSync(join(root, "app/page.tsx"), "utf8");
+cek("slot proyekAktif bisa skeleton (#216)", beranda.includes("proyekAktif={angka?.proyekAktif}"));
+cek("visible-refetch proyek+detail (#216)", readFileSync(join(root, "app/proyek/page.tsx"), "utf8").includes("visibilitychange") && readFileSync(join(root, "app/proyek/[id]/page.tsx"), "utf8").includes("visibilitychange"));
+cek("muatUlang segarkan angka (#216)", /const muatUlang[\s\S]{0,400}muatAngka\(\)/.test(beranda));
 
 const dash = readFileSync(join(root, "components/dashboard/Dashboard.tsx"), "utf8");
 cek("grid auto-fill 300px", dash.includes("minmax(300px,1fr)"));

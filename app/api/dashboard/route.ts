@@ -147,8 +147,12 @@ export async function GET(req: NextRequest) {
       sesiAktif: sesiSet.has(id),
       sesiKerja: (kerjaMap.get(id) ?? null) as Project["sesiKerja"],
       sesiRingkasan: ringkasMap.get(id) ?? null,
+      // waiting + command antre = masih bisa dibatalkan (#216): beri
+      // command+stop; waiting tanpa antrean = kosong (tak ada yang dikerjakan).
       actions: (status === "waiting"
-        ? []
+        ? cmdSet.has(id)
+          ? (["command", "stop"] as Project["actions"])
+          : []
         : cmdSet.has(id) || kerjaMap.get(id) === "bekerja"
           ? (["command", "stop"] as Project["actions"])
           : (["command"] as Project["actions"])),

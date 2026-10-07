@@ -1,6 +1,5 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { db } from "@/lib/db";
-import { buatId } from "@/lib/id";
 
 const BATAS_BYTE = 1024 * 1024;
 
@@ -43,7 +42,11 @@ export async function tulisActivity(
   type: "commit" | "pr" | "issue" | "error" | "info",
   message: string
 ) {
-  await db()`INSERT INTO activity_log (id, user_id, project_id, type, message) VALUES (${buatId("act")}, ${userId}, ${projectId}, ${type}, ${message})`;
+  // ID deterministik dari isi (#216, pola merge): redelivery GitHub dengan
+  // delivery_id baru + dua event berurutan tak ganda. Hash 16 hex cukup
+  // (ruang pesan per proyek per jenis, bukan global).
+  const hash = createHash("sha256").update(`${type}:${projectId}:${message}`).digest("hex").slice(0, 16);
+  await db()`INSERT INTO activity_log (id, user_id, project_id, type, message) VALUES (${`act-${type}-${hash}`}, ${userId}, ${projectId}, ${type}, ${message}) ON CONFLICT (id) DO NOTHING`;
 }
 
 export async function proyekUntukRepo(fullName: string): Promise<{ id: string; user_id: string } | null> {

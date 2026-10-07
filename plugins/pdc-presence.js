@@ -5,7 +5,7 @@
 // JANGAN tambah export lain / default export (risiko registrasi ganda).
 // JANGAN `import { Plugin } from "@opencode/plugin"`: tak ter-resolve dari
 // file .js polos dan hanya helper type — object return lolos skema yang sama.
-const VERSI_PLUGIN = "2026.10.14";
+const VERSI_PLUGIN = "2026.10.15";
 // Butuh env di mesin: PDC_API_URL (default production; set eksplisit
 // untuk dev lokal), PDC_API_KEY (buat di webapp PDC > Pengaturan),
 // opsional PDC_MODE (plan/build).
@@ -269,12 +269,15 @@ export const PdcPresence = async (input) => {
       // nyata ter-throttle lalu ketimpa cap idle).
       const idleBaru = (idleTerkirim.get(id) ?? 0) > kerjaLalu;
       if (!idleBaru && kini - kerjaLalu < SELA_KERJA_MS) return;
-      kerjaTerakhir.set(id, kini);
       const metaKirim = dikenal.get(id);
       const hasil = await kirim("/api/sessions/activity", "POST", {
         session_id: id,
         events: [{ kind: "kerja", mode: metaKirim?.mode ?? MODE, mode_eksplisit: metaKirim?.eksplisit ?? Boolean(ENV_MODE) }],
       });
+      // Baseline maju hanya bila terkirim (#216): gagal jaringan tak boleh
+      // menghanguskan sinyal (pola denyutOk) — kalau tidak, kerja nyata
+      // ter-throttle dan server menilai siaga.
+      if (hasil.ok) kerjaTerakhir.set(id, kini);
       log(hasil.ok ? "info" : "warn", `kerja -> ${hasil.status}`, { sessionId: id });
     } catch {
       /* abaikan */
@@ -583,7 +586,6 @@ export const PdcPresence = async (input) => {
           log("info", `idle dobel dilewati (${tipe})`, { sessionId: s.id });
           return;
         }
-        idleTerkirim.set(s.id, kiniIdle);
         if (!KEY) {
           log("warn", "PDC_API_KEY kosong, lewati lapor (set env User PDC_API_KEY)");
           return;
@@ -595,6 +597,8 @@ export const PdcPresence = async (input) => {
           mode: metaPatch?.mode ?? s.mode,
           mode_eksplisit: metaPatch?.eksplisit ?? s.eksplisit,
         });
+        // Baseline idle maju hanya bila terkirim (#216, pola denyutOk).
+        if (hasilPatch.ok) idleTerkirim.set(s.id, kiniIdle);
         log(hasilPatch.ok ? "info" : "warn", `PATCH /api/sessions -> ${hasilPatch.status} (${tipe})`, {
           sessionId: s.id,
         });

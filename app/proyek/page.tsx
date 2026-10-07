@@ -90,6 +90,17 @@ export default function Proyek() {
     return () => window.removeEventListener(EVENT_SEARCH, onSearch);
   }, []);
 
+  // Pulang ke tab = segar (#216, pola beranda): polling menahan diri saat
+  // hidden + browser throttle timer background.
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    const onNampak = () => {
+      if (!document.hidden) void muat();
+    };
+    document.addEventListener("visibilitychange", onNampak);
+    return () => document.removeEventListener("visibilitychange", onNampak);
+  }, [status, muat]);
+
   const jalankanKonfirmasi = useCallback(async () => {
     if (!konfirmasi) return;
     if (konfirmasi.jenis === "stop") {

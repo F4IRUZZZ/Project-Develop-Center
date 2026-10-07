@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { isErr, sesiUser, tokenGitHub } from "@/lib/server-auth";
 import { galat } from "@/lib/galat-api";
+import { potong } from "@/lib/potong";
 import { siarTelegram } from "@/lib/telegram";
 
 // Merge PR terbuka (satu-satunya aksi write ke GitHub dari webapp, PRD F15).
@@ -55,7 +56,7 @@ export async function POST(req: NextRequest) {
       headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" },
       signal: AbortSignal.timeout(10000),
     });
-    if (info.ok) judul = ((await info.json()) as { title?: string }).title?.slice(0, 120) ?? "";
+    if (info.ok) judul = potong((await info.json() as { title?: string }).title ?? "", 120);
   } catch {
     /* abaikan */
   }
