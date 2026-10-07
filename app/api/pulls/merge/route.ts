@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
-import { buatId, isErr, sesiUser, tokenGitHub } from "@/lib/server-auth";
+import { isErr, sesiUser, tokenGitHub } from "@/lib/server-auth";
 import { galat } from "@/lib/galat-api";
 import { siarTelegram } from "@/lib/telegram";
 
@@ -77,8 +77,11 @@ export async function POST(req: NextRequest) {
   // auto-done) agar angka Tasks Done selalu bertambah.
   if (tutup.length === 0) {
     const judulTask = `Merge PR #${prNumber}${judul ? ` "${judul}"` : ""}`.slice(0, 200);
+    // ID deterministik + ON CONFLICT (#210): balapan webapp<->webhook untuk
+    // PR yang sama tak bisa +2 (kalah diam-diam, tepat-sekali).
     await sql`INSERT INTO tasks (id, user_id, project_id, title, status, progress, result_summary, completed_at, updated_at)
-      VALUES (${buatId("task")}, ${ctx.userId}, ${projectId}, ${judulTask}, 'completed', 100, ${pesanFeed.slice(0, 500)}, now(), now())`;
+      VALUES (${`task-merge-webapp-${projectId}-${prNumber}`}, ${ctx.userId}, ${projectId}, ${judulTask}, 'completed', 100, ${pesanFeed.slice(0, 500)}, now(), now())
+      ON CONFLICT (id) DO NOTHING`;
   }
   void siarTelegram(ctx.userId, pesanFeed).catch(() => {});
   return NextResponse.json({ ok: true, merged: true });

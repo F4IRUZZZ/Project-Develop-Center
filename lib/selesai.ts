@@ -1,75 +1,65 @@
-// Done tepat-sekali (#184): 1 sesi bekerja = 1x task done + 1x feed
-// "Selesai:" + 1x Telegram, kapan pun pemicunya (sweep hening / tutup
-// eksplisit / double-PATCH balapan). Kuncinya klaim atomik: UPDATE
-// bersyarat + RETURNING sebagai mutex — hanya 1 pemenang per sesi, sisanya
-// kalah diam-diam. Best-effort: gagal = diam, respons tetap jalan.
+// Done tepat-sekali (#184, atomik penuh #210): 1 sesi build bekerja = 1x
+// task done + 1x feed "Selesai:" + 1x Telegram, kapan pun pemicunya (sweep
+// hening / tutup eksplisit / double-PATCH balapan). Merge PR juga hasilkan
+// task via jalurnya sendiri. SELURUH tulis dalam
+// SATU statement CTE: klaim (mutex done_at) + task + feed + done_task_id
+// komit bersama — gagal tengah = tak ada yang tertulis, retry aman.
+// ID deterministik per (sesi, detik-kerja) + ON CONFLICT: retry dedupe,
+// kerja baru yang sah = baris baru. Best-effort: gagal = diam.
 import { db } from "@/lib/db";
-import { buatId } from "@/lib/id";
 import { siarTelegram } from "@/lib/telegram";
 
 // Ambang hening: tanpa sinyal kerja selama ini = sesi dianggap selesai.
 export const HENING_MNT = 3;
 export const SWEEP_LIMIT = 50;
 
-interface Klaim {
+interface Done {
   session_id: string;
   project_id: string;
-  ringkasan: string;
+  judul: string;
+  ringkas: string;
+  repo: string | null;
 }
 
-// Menangkan hak mencatat done untuk 1 sesi (atau kalah = null). Syarat:
-// masih active, teratribusi proyek, pernah ada kerja, dan belum dicatat
-// sejak kerja terakhir. Satu statement = atomik lawan balapan.
-async function klaim(
-  sql: ReturnType<typeof db>,
-  userId: string,
-  sessionId: string
-): Promise<Klaim | null> {
-  const menang = (await sql`
-    UPDATE agent_sessions SET done_at = now()
-    WHERE session_id = ${sessionId} AND user_id = ${userId}
-      AND status = 'active' AND mode = 'build' AND project_id IS NOT NULL
-      AND COALESCE(last_work_at, last_edit_at) IS NOT NULL
-      AND (done_at IS NULL OR COALESCE(last_work_at, last_edit_at) > done_at)
-    RETURNING session_id, project_id, ringkasan_terakhir
-  `) as unknown as Array<{
-    session_id: string;
-    project_id: string;
-    ringkasan_terakhir: string | null;
-  }>;
-  if (menang.length === 0) return null;
-  return {
-    session_id: String(menang[0].session_id),
-    project_id: String(menang[0].project_id),
-    ringkasan: (menang[0].ringkasan_terakhir ?? "").trim().slice(0, 200),
-  };
-}
-
-// Catat 1x done untuk sesi (pemenang klaim saja yang lanjut). Kembalikan
-// true bila mencatat, false bila kalah/sudah dicatat.
+// Catat 1x done untuk sesi. Kembalikan true bila mencatat,
+// false bila kalah/sudah dicatat.
 export async function catatSelesai(userId: string, sessionId: string): Promise<boolean> {
   const sql = db();
-  const m = await klaim(sql, userId, sessionId);
-  if (!m) return false;
-  const judul = m.ringkasan || "Sesi AI selesai bekerja";
-  const taskId = buatId("task");
-  await sql`INSERT INTO tasks (id, user_id, project_id, title, status, progress, result_summary, completed_at, updated_at)
-    VALUES (${taskId}, ${userId}, ${m.project_id}, ${judul.slice(0, 200)}, 'completed', 100, ${m.ringkasan || null}, now(), now())`;
-  let repo = "";
-  try {
-    const pj = (await sql`SELECT repo_name FROM projects WHERE id = ${m.project_id} AND user_id = ${userId} LIMIT 1`) as Array<{
-      repo_name: string;
-    }>;
-    repo = pj[0]?.repo_name ?? "";
-  } catch {
-    /* abaikan: pesan tanpa nama repo tetap valid */
-  }
+  const rows = (await sql`
+    WITH k AS (
+      UPDATE agent_sessions SET done_at = now()
+      WHERE session_id = ${sessionId} AND user_id = ${userId}
+        AND status = 'active' AND mode = 'build' AND project_id IS NOT NULL
+        AND COALESCE(last_work_at, last_edit_at) IS NOT NULL
+        AND (done_at IS NULL OR COALESCE(last_work_at, last_edit_at) > done_at)
+      RETURNING session_id, user_id, project_id,
+        COALESCE(NULLIF(TRIM(LEFT(ringkasan_terakhir, 200)), ''), 'Sesi AI selesai bekerja') AS judul,
+        TRIM(COALESCE(ringkasan_terakhir, '')) AS ringkas,
+        EXTRACT(EPOCH FROM COALESCE(last_work_at, last_edit_at))::bigint AS ep,
+        (SELECT repo_name FROM projects p WHERE p.id = agent_sessions.project_id) AS repo
+    ),
+    t AS (
+      INSERT INTO tasks (id, user_id, project_id, title, status, progress, result_summary, completed_at, updated_at)
+      SELECT 'task-done-' || k.session_id || '-' || k.ep, k.user_id, k.project_id, LEFT(k.judul, 200), 'completed', 100, NULLIF(LEFT(k.ringkas, 1000), ''), now(), now() FROM k
+      ON CONFLICT (id) DO NOTHING
+      RETURNING id
+    ),
+    f AS (
+      INSERT INTO activity_log (id, user_id, project_id, type, message)
+      SELECT 'act-selesai-' || k.session_id || '-' || k.ep, k.user_id, k.project_id, 'info',
+        'Selesai: AI selesai bekerja' || COALESCE(' di ' || (SELECT repo_name FROM projects p WHERE p.id = k.project_id), '') || CASE WHEN k.ringkas <> '' THEN ' — ' || LEFT(k.ringkas, 200) ELSE '' END
+      FROM k
+      ON CONFLICT (id) DO NOTHING
+    )
+    UPDATE agent_sessions s SET done_task_id = COALESCE((SELECT id FROM t LIMIT 1), 'task-done-' || k.session_id || '-' || k.ep)
+    FROM k WHERE s.session_id = k.session_id AND s.user_id = k.user_id
+    RETURNING k.session_id AS session_id, k.project_id AS project_id, k.judul AS judul, k.ringkas AS ringkas, k.repo AS repo
+  `) as unknown as Done[];
+  if (rows.length === 0) return false;
+  const d = rows[0];
   // Kontrak /api/notifications: prefix "Selesai:" = masuk filter penting
   // (picu bunyi + popup + Notification browser di klien).
-  const pesanFeed = `Selesai: AI selesai bekerja${repo ? ` di ${repo}` : ""}${m.ringkasan ? ` — ${m.ringkasan}` : ""}`;
-  await sql`INSERT INTO activity_log (id, user_id, project_id, type, message)
-    VALUES (${buatId("act")}, ${userId}, ${m.project_id}, 'info', ${pesanFeed})`;
-  await sql`UPDATE agent_sessions SET done_task_id = ${taskId} WHERE session_id = ${sessionId} AND user_id = ${userId}`;
+  const pesanFeed = `Selesai: AI selesai bekerja${d.repo ? ` di ${d.repo}` : ""}${d.ringkas ? ` — ${d.ringkas.slice(0, 200)}` : ""}`;
   void siarTelegram(userId, pesanFeed).catch(() => {});
   return true;
 }

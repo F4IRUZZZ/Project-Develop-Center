@@ -20,6 +20,8 @@ cek("merge tutup working juga (#190)", hook.includes("'waiting', 'working'"));
 cek("merge Telegram webhook (#190)", hook.includes("void siarTelegram("));
 cek("merge anti-ganda 10 mnt (#190)", hook.includes("act-merge-webapp-") && hook.includes("interval '10 minutes'") && hook.includes("sudah dicatat webapp"));
 cek("merge selalu +1 task (#208)", hook.includes("tutup.length === 0") && hook.includes("INSERT INTO tasks"));
+cek("webhook Selesai: deterministik (#210)", hook.includes("act-merge-webhook-") && hook.includes("Selesai: PR #") && hook.includes("ON CONFLICT (id) DO NOTHING"));
+cek("webhook task deterministik (#210)", hook.includes("task-merge-webhook-"));
 cek("abaikan repo tak dipantau", hook.includes("tak dipantau"));
 
 const lib = readFileSync(join(root, "lib/github-hook.ts"), "utf8");

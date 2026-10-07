@@ -69,7 +69,7 @@ export async function GET(req: NextRequest) {
   // dan padam ≤~4 mnt setelah close/kill/crash (tanpa event tutup-proses).
   const sesi = (await sql`
     SELECT project_id FROM agent_sessions
-    WHERE user_id = ${ctx.userId} AND status = 'active'
+    WHERE user_id = ${ctx.userId} AND status = 'active' AND mode = 'build'
       AND last_seen_at > now() - interval '3 minutes'
   `) as unknown as Array<{ project_id: string | null }>;
   const sesiSet = new Set(sesi.map((r) => r.project_id));
@@ -102,7 +102,7 @@ export async function GET(req: NextRequest) {
   const ringkasRows = (await sql`
     SELECT project_id, ringkasan_terakhir AS ringkasan
     FROM agent_sessions
-    WHERE user_id = ${ctx.userId} AND status = 'active'
+    WHERE user_id = ${ctx.userId} AND status = 'active' AND mode = 'build'
       AND last_seen_at > now() - interval '3 minutes'
       AND ringkasan_terakhir IS NOT NULL
     ORDER BY ringkasan_waktu DESC

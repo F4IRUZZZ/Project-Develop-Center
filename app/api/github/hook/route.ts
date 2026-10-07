@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { buatId } from "@/lib/id";
 import { galat } from "@/lib/galat-api";
 import { siarTelegram } from "@/lib/telegram";
 import {
@@ -60,15 +59,23 @@ export async function POST(req: Request) {
       const pdc = await db()`SELECT id FROM activity_log
         WHERE id = ${`act-merge-webapp-${proyek.id}-${n}`} AND created_at > now() - interval '10 minutes' LIMIT 1`;
       if (pdc.length > 0) return NextResponse.json({ ok: true, abaikan: "merge sudah dicatat webapp" });
-      await tulisActivity(proyek.user_id, proyek.id, "pr", r.message);
+      // Kontrak Selesai: (#210, selaras webapp): SATU feed info prefix
+      // "Selesai:" + ID deterministik + ON CONFLICT — retry delivery baru
+      // tak ganda, filter penting tetap menangkap.
+      const judulWh = (body as { pull_request?: { title?: string } }).pull_request?.title?.slice(0, 120) ?? "";
+      const pesanWh = `Selesai: PR #${n}${judulWh ? ` "${judulWh}"` : ""} di-merge (webhook GitHub).`;
+      await db()`INSERT INTO activity_log (id, user_id, project_id, type, message)
+        VALUES (${`act-merge-webhook-${proyek.id}-${n}`}, ${proyek.user_id}, ${proyek.id}, 'info', ${pesanWh})
+        ON CONFLICT (id) DO NOTHING`;
       const tutup = (await db()`UPDATE tasks SET status = 'completed', progress = 100, completed_at = now(), updated_at = now(), result_summary = 'PR di-merge (webhook GitHub).' WHERE user_id = ${proyek.user_id} AND project_id = ${proyek.id} AND status IN ('waiting', 'working') RETURNING id`) as Array<{
         id: string;
       }>;
       if (tutup.length === 0) {
         await db()`INSERT INTO tasks (id, user_id, project_id, title, status, progress, result_summary, completed_at, updated_at)
-          VALUES (${buatId("task")}, ${proyek.user_id}, ${proyek.id}, ${`Merge PR #${n} (webhook GitHub).`}, 'completed', 100, ${r.message.slice(0, 500)}, now(), now())`;
+          VALUES (${`task-merge-webhook-${proyek.id}-${n}`}, ${proyek.user_id}, ${proyek.id}, ${`Merge PR #${n} (webhook GitHub).`}, 'completed', 100, ${pesanWh.slice(0, 500)}, now(), now())
+          ON CONFLICT (id) DO NOTHING`;
       }
-      void siarTelegram(proyek.user_id, `${r.message} (webhook GitHub).`).catch(() => {});
+      void siarTelegram(proyek.user_id, pesanWh).catch(() => {});
       return NextResponse.json({ ok: true });
     }
     await tulisActivity(proyek.user_id, proyek.id, "pr", r.message);

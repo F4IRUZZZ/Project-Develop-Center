@@ -5,7 +5,7 @@
 // JANGAN tambah export lain / default export (risiko registrasi ganda).
 // JANGAN `import { Plugin } from "@opencode/plugin"`: tak ter-resolve dari
 // file .js polos dan hanya helper type — object return lolos skema yang sama.
-const VERSI_PLUGIN = "2026.10.12";
+const VERSI_PLUGIN = "2026.10.13";
 // Butuh env di mesin: PDC_API_URL (default production; set eksplisit
 // untuk dev lokal), PDC_API_KEY (buat di webapp PDC > Pengaturan),
 // opsional PDC_MODE (plan/build).
@@ -119,19 +119,21 @@ export const PdcPresence = async (input) => {
 
   // Daftarkan sesi (baru maupun lanjutan/Continue) — POST idempoten.
   // reopen=true hanya dari bukti hidup (event nyata): membuka kembali
-  // baris yang sudah final. Denyut biasa TANPA flag ini.
-  const daftarkan = async (id, { lewat = "lazy", reopen = false, mode = MODE } = {}) => {
+  // baris yang sudah final. Denyut biasa TANPA flag ini. eksplisit (#210):
+  // apakah mode benar dari env/event (true) atau fallback default (false).
+  const daftarkan = async (id, { lewat = "lazy", reopen = false, mode = MODE, eksplisit = Boolean(ENV_MODE) } = {}) => {
     if (!id || !KEY || dikenal.has(id)) return;
     const repo = await repoFull(`daftar:${lewat}`);
     const hasil = await kirim("/api/sessions", "POST", {
       session_id: id,
       repo_full: repo,
       mode,
+      mode_eksplisit: eksplisit,
       plugin_version: VERSI_PLUGIN,
       ...(reopen ? { reopen: true } : {}),
     });
     if (hasil.ok) {
-      dikenal.set(id, { repo_full: repo, mode });
+      dikenal.set(id, { repo_full: repo, mode, eksplisit });
       terakhir = id;
     }
     log(hasil.ok ? "info" : "warn", `lazy-register -> ${hasil.status} (${lewat})`, { sessionId: id });
@@ -171,6 +173,7 @@ export const PdcPresence = async (input) => {
         session_id: id,
         repo_full: meta.repo_full,
         mode: meta.mode,
+        mode_eksplisit: meta.eksplisit ?? Boolean(ENV_MODE),
         plugin_version: VERSI_PLUGIN,
       });
       const dulu = denyutOk.get(id);
@@ -248,22 +251,21 @@ export const PdcPresence = async (input) => {
     log(hasil.ok ? "info" : "warn", `ringkasan -> ${hasil.status}`, { sessionId });
   };
 
-  // Sinyal kerja (#182): bukti AI sibuk ke server (kind "kerja",
-  // latest-only, tanpa isi/payload). Throttle per sesi agar deretan tool
-  // cepat tak membanjiri API. Tanpa sinyal ini indikator PDC hanya naik
-  // saat ada suntingan file.
+  // Sinyal kerja (#182, selaras idle #210): bukti AI sibuk ke server (kind
+  // "kerja", latest-only, tanpa isi/payload). Throttle 15 dtk per sesi —
+  // sama orde dengan idle agar giliran rapat tak false-siaga.
   const kerjaTerakhir = new Map(); // sessionId -> epoch ms
-  const SELA_KERJA_MS = 45000;
+  const SELA_KERJA_MS = 15000;
   const sinyalKerja = async (id) => {
     try {
       if (!id || !KEY || !dikenal.has(id)) return;
       const kini = Date.now();
       if (kini - (kerjaTerakhir.get(id) ?? 0) < SELA_KERJA_MS) return;
       kerjaTerakhir.set(id, kini);
-      const modeKirim = dikenal.get(id)?.mode ?? MODE;
+      const metaKirim = dikenal.get(id);
       const hasil = await kirim("/api/sessions/activity", "POST", {
         session_id: id,
-        events: [{ kind: "kerja", mode: modeKirim }],
+        events: [{ kind: "kerja", mode: metaKirim?.mode ?? MODE, mode_eksplisit: metaKirim?.eksplisit ?? Boolean(ENV_MODE) }],
       });
       log(hasil.ok ? "info" : "warn", `kerja -> ${hasil.status}`, { sessionId: id });
     } catch {
@@ -508,15 +510,16 @@ export const PdcPresence = async (input) => {
       if (tipe !== "session.deleted" && tipe !== "session.error") {
         const sAwal = infoSesi(event);
         if (sAwal.id && !dikenal.has(sAwal.id) && KEY) {
-          await daftarkan(sAwal.id, { lewat: tipe, reopen: true, mode: sAwal.mode });
+          await daftarkan(sAwal.id, { lewat: tipe, reopen: true, mode: sAwal.mode, eksplisit: sAwal.eksplisit });
         }
         // Segarkan mode sesi (#206): TUI bisa pindah plan/build mid-session.
         // Hanya mode EKSPLISIT yang menimpa (fallback build tak boleh
         // menghapus plan yang sudah terdeteksi).
         if (sAwal.id && sAwal.eksplisit && dikenal.has(sAwal.id)) {
           const meta0 = dikenal.get(sAwal.id);
-          if (meta0 && meta0.mode !== sAwal.mode) {
+          if (meta0 && (meta0.mode !== sAwal.mode || !meta0.eksplisit)) {
             meta0.mode = sAwal.mode;
+            meta0.eksplisit = true;
             log("info", `mode sesi -> ${sAwal.mode} (${tipe})`, { sessionId: sAwal.id });
           }
         }
@@ -537,10 +540,11 @@ export const PdcPresence = async (input) => {
           session_id: s.id,
           repo_full: repo,
           mode: s.mode,
+          mode_eksplisit: s.eksplisit,
           plugin_version: VERSI_PLUGIN,
         });
         if (hasilPost.ok) {
-          dikenal.set(s.id, { repo_full: repo, mode: s.mode });
+          dikenal.set(s.id, { repo_full: repo, mode: s.mode, eksplisit: s.eksplisit });
           terakhir = s.id;
         }
         log(hasilPost.ok ? "info" : "warn", `POST /api/sessions -> ${hasilPost.status}`, { sessionId: s.id });
@@ -576,10 +580,12 @@ export const PdcPresence = async (input) => {
           log("warn", "PDC_API_KEY kosong, lewati lapor (set env User PDC_API_KEY)");
           return;
         }
+        const metaPatch = dikenal.get(s.id);
         const hasilPatch = await kirim("/api/sessions", "PATCH", {
           session_id: s.id,
           status: "idle",
-          mode: dikenal.get(s.id)?.mode ?? s.mode,
+          mode: metaPatch?.mode ?? s.mode,
+          mode_eksplisit: metaPatch?.eksplisit ?? s.eksplisit,
         });
         log(hasilPatch.ok ? "info" : "warn", `PATCH /api/sessions -> ${hasilPatch.status} (${tipe})`, {
           sessionId: s.id,
