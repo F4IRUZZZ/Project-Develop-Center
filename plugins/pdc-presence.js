@@ -5,7 +5,7 @@
 // JANGAN tambah export lain / default export (risiko registrasi ganda).
 // JANGAN `import { Plugin } from "@opencode/plugin"`: tak ter-resolve dari
 // file .js polos dan hanya helper type — object return lolos skema yang sama.
-const VERSI_PLUGIN = "2026.10.16";
+const VERSI_PLUGIN = "2026.10.17";
 // Butuh env di mesin: PDC_API_URL (default production; set eksplisit
 // untuk dev lokal), PDC_API_KEY (buat di webapp PDC > Pengaturan),
 // opsional PDC_MODE (plan/build).
@@ -161,6 +161,18 @@ export const PdcPresence = async (input) => {
         body: body === undefined ? undefined : JSON.stringify(body),
         signal: AbortSignal.timeout(10000),
       });
+      if (!res.ok) {
+        // Cuplikan body error (#221): tanpa ini vonis 500 butuh bolak-balik
+        // Vercel Logs. Cap 200 char, respons API tak memuat secret. File saja
+        // (TUI tetap steril, #168).
+        let cuplik = "";
+        try {
+          cuplik = (await res.text()).slice(0, 200);
+        } catch {
+          /* abaikan */
+        }
+        return { ok: false, status: String(res.status), cuplik };
+      }
       return { ok: res.ok, status: String(res.status) };
     } catch (e) {
       return { ok: false, status: "jaringan:" + String((e && e.message) || e).slice(0, 200) };
@@ -191,7 +203,7 @@ export const PdcPresence = async (input) => {
       dikenal.set(id, { repo_full: repo, mode, eksplisit });
       terakhir = id;
     }
-    catat("daftar", { sessionId: id, rincian: { lewat, hasil: hasil.status } });
+    catat("daftar", { sessionId: id, rincian: { lewat, hasil: hasil.status, cuplik: hasil.cuplik ?? "" } });
     log(hasil.ok ? "info" : "warn", `lazy-register -> ${hasil.status} (${lewat})`, { sessionId: id });
   };
 
@@ -235,7 +247,7 @@ export const PdcPresence = async (input) => {
       const dulu = denyutOk.get(id);
       denyutOk.set(id, hasil.ok);
       if (!hasil.ok) {
-        catat("denyut", { sessionId: id, rincian: { hasil: hasil.status } });
+        catat("denyut", { sessionId: id, rincian: { hasil: hasil.status, cuplik: hasil.cuplik ?? "" } });
       }
       if (!hasil.ok && dulu !== false) {
         log("warn", `denyut gagal (mulai): ${hasil.status}`, { sessionId: id });
@@ -338,7 +350,7 @@ export const PdcPresence = async (input) => {
       // menghanguskan sinyal (pola denyutOk) — kalau tidak, kerja nyata
       // ter-throttle dan server menilai siaga.
       if (hasil.ok) kerjaTerakhir.set(id, kini);
-      catat("kerja", { sessionId: id, rincian: { hasil: hasil.status } });
+      catat("kerja", { sessionId: id, rincian: { hasil: hasil.status, cuplik: hasil.cuplik ?? "" } });
       log(hasil.ok ? "info" : "warn", `kerja -> ${hasil.status}`, { sessionId: id });
     } catch {
       /* abaikan */
@@ -673,7 +685,7 @@ export const PdcPresence = async (input) => {
         });
         // Baseline idle maju hanya bila terkirim (#216, pola denyutOk).
         if (hasilPatch.ok) idleTerkirim.set(s.id, kiniIdle);
-        catat("idle", { sessionId: s.id, rincian: { tipe, hasil: hasilPatch.status } });
+        catat("idle", { sessionId: s.id, rincian: { tipe, hasil: hasilPatch.status, cuplik: hasilPatch.cuplik ?? "" } });
         log(hasilPatch.ok ? "info" : "warn", `PATCH /api/sessions -> ${hasilPatch.status} (${tipe})`, {
           sessionId: s.id,
         });

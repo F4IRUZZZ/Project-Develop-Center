@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
       last_seen_at = now(),
       status = CASE WHEN ${bukaUlang} THEN 'active' WHEN agent_sessions.status = 'active' THEN 'active' ELSE agent_sessions.status END,
       ended_at = CASE WHEN ${bukaUlang} THEN NULL ELSE agent_sessions.ended_at END,
-      mode = CASE WHEN ${modeUp} IS NULL THEN agent_sessions.mode ELSE ${modeUp} END,
+      mode = COALESCE(CAST(${modeUp} AS text), agent_sessions.mode),
       repo_full = COALESCE(NULLIF(agent_sessions.repo_full, ''), EXCLUDED.repo_full),
       project_id = COALESCE(agent_sessions.project_id, ${projectId})
   `;

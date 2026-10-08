@@ -93,6 +93,7 @@ Peta cepat:
 | `tool` + `fallback: true` | atribusi ke sesi terakhir (normal bila sid absen) |
 | `tool-lewat` `tanpa-sid-tanpa-path` | tool tanpa sid dan tanpa path — dilewati |
 | `kerja` `hasil: 401` | key ditolak → putar key + restart total |
+| `kerja`/`daftar`/`idle` + `cuplik` | cuplikan body error server (≤200 char) — vonis 500 tanpa Vercel Logs |
 | `kerja` `hasil: tanpa-key` | env proses tak punya key |
 | `idle-lewat` `throttle` | normal (anti-flapping 15 dtk) |
 | `denyut` gagal | jaringan/API bermasalah |
