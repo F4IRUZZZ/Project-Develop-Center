@@ -95,6 +95,11 @@ const KAMUS = {
   "kartu.aiAktif": { id: "AI aktif", en: "AI active" },
   "kartu.titleBekerja": { id: "AI sedang menyunting kode di repo ini", en: "AI is editing code in this repo" },
   "kartu.titleAktif": { id: "Sesi AI aktif di repo ini", en: "Active AI session in this repo" },
+  "kartu.modePlan": { id: "plan · siaga", en: "plan · standby" },
+  "kartu.titleSiagaPlan": {
+    id: "Sesi plan aktif — siaga, tak menyunting kode",
+    en: "Active plan session — standby, not editing code",
+  },
   "kartu.jadikanPublic": { id: "Jadikan public", en: "Make public" },
   "kartu.jadikanPrivate": { id: "Jadikan private", en: "Make private" },
   "kartu.perintah": { id: "Perintah", en: "Command" },

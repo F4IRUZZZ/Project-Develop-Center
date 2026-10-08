@@ -125,10 +125,13 @@ export default function Home() {
     p.repoFull.toLowerCase().includes(kataKunci);
   const perhatian = (live ?? []).filter((p) => PERHATIAN.has(p.status) && cocokCari(p));
   // Repo dengan sesi AI hidup (bekerja dulu), hormati pencarian. Data sudah
-  // ada di `live` (sesiAktif/sesiKerja dari /api/dashboard, refresh 10 dtk).
+  // ada di `live` (sesiAktif/sesiKerja/sesiMode dari /api/dashboard, refresh
+  // 10 dtk). #225: plan-siaga ikut tampil (tanpa dot), urutan bekerja (0) >
+  // build-siaga (1) > plan-siaga (2).
+  const bobotAktif = (p: Project) => (p.sesiKerja === "bekerja" ? 0 : p.sesiMode === "plan" ? 2 : 1);
   const aktif = (live ?? [])
     .filter((p) => p.sesiAktif && cocokCari(p))
-    .sort((a, b) => (a.sesiKerja === "bekerja" ? 0 : 1) - (b.sesiKerja === "bekerja" ? 0 : 1));
+    .sort((a, b) => bobotAktif(a) - bobotAktif(b));
 
   return (
     <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-6 p-4 sm:p-6 xl:flex-row">

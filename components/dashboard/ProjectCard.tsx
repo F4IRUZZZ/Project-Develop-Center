@@ -49,7 +49,7 @@ export function ProjectCard({ project, readOnly, onCommand, onStop, onVisibility
                 {project.repoName}
               </Link>
               <PendingBadge projectId={project.id} />
-              {project.sesiKerja === "bekerja" ? (
+              {project.sesiKerja === "bekerja" && project.sesiMode !== "plan" ? (
                 <span
                   title={`${teks("kartu.titleBekerja")}${project.sesiRingkasan ? `: ${project.sesiRingkasan}` : ""}`}
                   aria-label={teks("kartu.aiBekerja")}
@@ -57,6 +57,15 @@ export function ProjectCard({ project, readOnly, onCommand, onStop, onVisibility
                   className="ml-1.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-sky-500/10 text-sky-500"
                 >
                   <span className="h-[6px] w-[6px] animate-pulse rounded-full bg-sky-500" />
+                </span>
+              ) : project.sesiAktif && project.sesiMode === "plan" ? (
+                <span
+                  title={`${teks("kartu.titleSiagaPlan")}${project.sesiRingkasan ? `: ${project.sesiRingkasan}` : ""}`}
+                  aria-label={teks("kartu.modePlan")}
+                  role="img"
+                  className="ml-1.5 inline-flex h-5 shrink-0 items-center rounded-full border border-border bg-muted px-2 font-mono text-[10px] font-normal text-muted-foreground"
+                >
+                  {teks("kartu.modePlan")}
                 </span>
               ) : (
                 project.sesiAktif && (
