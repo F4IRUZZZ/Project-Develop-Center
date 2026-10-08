@@ -5,7 +5,7 @@
 // JANGAN tambah export lain / default export (risiko registrasi ganda).
 // JANGAN `import { Plugin } from "@opencode/plugin"`: tak ter-resolve dari
 // file .js polos dan hanya helper type — object return lolos skema yang sama.
-const VERSI_PLUGIN = "2026.10.17";
+const VERSI_PLUGIN = "2026.10.18";
 // Butuh env di mesin: PDC_API_URL (default production; set eksplisit
 // untuk dev lokal), PDC_API_KEY (buat di webapp PDC > Pengaturan),
 // opsional PDC_MODE (plan/build).
@@ -220,10 +220,21 @@ export const PdcPresence = async (input) => {
   // gagal-pertama -> warn 1x, pulih -> info 1x, selebihnya diam (#160).
   // Outage panjang meninggalkan 2 baris, bukan tembok tiap 60 dtk.
   const denyutOk = new Map();
+  // Denyut tak sunyi (#223): proses tanpa sesi dikenal tetap meninggalkan
+  // jejak observabilitas (throttle 10 mnt) + mencoba kandidat independen
+  // (ping kesehatan membawa versi = bukti hidup proses di Status).
+  let denyutKosongTerakhir = 0;
   const denyut = async () => {
     if (!KEY) return;
     await rekonsiliasi();
-    if (dikenal.size === 0) return;
+    if (dikenal.size === 0) {
+      const kiniD = Date.now();
+      if (kiniD - denyutKosongTerakhir > 10 * 60 * 1000) {
+        denyutKosongTerakhir = kiniD;
+        catat("denyut-kosong", { sessionId: null, rincian: {} });
+      }
+      return;
+    }
     // Retry #99: sesi yang terdaftar buta-repo coba resolve lagi tiap
     // denyut; begitu dapat, meta diperbarui dan POST di bawah membawa
     // repo (server backfill project_id bila masih kosong).
@@ -329,7 +340,15 @@ export const PdcPresence = async (input) => {
   const SELA_KERJA_MS = 15000;
   const sinyalKerja = async (id) => {
     try {
-      if (!id || !KEY || !dikenal.has(id)) return;
+      if (!id || !KEY) return;
+      // Self-healing (#223): bukti kerja = bukti hidup. Sesi ber-ID valid
+      // tapi belum terdaftar didaftarkan dulu sekali (lazy-register) agar
+      // sinyal tak terbuang — filosofi sama dengan lazy-register event.
+      if (!dikenal.has(id)) {
+        catat("kerja-tanpa-daftar", { sessionId: id, rincian: {} });
+        await daftarkan(id, { lewat: "kerja-tanpa-daftar", reopen: true });
+        if (!dikenal.has(id)) return;
+      }
       const kini = Date.now();
       const kerjaLalu = kerjaTerakhir.get(id) ?? 0;
       // Bypass cerdas (#212): throttle boleh dilewati bila ada cap idle yang
@@ -441,9 +460,11 @@ export const PdcPresence = async (input) => {
   // (sessionID/sessionId/session_id/info.id), lalu deep-scan rekursif cari
   // string ^ses_[A-Za-z0-9]+ (format ID sesi OpenCode, stabil lintas versi).
   // .id polos HANYA dari info — .id milik message/part BUKAN id sesi, dilarang.
+  // Cap 9 (#223, dulu 4): bump minor struktur event (satu wrapper tambahan)
+  // tak boleh membunuh seluruh registrasi; cycle-safe via set lihat.
   const POLA_SESI = /^ses_[A-Za-z0-9]+$/;
   const cariIdDalam = (o, dalam = 0, lihat = new Set()) => {
-    if (o === null || o === undefined || dalam > 4) return null;
+    if (o === null || o === undefined || dalam > 9) return null;
     if (typeof o === "string") return POLA_SESI.test(o) ? o : null;
     if (typeof o !== "object" || lihat.has(o)) return null;
     lihat.add(o);
@@ -478,7 +499,7 @@ export const PdcPresence = async (input) => {
       ambil(p.part) ??
       ambil(p.session) ??
       ambil(event) ??
-      (typeof p.info?.id === "string" && p.info.id ? p.info.id : null) ??
+      (typeof p.info?.id === "string" && POLA_SESI.test(p.info.id) ? p.info.id : null) ??
       cariIdDalam(event);
     // Mode eksplisit (#206): hanya dari env atau field event. Tanpa keduanya
     // = tak-terdeteksi -> fallback build (kontrak: unknown dihitung build).
@@ -575,6 +596,7 @@ export const PdcPresence = async (input) => {
   }
 
   const SIKLUS = new Set(["session.created", "session.idle", "session.status", "session.deleted", "session.error"]);
+  const tanpaIdTerakhir = new Map(); // tipe event -> epoch ms (throttle forensik)
   const tangani = async (event) => {
     const tipe = (() => {
       try {
@@ -593,6 +615,24 @@ export const PdcPresence = async (input) => {
     if (SIKLUS.has(tipe) || DEBUG) {
       try {
         catat("event", { sessionId: infoSesi(event).id, rincian: { tipe } });
+      } catch {
+        /* abaikan */
+      }
+    }
+    // Forensik shape baru (#223): lifecycle TANPA id terekstrak = sinyal
+    // bahaya (seluruh pintu registrasi buta). Catat kunci propertinya agar
+    // drift format langsung terlihat di JSONL. Throttle 5 mnt per tipe.
+    if (SIKLUS.has(tipe)) {
+      try {
+        const sidTes = infoSesi(event).id;
+        if (!sidTes) {
+          const kiniT = Date.now();
+          if (kiniT - (tanpaIdTerakhir.get(tipe) ?? 0) > 5 * 60 * 1000) {
+            tanpaIdTerakhir.set(tipe, kiniT);
+            const kunci = event && typeof event === "object" ? Object.keys(event.properties ?? event).slice(0, 12) : [];
+            catat("tanpa-id", { sessionId: null, rincian: { tipe, kunci } });
+          }
+        }
       } catch {
         /* abaikan */
       }
@@ -741,25 +781,51 @@ export const PdcPresence = async (input) => {
   };
 
   // Rekonsiliasi via client SDK v1.18 (daftar sesi server): sesi resume yang
-  // NOL event tetap ketahuan. Hanya yang se-direktori/proyek proses ini
-  // (tanpa pencocokan = lewati, anti salah atribusi). Sekali jalan tiap
-  // denyut; gagal sekali -> diam + warn (coba lagi denyut berikut).
+  // NOL event tetap ketahuan. Pencocokan dinormalisasi (#223): case drive,
+  // slash, trailing — string persis terlalu rapuh lintas restart/worktree.
+  // Tanpa field pencocok pun didaftarkan sebagai fallback (repo lokal).
+  // Sekali jalan tiap denyut; kegagalan dicatat (jaring pengaman tak boleh
+  // gagal diam-diam).
+  const normDir = (d) => {
+    try {
+      return String(d || "")
+        .replace(/\\/g, "/")
+        .replace(/\/+$/, "")
+        .replace(/^([a-z]):/i, (_, c) => c.toLowerCase() + ":");
+    } catch {
+      return "";
+    }
+  };
   const rekonsiliasi = async () => {
-    if (!KEY || !client) return;
+    if (!KEY || !client) {
+      catat("rekonsiliasi-lewat", { sessionId: null, rincian: { alasan: !KEY ? "tanpa-key" : "tanpa-client" } });
+      return;
+    }
     try {
       const daftar = await client.session.list();
       const arr = Array.isArray(daftar) ? daftar : daftar?.data ?? [];
-      if (!Array.isArray(arr)) return;
+      if (!Array.isArray(arr)) {
+        catat("rekonsiliasi-lewat", { sessionId: null, rincian: { alasan: "bentuk-tak-dikenal" } });
+        return;
+      }
+      const dirKita = normDir(directory);
+      let cocokNol = 0;
       for (const it of arr) {
         const id = typeof it?.id === "string" && it.id ? it.id : null;
         if (!id || dikenal.has(id)) continue;
+        const dirIt = normDir(it?.directory);
         const cocok =
-          (typeof it?.directory === "string" && it.directory === directory) ||
+          (dirIt && dirKita && (dirIt === dirKita || dirIt.startsWith(dirKita + "/") || dirKita.startsWith(dirIt + "/"))) ||
           (typeof it?.projectID === "string" && project && it.projectID === project.id);
-        if (!cocok) continue;
+        if (!cocok) {
+          cocokNol += 1;
+          continue;
+        }
         await daftarkan(id, { lewat: "rekonsiliasi", reopen: true });
       }
+      if (cocokNol > 0) catat("rekonsiliasi-lewat", { sessionId: null, rincian: { alasan: "tak-cocok", jumlah: cocokNol } });
     } catch (e) {
+      catat("rekonsiliasi-gagal", { sessionId: null, rincian: {} });
       log("warn", `rekonsiliasi gagal: ${String((e && e.message) || e).slice(0, 150)}`);
     }
   };
@@ -796,7 +862,9 @@ export const PdcPresence = async (input) => {
       try {
         const t = toolInput ?? {};
         const namaTool = typeof t.tool === "string" ? t.tool : "";
-        const sidMentah = typeof t.sessionID === "string" && t.sessionID ? t.sessionID : null;
+        // Ekstraksi penuh (#223): t.sessionID saja rapuh terhadap drift
+        // shape 1.18.x — pakai infoSesi (semua varian key + deep-scan).
+        const sidMentah = infoSesi(t).id;
         const paths = kumpulPath(t.args);
         // Fallback atribusi (#219): event tool tanpa ID sesi milik sesi
         // terakhir dikenal proses ini — dulu dibuang diam-diam bila tanpa
