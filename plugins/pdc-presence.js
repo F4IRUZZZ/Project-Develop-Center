@@ -5,7 +5,7 @@
 // JANGAN tambah export lain / default export (risiko registrasi ganda).
 // JANGAN `import { Plugin } from "@opencode/plugin"`: tak ter-resolve dari
 // file .js polos dan hanya helper type — object return lolos skema yang sama.
-const VERSI_PLUGIN = "2026.10.15";
+const VERSI_PLUGIN = "2026.10.16";
 // Butuh env di mesin: PDC_API_URL (default production; set eksplisit
 // untuk dev lokal), PDC_API_KEY (buat di webapp PDC > Pengaturan),
 // opsional PDC_MODE (plan/build).
@@ -96,6 +96,59 @@ export const PdcPresence = async (input) => {
     log("warn", "directory kosong total, pelaporan repo dimatikan", {});
   }
 
+  // Observabilitas klien (#219): log JSONL lokal per proses, SELALU nyala
+  // (bukan cuma DEBUG). Prinsip Batch 5: sunyi total membuat bug sunyi tak
+  // terdeteksi — setiap keputusan (kirim/lewati + alasan) tercatat 1 baris.
+  // Isi: jenis event, hitungan, status kirim, id sesi pendek. TANPA secret
+  // (tanpa KEY), TANPA isi pesan/file. Lokasi di tmpdir OS (di luar repo agar
+  // git status steril). Rotasi: >200KB dipangkas ke ekor 100KB.
+  const BATAS_LOG = 200 * 1024;
+  let berkasLog = null;
+  let modFs = null;
+  const siapkanLog = async () => {
+    try {
+      const osMod = await import("node:os");
+      const pathMod = await import("node:path");
+      modFs = await import("node:fs");
+      const aman =
+        String(directory || "norepo")
+          .replace(/[^A-Za-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "")
+          .slice(-40) || "norepo";
+      berkasLog = pathMod.join(osMod.tmpdir(), `pdc-presence-${aman}.log`);
+    } catch {
+      berkasLog = null;
+    }
+  };
+  void siapkanLog();
+  const pendekSid = (id) => (typeof id === "string" && id ? id.slice(0, 12) : "-");
+  const catat = (aksi, info) => {
+    try {
+      if (!berkasLog || !modFs) return;
+      try {
+        if (modFs.statSync(berkasLog).size > BATAS_LOG) {
+          modFs.writeFileSync(berkasLog, modFs.readFileSync(berkasLog, "utf8").slice(-100 * 1024));
+        }
+      } catch {
+        /* file belum ada = tulis baru */
+      }
+      modFs.appendFileSync(
+        berkasLog,
+        JSON.stringify({
+          ts: new Date().toISOString(),
+          v: VERSI_PLUGIN,
+          dir: dirRingkas,
+          sid: pendekSid(info?.sessionId),
+          aksi,
+          ...(info?.rincian ?? {}),
+        }) + "\n"
+      );
+    } catch {
+      /* logging tak boleh mengganggu sesi */
+    }
+  };
+  catat("proses-mulai", { sessionId: null, rincian: { keyAda: Boolean(KEY), appVersion } });
+
   // Direct fetch di proses plugin. Mengembalikan {ok, status} agar
   // "terkirim" vs "diterima" tak ambigu.
   const kirim = async (path, method, body) => {
@@ -138,6 +191,7 @@ export const PdcPresence = async (input) => {
       dikenal.set(id, { repo_full: repo, mode, eksplisit });
       terakhir = id;
     }
+    catat("daftar", { sessionId: id, rincian: { lewat, hasil: hasil.status } });
     log(hasil.ok ? "info" : "warn", `lazy-register -> ${hasil.status} (${lewat})`, { sessionId: id });
   };
 
@@ -180,6 +234,9 @@ export const PdcPresence = async (input) => {
       });
       const dulu = denyutOk.get(id);
       denyutOk.set(id, hasil.ok);
+      if (!hasil.ok) {
+        catat("denyut", { sessionId: id, rincian: { hasil: hasil.status } });
+      }
       if (!hasil.ok && dulu !== false) {
         log("warn", `denyut gagal (mulai): ${hasil.status}`, { sessionId: id });
       } else if (hasil.ok && dulu === false) {
@@ -268,7 +325,10 @@ export const PdcPresence = async (input) => {
       // setelah idle tercatat. Tanpa ini giliran rapat false-siaga (kerja
       // nyata ter-throttle lalu ketimpa cap idle).
       const idleBaru = (idleTerkirim.get(id) ?? 0) > kerjaLalu;
-      if (!idleBaru && kini - kerjaLalu < SELA_KERJA_MS) return;
+      if (!idleBaru && kini - kerjaLalu < SELA_KERJA_MS) {
+        catat("kerja-lewat", { sessionId: id, rincian: { alasan: "throttle" } });
+        return;
+      }
       const metaKirim = dikenal.get(id);
       const hasil = await kirim("/api/sessions/activity", "POST", {
         session_id: id,
@@ -278,6 +338,7 @@ export const PdcPresence = async (input) => {
       // menghanguskan sinyal (pola denyutOk) — kalau tidak, kerja nyata
       // ter-throttle dan server menilai siaga.
       if (hasil.ok) kerjaTerakhir.set(id, kini);
+      catat("kerja", { sessionId: id, rincian: { hasil: hasil.status } });
       log(hasil.ok ? "info" : "warn", `kerja -> ${hasil.status}`, { sessionId: id });
     } catch {
       /* abaikan */
@@ -501,6 +562,7 @@ export const PdcPresence = async (input) => {
     /* abaikan */
   }
 
+  const SIKLUS = new Set(["session.created", "session.idle", "session.status", "session.deleted", "session.error"]);
   const tangani = async (event) => {
     const tipe = (() => {
       try {
@@ -513,6 +575,15 @@ export const PdcPresence = async (input) => {
       log("info", `event diterima: ${tipe}`, { sessionId: infoSesi(event).id });
     } catch {
       /* abaikan */
+    }
+    // Jejak lifecycle selalu dicatat (#219); message.* hanya saat DEBUG
+    // (terlalu deras untuk log selalu-on).
+    if (SIKLUS.has(tipe) || DEBUG) {
+      try {
+        catat("event", { sessionId: infoSesi(event).id, rincian: { tipe } });
+      } catch {
+        /* abaikan */
+      }
     }
     try {
       // Registrasi malas: event ber-ID dari sesi tak dikenal (Continue/
@@ -558,6 +629,7 @@ export const PdcPresence = async (input) => {
           dikenal.set(s.id, { repo_full: repo, mode: s.mode, eksplisit: s.eksplisit });
           terakhir = s.id;
         }
+        catat("daftar", { sessionId: s.id, rincian: { lewat: "created", hasil: hasilPost.status } });
         log(hasilPost.ok ? "info" : "warn", `POST /api/sessions -> ${hasilPost.status}`, { sessionId: s.id });
       }
       // file.edited = jejak metadata: antre path-nya saja (maks 50),
@@ -583,10 +655,12 @@ export const PdcPresence = async (input) => {
         }
         const kiniIdle = Date.now();
         if (kiniIdle - (idleTerkirim.get(s.id) ?? 0) < SELA_IDLE_MS) {
+          catat("idle-lewat", { sessionId: s.id, rincian: { alasan: "throttle", tipe } });
           log("info", `idle dobel dilewati (${tipe})`, { sessionId: s.id });
           return;
         }
         if (!KEY) {
+          catat("idle-lewat", { sessionId: s.id, rincian: { alasan: "tanpa-key", tipe } });
           log("warn", "PDC_API_KEY kosong, lewati lapor (set env User PDC_API_KEY)");
           return;
         }
@@ -599,6 +673,7 @@ export const PdcPresence = async (input) => {
         });
         // Baseline idle maju hanya bila terkirim (#216, pola denyutOk).
         if (hasilPatch.ok) idleTerkirim.set(s.id, kiniIdle);
+        catat("idle", { sessionId: s.id, rincian: { tipe, hasil: hasilPatch.status } });
         log(hasilPatch.ok ? "info" : "warn", `PATCH /api/sessions -> ${hasilPatch.status} (${tipe})`, {
           sessionId: s.id,
         });
@@ -641,10 +716,12 @@ export const PdcPresence = async (input) => {
         log(hasilTutup.ok ? "info" : "warn", `PATCH /api/sessions -> ${hasilTutup.status} (${tipe})`, {
           sessionId: s.id,
         });
+        catat("tutup", { sessionId: s.id, rincian: { tipe, hasil: hasilTutup.status } });
       }
     } catch (e) {
       try {
         log("error", `handler gagal di ${tipe}: ${String(e && e.message ? e.message : e)}`);
+        catat("handler-gagal", { sessionId: null, rincian: { tipe } });
       } catch {
         /* abaikan */
       }
@@ -707,13 +784,22 @@ export const PdcPresence = async (input) => {
       try {
         const t = toolInput ?? {};
         const namaTool = typeof t.tool === "string" ? t.tool : "";
-        const sid = typeof t.sessionID === "string" && t.sessionID ? t.sessionID : null;
+        const sidMentah = typeof t.sessionID === "string" && t.sessionID ? t.sessionID : null;
         const paths = kumpulPath(t.args);
-        if (!sid && paths.length === 0) return;
+        // Fallback atribusi (#219): event tool tanpa ID sesi milik sesi
+        // terakhir dikenal proses ini — dulu dibuang diam-diam bila tanpa
+        // path (kasus `git status`: argumen tanpa slash + sid tak dikenal).
+        const sid = sidMentah ?? (terakhir && dikenal.has(terakhir) ? terakhir : null);
+        const lewatFallback = !sidMentah && Boolean(sid);
+        if (!sid && paths.length === 0) {
+          catat("tool-lewat", { sessionId: null, rincian: { tool: namaTool, alasan: "tanpa-sid-tanpa-path" } });
+          return;
+        }
         if (sid && !dikenal.has(sid) && KEY) {
           await daftarkan(sid, { lewat: `tool:${namaTool || "?"}`, reopen: true, mode: MODE });
         }
         if (sid) terakhir = sid;
+        catat("tool", { sessionId: sid, rincian: { tool: namaTool, paths: paths.length, fallback: lewatFallback } });
         if (sid) await sinyalKerja(sid); // tool apa pun = bukti sibuk
         if (paths.length > 0 && alatTulis.test(namaTool)) {
           for (const p of paths) await antrekan(p);

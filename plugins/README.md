@@ -69,3 +69,32 @@ tanpa perintah PDC pun tetap terlacak per repo.
 - Batas jujur: close/kill/crash tak memicu event apa pun — PDC mendeteksinya
   via timeout 3 menit (tampilan), jadi "hantu aktif" 0–4 menit tak terhapus total.
 - Tanpa key (`PDC_API_KEY` kosong) plugin nonaktif sendiri.
+
+## Diagnosis: log lokal per proses (#219)
+
+Setiap proses menulis `pdc-presence-<repo>.log` (JSONL) di direktori temp OS
+(`%TEMP%` Windows / `/tmp`), selalu-on sejak v2026.10.16. Isi: tiap event
+lifecycle, tiap tool (nama + sid + fallback?), tiap kirim (hasil HTTP),
+tiap lewati + alasannya (`tanpa-sid-tanpa-path`, `throttle`, `tanpa-key`).
+TANPA secret, TANPA isi pesan/file. Rotasi 200KB (ekor 100KB).
+
+Cara baca (PowerShell):
+
+```powershell
+Get-Content $env:TEMP\pdc-presence-NAMA-REPO.log -Tail 30
+```
+
+Peta cepat:
+
+| Baris log | Arti |
+|---|---|
+| tak ada file log | plugin tak termuat di proses itu |
+| `proses-mulai` tanpa baris berikut | tak ada event/tool masuk ke hook |
+| `tool` + `fallback: true` | atribusi ke sesi terakhir (normal bila sid absen) |
+| `tool-lewat` `tanpa-sid-tanpa-path` | tool tanpa sid dan tanpa path — dilewati |
+| `kerja` `hasil: 401` | key ditolak → putar key + restart total |
+| `kerja` `hasil: tanpa-key` | env proses tak punya key |
+| `idle-lewat` `throttle` | normal (anti-flapping 15 dtk) |
+| `denyut` gagal | jaringan/API bermasalah |
+
+`PDC_DEBUG=1` = verbose (semua jenis event + kunci payload).

@@ -31,11 +31,12 @@ cek("plugin lazy-register + reopen", plug.includes("lazy-register") && plug.incl
 cek("rekonsiliasi via client.session.list (v1.18)", plug.includes("client.session.list") && plug.includes("lazy-register"));
 cek("POST reopen + feed dilanjutkan", api.includes("reopen") && api.includes("Sesi AI dilanjutkan"));
 cek(
-  "plugin tak baca isi file (privasi; .git/config dikecualikan)",
+  "plugin tak baca isi file (privasi; .git/config + log-sendiri dikecualikan)",
   !plug.includes("Bun.file") &&
-    [...plug.matchAll(/readFileSync\(([^)]*)\)/g)].every(
-      (m) => /\.git/.test(plug.slice(Math.max(0, m.index - 300), m.index + 120))
-    )
+    [...plug.matchAll(/readFileSync\(([^)]*)\)/g)].every((m) => {
+      const konteks = plug.slice(Math.max(0, m.index - 300), m.index + 120);
+      return /\.git/.test(konteks) || /berkasLog/.test(konteks);
+    })
 );
 
 const detail = readFileSync(join(root, "app/proyek/[id]/page.tsx"), "utf8");
@@ -75,7 +76,7 @@ cek("route status ada", existsSync(stRoute));
 const stIsi = existsSync(stRoute) ? readFileSync(stRoute, "utf8") : "";
 cek("status read-only + versi cocok",
   stIsi.includes("export async function GET") && !stIsi.includes("export async function POST") &&
-  stIsi.includes('VERSI_PLUGIN_TERKINI = "2026.10.15"') && plug.includes('VERSI_PLUGIN = "2026.10.15"'));
+  stIsi.includes('VERSI_PLUGIN_TERKINI = "2026.10.16"') && plug.includes('VERSI_PLUGIN = "2026.10.16"'));
 cek("tabel repo_health", schema.includes("CREATE TABLE IF NOT EXISTS repo_health"));
 const stPage = join(root, "app/status/page.tsx");
 cek("halaman Status 4 seksi (kamus)", existsSync(stPage) && readFileSync(stPage, "utf8").includes("status.pluginJudul"));
@@ -112,6 +113,7 @@ if (gagal > 0) {
   process.exit(1);
 }
 console.log("\nP-CEK: ALL-OK");
+
 
 
 
