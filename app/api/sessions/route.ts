@@ -70,8 +70,9 @@ export async function POST(req: NextRequest) {
   }
 
   // ID feed deterministik + DO NOTHING: kebal race check-then-insert
-  // (dua event konkuren tak lagi ganda). Pesan tanpa klaim mode — mode
-  // env tak mencerminkan mode aktual TUI (kolom mode tetap untuk tab).
+  // (dua event konkuren tak lagi ganda). Yatim (project null) TETAP 201 —
+  // terlihat di tab Sesi via fallback tanpaProyek; flag orphan memberi tahu
+  // klien agar backfill denyut diprioritaskan (#223).
   if (projectId) {
     if (lama.length === 0) {
       await sql`INSERT INTO activity_log (id, user_id, project_id, type, message)
@@ -84,7 +85,7 @@ export async function POST(req: NextRequest) {
         ON CONFLICT (id) DO NOTHING`;
     }
   }
-  return NextResponse.json({ ok: true }, { status: 201 });
+  return NextResponse.json({ ok: true, project_id: projectId, orphan: projectId === null }, { status: 201 });
 }
 
 // Heartbeat (idle) vs tutup (error/selesai).

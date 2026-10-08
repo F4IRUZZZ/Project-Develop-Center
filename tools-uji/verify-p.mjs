@@ -76,7 +76,7 @@ cek("route status ada", existsSync(stRoute));
 const stIsi = existsSync(stRoute) ? readFileSync(stRoute, "utf8") : "";
 cek("status read-only + versi cocok",
   stIsi.includes("export async function GET") && !stIsi.includes("export async function POST") &&
-  stIsi.includes('VERSI_PLUGIN_TERKINI = "2026.10.17"') && plug.includes('VERSI_PLUGIN = "2026.10.17"'));
+  stIsi.includes('VERSI_PLUGIN_TERKINI = "2026.10.18"') && plug.includes('VERSI_PLUGIN = "2026.10.18"'));
 cek("tabel repo_health", schema.includes("CREATE TABLE IF NOT EXISTS repo_health"));
 const stPage = join(root, "app/status/page.tsx");
 cek("halaman Status 4 seksi (kamus)", existsSync(stPage) && readFileSync(stPage, "utf8").includes("status.pluginJudul"));
@@ -113,6 +113,7 @@ if (gagal > 0) {
   process.exit(1);
 }
 console.log("\nP-CEK: ALL-OK");
+
 
 
 
