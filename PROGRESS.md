@@ -47,6 +47,26 @@
 ## H. Riwayat Perubahan
 
 | Tanggal    | Perubahan                                                                                       | Uji                                                               |
+| 2026-10-08 | Batch 4 audit p2 (#216/#217, waiting+antre stop + tulisActivity deterministik + throttle ok + skeleton slot + dedupe fetch + visible + potong + v2026.10.15) | 35+ suite hijau + tsc + build                       |
+| 2026-10-07 | Batch 3 audit (#214/#215, skeleton Stats + komentar plan-aware)                                  | 35+ suite hijau + tsc + build                                     |
+| 2026-10-07 | Batch 2 audit (#212/#213, detail actions + catatFlip satu pintu + bypass + notif live + v2026.10.14) | 35+ suite hijau + tsc + build                                  |
+| 2026-10-07 | Batch 1 audit (#210/#211, merge/done deterministik + CTE atomik + mode eksplisit + indeks + v2026.10.13) + migrate indeks | 35+ suite hijau + tsc + build + migrate                 |
+| 2026-10-07 | Notif dua tingkat + merge +1 task (#208/#209, flip lokal instan + fallback hening)               | 35+ suite hijau + tsc + build                                     |
+| 2026-10-06 | Build-only (#206/#207, working+done mode build + v2026.10.12 + 4 salinan)                         | 35 suite hijau + tsc + build                                      |
+| 2026-10-06 | Latensi flip (#204/#205, throttle idle 15dtk + refetch visible + v2026.10.11)                     | 35 suite hijau + tsc + build                                      |
+| 2026-10-06 | Idle real-time (#202/#203, last_idle_at + predikat kerja>idle) + migrate kolom                  | 34 suite hijau + tsc + build + migrate                            |
+| 2026-10-06 | Aksi kartu independen (#200/#201, regresi tampilPr: PR/Perintah/Stop independen)                  | 35 suite hijau + tsc + build                                      |
+| 2026-10-06 | Stop bekerja-saja (#198/#199, syarat sesiKerja=bekerja)                                          | 35 suite hijau + tsc + build                                      |
+| 2026-10-06 | Stop jujur (#196/#197, hanya sesi live + teks jujur, hapus jalanSet)                             | 35 suite hijau + tsc + build                                      |
+| 2026-10-06 | Tombol PR + mark-read (#194/#195, PR selalu tampil + filter selaras)                             | 35 suite hijau + tsc + build                                      |
+| 2026-10-06 | Merge-notif penuh (#190/#191, Selesai+Telegram dua jalur + anti-ganda)                           | 35 suite hijau + tsc + build                                      |
+| 2026-10-06 | Profil+statistik gabung (#188/#189, /profil + starred user + redirect)                           | 35 suite hijau + tsc + build                                      |
+| 2026-10-06 | Profil cermin GitHub (#186/#187, /profil + pagination + Segarkan)                                | 35 suite hijau + tsc + build                                      |
+| 2026-10-06 | Done tepat-sekali (#184/#185, mutex + hening 3mnt + throttle 90dtk + bersih duplikat)            | 34 suite hijau + tsc + build                                      |
+| 2026-10-06 | Presence jujur (#182/#183, sinyal kerja + task done idle + v2026.10.09 + migrasi)                | 34 suite hijau + tsc + build + migrate                            |
+| 2026-10-06 | Kartu sempit (#192/#193, truncate + badge utuh)                                                  | 35 suite hijau + tsc + build                                      |
+| 2026-10-06 | Cabut Web Push (#180/#181, hapus SW/lib/API/UI/dep, tabel pensiun)                               | 33 suite hijau + tsc + build                                      |
+| 2026-10-06 | Task lahir idle (#178/#179, AI Working jujur pasca-perintah)                                     | 33 suite hijau + tsc + build                                      |
 | 2026-10-05 | Denyut lapor transisi (#160/#161, warn mulai-gagal + info pulih, anti banjir ngelag)            | presence-v1 ALL-OK + 33 suite + tsc + build + live user           |
 | 2026-10-05 | repoFull tanpa spawn (#158/#159, baca .git/config via fs, parsing terbukti 3 repo)              | presence-v1 ALL-OK + 33 suite + tsc + build                       |
 | 2026-10-05 | Hardening repo-resolve (#156/#157, timeout 15s + throttle warn, self-healed live)                | 33 suite hijau + tsc + build                                       |
@@ -131,3 +151,12 @@
 | 2026-09-27 | C2 dashboard grid merged (stats + 3 kartu)                                                      | C2-CEK ALL-OK + tsc + build                                       |
 | 2026-09-27 | C1 shell merged (Sidebar + Topbar)                                                              | C1-CEK ALL-OK + tsc + build                                       |
 | 2026-09-27 | C0 scaffold merged                                                                              | tsc + build                                                       |
+
+## Dua pipa visibilitas (arsitektur, 2026-10-08)
+
+PDC melihat kerja AI lewat DUA pipa independen — keduanya harus dipahami agar tidak salah vonis bug:
+
+1. **Pipa MCP (agen chat):** tool pdc_report_progress/completion menulis tasks + activity langsung. Terlihat di: Tasks Done, feed, kartu (via task). Syarat: agen MEMANGGIL tool-nya tiap milestone. Tanpa panggilan = tak terpantau (bukan bug).
+2. **Pipa plugin (TUI lokal):** pdc-presence.js di tiap repo (v2026.10.15+, restart total tiap update) mengirim denyut + sinyal kerja/idle. Terlihat di: indikator Working, tab Sesi, dot kartu. Syarat: plugin termuat + PDC_API_KEY valid di env proses + sesi Build + tool/event mengalir.
+
+Aturan operasi: tiap rotasi key = restart total semua proses; tiap update plugin = salin ke semua repo + restart; kerja tanpa perintah/laporan PDC = hanya terpantau bila pipa plugin hidup.
