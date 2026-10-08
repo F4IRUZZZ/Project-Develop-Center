@@ -2,10 +2,12 @@ import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { isErr, sesiUser } from "@/lib/server-auth";
 import { galat } from "@/lib/galat-api";
-import { kirimTelegram } from "@/lib/telegram";
+import { kirimTelegram, siarTelegramRinci } from "@/lib/telegram";
 import { dekrip } from "@/lib/crypto";
 
-// Hapus tujuan, atau kirim pesan tes ({ aksi: "test" }).
+// Hapus tujuan, kirim pesan tes ({ aksi: "test" }), atau uji jalur siar
+// Selesai ({ aksi: "uji-selesai" }) — lewat siarTelegramRinci yang sama
+// dengan catatSelesai (#227). Balikan counts saja, tanpa token.
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const ctx = await sesiUser(req);
   if (isErr(ctx)) return NextResponse.json({ error: ctx.error }, { status: ctx.status });
@@ -17,8 +19,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   } catch {
     body = {};
   }
-  if (body.aksi !== "test") {
+  if (body.aksi !== "test" && body.aksi !== "uji-selesai") {
     return NextResponse.json({ error: galat(req, "bodyInvalid") }, { status: 400 });
+  }
+
+  if (body.aksi === "uji-selesai") {
+    const hasil = await siarTelegramRinci(ctx.userId, "Uji jalur Selesai PDC: siar berfungsi. 🤖");
+    return NextResponse.json({ ok: hasil.terkirim > 0, ...hasil });
   }
 
   const rows = (await db()`SELECT bot_token_enc, chat_id FROM notif_tujuan WHERE id = ${id} AND user_id = ${ctx.userId}`) as Array<{

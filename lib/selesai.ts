@@ -8,7 +8,7 @@
 // kerja baru yang sah = baris baru. Best-effort: gagal = diam.
 import { db } from "@/lib/db";
 import { potong } from "@/lib/potong";
-import { siarTelegram } from "@/lib/telegram";
+import { siarTelegramRinci } from "@/lib/telegram";
 
 // Ambang hening: tanpa sinyal kerja selama ini = sesi dianggap selesai.
 export const HENING_MNT = 3;
@@ -61,7 +61,22 @@ export async function catatSelesai(userId: string, sessionId: string): Promise<b
   // Kontrak /api/notifications: prefix "Selesai:" = masuk filter penting
   // (picu bunyi + popup + Notification browser di klien).
   const pesanFeed = `Selesai: AI selesai bekerja${d.repo ? ` di ${d.repo}` : ""}${d.ringkas ? ` — ${potong(d.ringkas, 200)}` : ""}`;
-  void siarTelegram(userId, pesanFeed).catch(() => {});
+  // #227: AWAIT pengiriman (bukan void) agar tak terpotong freeze serverless
+  // setelah respons terkirim — feed tercatat tapi Telegram tak sampai.
+  // Timeout lomba 8 dtk menjaga sapu dashboard tetap cepat; hasil dilog
+  // (counts saja, tanpa token) agar kegagalan berikutnya terlihat.
+  try {
+    const janji = siarTelegramRinci(userId, pesanFeed);
+    const hasil = await Promise.race([
+      janji.then((h) => ({ ...h, batas: false as const })),
+      new Promise<{ batas: true }>((s) => setTimeout(() => s({ batas: true }), 8000)),
+    ]);
+    janji.catch(() => {});
+    if (hasil.batas) console.log(`[selesai] telegram timeout sesi=${sessionId}`);
+    else console.log(`[selesai] telegram sesi=${sessionId} tujuan=${hasil.tujuan} terkirim=${hasil.terkirim} gagalDekrip=${hasil.gagalDekrip} gagalKirim=${hasil.gagalKirim}`);
+  } catch {
+    // Best-effort: notif eksternal tak boleh ganggu alur utama.
+  }
   return true;
 }
 
