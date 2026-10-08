@@ -64,17 +64,26 @@ export async function GET(req: NextRequest) {
   `) as unknown as Array<{ project_id: string }>;
   const cmdSet = new Set(cmd.map((r) => r.project_id));
 
-  // Sesi AI aktif: status active + mode build + denyut <3 mnt (#206:
-  // sesi plan yang terbuka tak menyalakan dot — konsisten dengan predikat
-  // bekerja/done yang build-only). Denyut dikirim plugin tiap 60 dtk selama
-  // proses OpenCode hidup, jadi timeout pendek aman dari kedip dan padam
-  // ≤~4 mnt setelah close/kill/crash.
+  // Sesi AI aktif (#225, revisi #206): status active + denyut <3 mnt untuk
+  // SEMUA mode (build + plan) agar Sedang Aktif konsisten dengan tab Sesi.
+  // Bedanya di tampilan: build menyalakan dot (bekerja/siaga), plan hanya
+  // kartu Siaga tanpa dot (sesiMode). Predikat bekerja/done/Stop tetap
+  // build-only. Denyut dikirim plugin tiap 60 dtk selama proses OpenCode
+  // hidup, jadi timeout pendek aman dari kedip dan padam ≤~4 mnt setelah
+  // close/kill/crash.
   const sesi = (await sql`
-    SELECT project_id FROM agent_sessions
-    WHERE user_id = ${ctx.userId} AND status = 'active' AND mode = 'build'
+    SELECT project_id, mode FROM agent_sessions
+    WHERE user_id = ${ctx.userId} AND status = 'active'
       AND last_seen_at > now() - interval '3 minutes'
-  `) as unknown as Array<{ project_id: string | null }>;
+  `) as unknown as Array<{ project_id: string | null; mode: string | null }>;
   const sesiSet = new Set(sesi.map((r) => r.project_id));
+  // Mode per proyek: build menang bila build+plan hidup bersamaan.
+  const modeMap = new Map<string, "build" | "plan">();
+  for (const r of sesi) {
+    if (!r.project_id) continue;
+    if (r.mode === "build") modeMap.set(r.project_id, "build");
+    else if (!modeMap.has(r.project_id)) modeMap.set(r.project_id, "plan");
+  }
 
   // Tingkat kerja per proyek: bekerja (sinyal kerja <2 mnt DAN lebih baru
   // dari idle-terakhir, #202) vs siaga. COALESCE agar plugin lama
@@ -101,10 +110,11 @@ export async function GET(req: NextRequest) {
   );
 
   // Ringkasan terbaru per proyek (untuk tooltip chip kartu; null bila tak ada).
+  // #225: plan+build agar kartu plan-siaga tetap punya tooltip.
   const ringkasRows = (await sql`
     SELECT project_id, ringkasan_terakhir AS ringkasan
     FROM agent_sessions
-    WHERE user_id = ${ctx.userId} AND status = 'active' AND mode = 'build'
+    WHERE user_id = ${ctx.userId} AND status = 'active'
       AND last_seen_at > now() - interval '3 minutes'
       AND ringkasan_terakhir IS NOT NULL
     ORDER BY ringkasan_waktu DESC
@@ -145,7 +155,8 @@ export async function GET(req: NextRequest) {
       branch: (t?.git_branch ?? (p.default_branch as string | null) ?? undefined) as string | undefined,
       isPrivate: (p.is_private as boolean | null) ?? undefined,
       sesiAktif: sesiSet.has(id),
-      sesiKerja: (kerjaMap.get(id) ?? null) as Project["sesiKerja"],
+      sesiMode: (modeMap.get(id) ?? null) as Project["sesiMode"],
+      sesiKerja: (kerjaMap.get(id) ?? (modeMap.get(id) === "plan" ? "siaga" : null)) as Project["sesiKerja"],
       sesiRingkasan: ringkasMap.get(id) ?? null,
       // waiting + command antre = masih bisa dibatalkan (#216): beri
       // command+stop; waiting tanpa antrean = kosong (tak ada yang dikerjakan).

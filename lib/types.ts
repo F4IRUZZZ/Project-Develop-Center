@@ -14,6 +14,7 @@ export interface Project {
   branch?: string;
   isPrivate?: boolean;
   sesiAktif?: boolean;
+  sesiMode?: "build" | "plan" | null;
   sesiKerja?: "bekerja" | "siaga" | null;
   sesiRingkasan?: string | null;
   actions: Array<"command" | "stop">;
