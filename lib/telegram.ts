@@ -49,18 +49,36 @@ export async function kirimTelegram(botToken: string, chatId: string, pesan: str
 }
 
 // Siarkan 1 pesan ke semua tujuan aktif user. Best-effort per tujuan.
-export async function siarTelegram(userId: string, pesan: string): Promise<number> {
-  let terkirim = 0;
+// Hasil rinci (#227): tanpa token/isi rahasia, aman dilog + dikembalikan
+// ke endpoint diagnosis. Gagal kirim = diam di sisi alur utama.
+export interface HasilSiar {
+  tujuan: number;
+  terkirim: number;
+  gagalDekrip: number;
+  gagalKirim: number;
+}
+
+export async function siarTelegramRinci(userId: string, pesan: string): Promise<HasilSiar> {
+  const hasil: HasilSiar = { tujuan: 0, terkirim: 0, gagalDekrip: 0, gagalKirim: 0 };
   let daftar: TujuanTelegram[] = [];
   try {
     daftar = await tujuanAktif(userId);
   } catch {
-    return 0;
+    return hasil;
   }
+  hasil.tujuan = daftar.length;
   for (const t of daftar) {
     const token = await tokenUntuk(t.id, userId);
-    if (!token) continue;
-    if (await kirimTelegram(token, t.chat_id, pesan)) terkirim += 1;
+    if (!token) {
+      hasil.gagalDekrip += 1;
+      continue;
+    }
+    if (await kirimTelegram(token, t.chat_id, pesan)) hasil.terkirim += 1;
+    else hasil.gagalKirim += 1;
   }
-  return terkirim;
+  return hasil;
+}
+
+export async function siarTelegram(userId: string, pesan: string): Promise<number> {
+  return (await siarTelegramRinci(userId, pesan)).terkirim;
 }

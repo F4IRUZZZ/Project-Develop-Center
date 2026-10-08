@@ -16,7 +16,7 @@ for (const f of ["lib/telegram.ts", "app/api/notif-tujuan/route.ts", "app/api/no
 const lib = readFileSync(join(root, "lib/telegram.ts"), "utf8");
 cek("kirim via Bot API + timeout", lib.includes("api.telegram.org") && lib.includes("AbortSignal.timeout"));
 cek("token terenkripsi (tak mentah)", lib.includes("dekrip") && !lib.includes("bot_token_enc AS bot_token"));
-cek("gagal = diam", lib.includes("catch") && lib.includes("return 0"));
+cek("gagal = diam", lib.includes("catch") && lib.includes("return hasil"));
 cek("tanpa token ke client", lib.includes("SELECT id, label, chat_id") && !lib.includes("bot_token_enc, chat_id FROM notif_tujuan WHERE user_id"));
 
 const schema = readFileSync(join(root, "db/schema.sql"), "utf8");
@@ -28,6 +28,12 @@ cek("simpan terenkripsi", api.includes("enkrip("));
 
 const aksi = readFileSync(join(root, "app/api/notif-tujuan/[id]/route.ts"), "utf8");
 cek("aksi test + hapus", aksi.includes('"test"') && aksi.includes("DELETE FROM notif_tujuan"));
+cek("uji jalur selesai (#227)", aksi.includes('"uji-selesai"') && aksi.includes("siarTelegramRinci"));
+cek("uji tanpa bocor token (#227)", aksi.includes("return NextResponse.json({ ok: hasil.terkirim > 0, ...hasil })"));
+const sel = readFileSync(join(root, "lib/selesai.ts"), "utf8");
+cek("selesai await siar rinci (#227)", sel.includes("siarTelegramRinci") && sel.includes("Promise.race") && sel.includes("[selesai] telegram"));
+cek("siar rinci terstruktur (#227)", lib.includes("siarTelegramRinci") && lib.includes("HasilSiar") && lib.includes("gagalDekrip") && lib.includes("gagalKirim"));
+cek("siar kompatibel angka (#227)", lib.includes("export async function siarTelegram(userId: string, pesan: string): Promise<number>"));
 
 const act = readFileSync(join(root, "app/api/activity/route.ts"), "utf8");
 cek("hook activity error+Selesai", act.includes("siarTelegram") && act.includes('startsWith("Selesai:")'));
