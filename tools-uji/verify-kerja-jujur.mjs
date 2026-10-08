@@ -94,7 +94,8 @@ cek("dashboard build-only", baca("app/api/dashboard/route.ts").includes("AND mod
 cek("sesi plan = siaga", ses.includes('r.mode !== "build"'));
 cek("klaim + sweep build-only", baca("lib/selesai.ts").includes("AND mode = 'build'"));
 cek("done satu statement CTE (#210)", baca("lib/selesai.ts").includes("WITH k AS (") && baca("lib/selesai.ts").includes("task-done-") && baca("lib/selesai.ts").includes("act-selesai-"));
-cek("POST hormat mode eksplisit (#210)", ses.includes("mode_eksplisit") && ses.includes("CASE WHEN ${modeUp} IS NULL"));
+cek("POST mode CAST eksplisit (#221)", ses.includes("COALESCE(CAST(${modeUp} AS text), agent_sessions.mode)"));
+cek("POST tanpa CASE-WHEN-param-nullable (#221)", !ses.includes("CASE WHEN ${modeUp}"));
 cek("activity + idle hormat eksplisit (#210)", baca("app/api/sessions/activity/route.ts").includes("mode_eksplisit") && ses.includes("body.mode_eksplisit === true"));
 cek("plugin kirim eksplisit (#210)", plug2.includes("mode_eksplisit"));
 cek("throttle kerja 15 dtk (#210)", plug2.includes("SELA_KERJA_MS = 15000"));

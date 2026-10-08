@@ -22,7 +22,7 @@ cek("deteksi tool tulis", src.includes("edit|write|patch|apply"));
 cek("rekonsiliasi client.session.list", src.includes("client.session.list"));
 cek("denyut 60 dtk tetap", src.includes("DENYUT_MS = 60000") || src.includes("60000"));
 cek("tanpa kirim isi file", !src.includes("readFile") || src.includes("isi file tak pernah"));
-cek("versi 2026.10.16", src.includes('VERSI_PLUGIN = "2026.10.16"'));
+cek("versi 2026.10.17", src.includes('VERSI_PLUGIN = "2026.10.17"'));
 cek("denyut lapor transisi", src.includes("denyutOk") && src.includes("denyut gagal (mulai)") && src.includes("denyut pulih"));
 cek("resolve via fs + worktree", src.includes(".git") && src.includes("gitdir:"));
 cek("spawn git dihapus dari repoFull", !src.match(/repoFull[\s\S]{0,2000}execFileSync/));
@@ -37,9 +37,10 @@ cek("log JSONL selalu-on (#219)", src.includes("pdc-presence-") && src.includes(
 cek("log tanpa secret/isi (#219)", src.includes("TANPA secret") && src.includes("TANPA isi pesan"));
 cek("fallback sid tool (#219)", src.includes("sidMentah") && src.includes("terakhir && dikenal.has(terakhir)"));
 cek("catat lifecycle (#219)", src.includes('catat("idle"') && src.includes('catat("tutup"') && src.includes('catat("daftar"'));
+cek("cuplik body error (#221)", src.includes("cuplik") && src.includes("slice(0, 200)") && src.includes("File saja"));
 
 const st = readFileSync(join(root, "app/api/status/route.ts"), "utf8");
-cek("status samakan versi", st.includes('VERSI_PLUGIN_TERKINI = "2026.10.16"'));
+cek("status samakan versi", st.includes('VERSI_PLUGIN_TERKINI = "2026.10.17"'));
 
 const norm = (s) => s.replace(/\r\n/g, "\n");
 for (const salinan of [
@@ -59,6 +60,7 @@ if (gagal > 0) {
   process.exit(1);
 }
 console.log("\nPRESENCE-V1: ALL-OK");
+
 
 
 
