@@ -105,9 +105,9 @@ export function PanelNotifikasi() {
       </button>
 
       {buka && (
-        <div role="dialog" aria-modal="false" aria-label={teks("notif.panelJudul")} className="fixed inset-x-3 top-[64px] z-50 rounded-2xl border border-border bg-card shadow-[0_12px_32px_rgba(0,0,0,0.45)] sm:absolute sm:inset-x-auto sm:right-0 sm:top-11 sm:w-[360px]">
+        <div role="dialog" aria-modal="false" aria-labelledby="panel-notif-judul" className="fixed inset-x-3 top-[64px] z-50 rounded-2xl border border-border bg-card shadow-[0_12px_32px_rgba(0,0,0,0.45)] sm:absolute sm:inset-x-auto sm:right-0 sm:top-11 sm:w-[360px]">
           <div className="flex items-center justify-between px-4 pb-1 pt-3">
-            <h2 className="text-[15px] font-semibold tracking-tight">{teks("notif.panelJudul")}</h2>
+            <h2 id="panel-notif-judul" className="text-[15px] font-semibold tracking-tight">{teks("notif.panelJudul")}</h2>
             {belum > 0 && (
               <button
                 onClick={() => void tandai()}
