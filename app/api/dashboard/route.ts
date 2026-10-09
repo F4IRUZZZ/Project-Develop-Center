@@ -119,7 +119,7 @@ export async function GET(req: NextRequest) {
       AND ringkasan_terakhir IS NOT NULL
       AND project_id IS NOT NULL
     ORDER BY ringkasan_waktu DESC
-  `) as unknown as Array<{ project_id: string | null; ringkasan: string }>;
+  `) as unknown as Array<{ project_id: string; ringkasan: string }>;
   const ringkasMap = new Map<string, string>();
   for (const r of ringkasRows) {
     if (r.project_id && !ringkasMap.has(r.project_id)) ringkasMap.set(r.project_id, r.ringkasan);
