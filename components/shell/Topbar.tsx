@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { PemilihTema } from "./PemilihTema";
 import { NotifBadge } from "./NotifBadge";
+import { PanelNotifikasi } from "./PanelNotifikasi";
 import { useBahasa } from "./BahasaProvider";
 import type { Kunci } from "@/lib/kamus";
 import { UserMenu } from "./UserMenu";
@@ -91,16 +92,7 @@ export function Topbar() {
         <SearchBox />
       </div>
       <div className="flex shrink-0 items-center gap-2.5">
-        <Link
-          href="/notifikasi"
-          aria-label={teks("nav.notifikasi")}
-          className="relative flex h-9 w-9 items-center justify-center rounded-[9px] border border-border bg-muted text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <Bell className="h-[17px] w-[17px]" />
-          <span className="absolute -right-1 -top-1">
-            <NotifBadge className="" />
-          </span>
-        </Link>
+        <PanelNotifikasi />
         <PemilihTema />
         {/* Avatar hanya di HP: desktop memakai UserBox sidebar */}
         <div className="lg:hidden">

@@ -32,6 +32,17 @@ const hal = readFileSync(join(root, "app/notifikasi/page.tsx"), "utf8");
 cek("halaman ikon selesai", hal.includes("CircleCheck") && hal.includes('e.type === "info"'));
 cek("halaman empty tetap (kamus)", hal.includes("notif.kosongJudul"));
 
+const panel = readFileSync(join(root, "components/shell/PanelNotifikasi.tsx"), "utf8");
+cek("panel lonceng ada (#229)", panel.includes("PanelNotifikasi") && panel.includes("fetchNotifikasi"));
+cek("panel link tunggal lihat-semua (#229)", panel.includes('href="/notifikasi"') && panel.includes("notif.lihatSemua") && panel.includes("setBuka(false)"));
+cek("panel state kosong/loading/error (#229)", panel.includes("notif.kosongJudul") && panel.includes("animate-pulse") && panel.includes("notif.gagal"));
+cek("panel tandai + siar (#229)", panel.includes("tandaiDibaca") && panel.includes("siarNotifikasi"));
+cek("panel tutup klik-luar/Escape (#229)", panel.includes("mousedown") && panel.includes("Escape"));
+const top = readFileSync(join(root, "components/shell/Topbar.tsx"), "utf8");
+cek("topbar pakai panel (#229)", top.includes("PanelNotifikasi") && !top.includes('href="/notifikasi"'));
+const kamus = readFileSync(join(root, "lib/kamus.ts"), "utf8");
+cek("kamus panel (#229)", ["notif.panelJudul", "notif.lihatSemua", "notif.gagal", "notif.cobaLagi"].every((k) => kamus.includes(`"${k}"`)));
+
 if (gagal > 0) {
   console.log(`\nNOTIF-LUAS: ${gagal} gagal`);
   process.exit(1);
