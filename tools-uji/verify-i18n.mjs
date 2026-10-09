@@ -95,6 +95,7 @@ for (const [f, kunci] of [
   cek(`dashboard ${f.split("/").pop()} pakai kamus`, isi.includes("useBahasa") && isi.includes(kunci));
 }
 cek("tanpa window.confirm baru", !shell.includes("window.confirm") && !atur.includes("window.confirm"));
+cek("label repo aktif (#233)", kamus.includes('"dash.proyekAktif"') && kamus.includes('"Repo Aktif"') && kamus.includes('"Active Repos"'));
 
 if (gagal > 0) {
   console.log(`\nI18N: ${gagal} gagal`);
