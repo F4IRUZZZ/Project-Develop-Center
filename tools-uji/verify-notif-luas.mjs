@@ -48,6 +48,9 @@ cek("unauth tanpa coba-lagi (#231)", panel.includes("notif.masukDulu"));
 cek("dialog a11y + waktu floor (#231)", panel.includes('role="dialog"') && panel.includes("Math.floor") && panel.includes("tombolRef"));
 cek("tandaiDibaca cek ok (#231)", readFileSync(join(root, "lib/notifikasi.ts"), "utf8").includes("if (!res.ok) throw"));
 cek("kamus tandai/masuk (#231)", ["notif.masukDulu", "notif.gagalTandai"].every((k) => kamus.includes(`"${k}"`)));
+const halNotif = readFileSync(join(root, "app/notifikasi/page.tsx"), "utf8");
+cek("halaman waktu floor (#235)", halNotif.includes("Math.floor((Date.now()"));
+cek("halaman tandai 44px+catch (#235)", halNotif.includes("min-h-11") && halNotif.includes("setGagalTandai(true)") && halNotif.includes("notif.gagalTandai"));
 
 if (gagal > 0) {
   console.log(`\nNOTIF-LUAS: ${gagal} gagal`);

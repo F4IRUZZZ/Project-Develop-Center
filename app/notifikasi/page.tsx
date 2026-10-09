@@ -12,11 +12,11 @@ import { cn } from "@/lib/utils";
 import { SkeletonCard, SkeletonText } from "@/components/ui/Skeleton";
 
 function waktuRelatif(iso: string, lang: Lang, teks: (k: Kunci) => string): string {
-  const dtk = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
+  const dtk = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
   if (dtk < 60) return `${dtk} ${teks("notif.dtkLalu")}`;
-  const mnt = Math.round(dtk / 60);
+  const mnt = Math.floor(dtk / 60);
   if (mnt < 60) return `${mnt} ${teks("notif.mntLalu")}`;
-  const jam = Math.round(mnt / 60);
+  const jam = Math.floor(mnt / 60);
   if (jam < 24) return `${jam} ${teks("notif.jamLalu")}`;
   return new Date(iso).toLocaleDateString(lang === "en" ? "en-US" : "id-ID", { day: "numeric", month: "short" });
 }
@@ -25,6 +25,7 @@ export default function Notifikasi() {
   const { data: session, status } = useSession();
   const { lang, teks } = useBahasa();
   const [items, setItems] = useState<Notifikasi[] | null>(null);
+  const [gagalTandai, setGagalTandai] = useState(false);
 
   const muat = useCallback(() => {
     fetchNotifikasi()
@@ -56,8 +57,11 @@ export default function Notifikasi() {
   const belum = items?.filter((e) => !e.dibaca).length ?? 0;
 
   const tandai = async (id?: string) => {
+    setGagalTandai(false);
     try {
       await tandaiDibaca(id);
+    } catch {
+      setGagalTandai(true);
     } finally {
       // Andalkan event (#216): listener di atas memuat ulang — muat() eksplisit
       // di sini = fetch ganda (event fire sinkron ke listener sendiri juga).
@@ -81,6 +85,11 @@ export default function Notifikasi() {
         )}
       </div>
       <p className="mb-6 text-[13px] text-muted-foreground">{teks("notif.sub")}</p>
+      {gagalTandai && (
+        <p role="alert" className="mb-4 text-[12px] text-red-500">
+          {teks("notif.gagalTandai")}
+        </p>
+      )}
 
       {!items ? (
         <div className="space-y-4">
@@ -130,14 +139,14 @@ export default function Notifikasi() {
                   </div>
                   <div className="mt-1 flex items-center gap-2 font-mono text-[10.5px] text-muted-foreground">
                     <span suppressHydrationWarning>{waktuRelatif(e.created_at, lang, teks)}</span>
-                    {!e.dibaca && (
-                      <button
-                        onClick={() => void tandai(e.id)}
-                        className="rounded-full bg-primary/10 px-2 py-0.5 font-sans text-[10px] font-medium text-primary hover:bg-primary/20"
-                      >
-                        {teks("notif.tandai")}
-                      </button>
-                    )}
+                      {!e.dibaca && (
+                        <button
+                          onClick={() => void tandai(e.id)}
+                          className="flex min-h-11 items-center rounded-full bg-primary/10 px-2.5 font-sans text-[10px] font-medium text-primary hover:bg-primary/20"
+                        >
+                          {teks("notif.tandai")}
+                        </button>
+                      )}
                   </div>
                 </div>
               </div>

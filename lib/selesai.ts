@@ -92,12 +92,17 @@ export async function sapuSelesai(userId: string): Promise<number> {
       AND (done_at IS NULL OR COALESCE(last_work_at, last_edit_at) > done_at)
     ORDER BY last_seen_at ASC LIMIT ${SWEEP_LIMIT}
   `) as unknown as Array<{ session_id: string }>;
-  // #231: paralel (bukan sekuensial) agar TTFB dashboard tak N×8 dtk —
-  // tiap catatSelesai membawa race 8 dtk sendiri, total ≈8 dtk.
-  const hasil = await Promise.allSettled(calon.map((c) => catatSelesai(userId, String(c.session_id))));
+  // #231: paralel per chunk 10 (bukan 50 sekaligus, bukan sekuensial) —
+  // total ≈8 dtk tanpa spike 50 CTE + 50 burst Telegram bersamaan.
+  const UKURAN_CHUNK = 10;
   let dicatat = 0;
-  for (const h of hasil) {
-    if (h.status === "fulfilled" && h.value) dicatat += 1;
+  for (let i = 0; i < calon.length; i += UKURAN_CHUNK) {
+    const hasil = await Promise.allSettled(
+      calon.slice(i, i + UKURAN_CHUNK).map((c) => catatSelesai(userId, String(c.session_id)))
+    );
+    for (const h of hasil) {
+      if (h.status === "fulfilled" && h.value) dicatat += 1;
+    }
   }
   return dicatat;
 }
