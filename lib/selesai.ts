@@ -92,13 +92,12 @@ export async function sapuSelesai(userId: string): Promise<number> {
       AND (done_at IS NULL OR COALESCE(last_work_at, last_edit_at) > done_at)
     ORDER BY last_seen_at ASC LIMIT ${SWEEP_LIMIT}
   `) as unknown as Array<{ session_id: string }>;
+  // #231: paralel (bukan sekuensial) agar TTFB dashboard tak N×8 dtk —
+  // tiap catatSelesai membawa race 8 dtk sendiri, total ≈8 dtk.
+  const hasil = await Promise.allSettled(calon.map((c) => catatSelesai(userId, String(c.session_id))));
   let dicatat = 0;
-  for (const c of calon) {
-    try {
-      if (await catatSelesai(userId, String(c.session_id))) dicatat += 1;
-    } catch {
-      /* abaikan per sesi: lanjut ke calon berikut */
-    }
+  for (const h of hasil) {
+    if (h.status === "fulfilled" && h.value) dicatat += 1;
   }
   return dicatat;
 }

@@ -76,7 +76,7 @@ export async function GET(req: NextRequest) {
     WHERE user_id = ${ctx.userId} AND status = 'active'
       AND last_seen_at > now() - interval '3 minutes'
   `) as unknown as Array<{ project_id: string | null; mode: string | null }>;
-  const sesiSet = new Set(sesi.map((r) => r.project_id));
+  const sesiSet = new Set(sesi.map((r) => r.project_id).filter((v): v is string => v !== null));
   // Mode per proyek: build menang bila build+plan hidup bersamaan.
   const modeMap = new Map<string, "build" | "plan">();
   for (const r of sesi) {
@@ -117,6 +117,7 @@ export async function GET(req: NextRequest) {
     WHERE user_id = ${ctx.userId} AND status = 'active'
       AND last_seen_at > now() - interval '3 minutes'
       AND ringkasan_terakhir IS NOT NULL
+      AND project_id IS NOT NULL
     ORDER BY ringkasan_waktu DESC
   `) as unknown as Array<{ project_id: string | null; ringkasan: string }>;
   const ringkasMap = new Map<string, string>();

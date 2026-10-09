@@ -56,10 +56,13 @@ export default function Notifikasi() {
   const belum = items?.filter((e) => !e.dibaca).length ?? 0;
 
   const tandai = async (id?: string) => {
-    await tandaiDibaca(id);
-    // Andalkan event (#216): listener di atas memuat ulang — muat() eksplisit
-    // di sini = fetch ganda (event fire sinkron ke listener sendiri juga).
-    siarNotifikasi();
+    try {
+      await tandaiDibaca(id);
+    } finally {
+      // Andalkan event (#216): listener di atas memuat ulang — muat() eksplisit
+      // di sini = fetch ganda (event fire sinkron ke listener sendiri juga).
+      siarNotifikasi();
+    }
   };
 
   return (

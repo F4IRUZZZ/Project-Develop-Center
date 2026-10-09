@@ -52,6 +52,7 @@ cek("selesai kalah diam", sel.includes("if (rows.length === 0) return false"));
 cek("selesai INSERT task completed", sel.includes("INSERT INTO tasks") && sel.includes("'completed'"));
 cek("selesai feed Selesai:", sel.includes("Selesai: AI selesai bekerja"));
 cek("selesai siar await+log (#227)", sel.includes("siarTelegramRinci") && sel.includes("Promise.race") && sel.includes("[selesai] telegram"));
+cek("sweep paralel berbatas (#231)", sel.includes("Promise.allSettled") && sel.includes("catatSelesai(userId, String(c.session_id))"));
 cek("selesai tulis done_task_id", sel.includes("SET done_task_id ="));
 cek("sweep hening 3 menit", sel.includes("sapuSelesai") && sel.includes("interval '3 minutes'"));
 cek("sweep limit anti-ledak", sel.includes("LIMIT ${SWEEP_LIMIT}"));

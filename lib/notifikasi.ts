@@ -25,9 +25,10 @@ export async function fetchNotifikasi(): Promise<Notifikasi[]> {
 }
 
 export async function tandaiDibaca(activityId?: string): Promise<void> {
-  await fetch("/api/notifications/read", {
+  const res = await fetch("/api/notifications/read", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(activityId ? { activity_id: activityId } : { semua: true }),
   });
+  if (!res.ok) throw new Error(`API notifications/read ${res.status}`);
 }
