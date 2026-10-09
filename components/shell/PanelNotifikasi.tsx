@@ -11,11 +11,11 @@ import type { Kunci, Lang } from "@/lib/kamus";
 import { cn } from "@/lib/utils";
 
 function waktuRelatif(iso: string, lang: Lang, teks: (k: Kunci) => string): string {
-  const dtk = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
+  const dtk = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
   if (dtk < 60) return `${dtk} ${teks("notif.dtkLalu")}`;
-  const mnt = Math.round(dtk / 60);
+  const mnt = Math.floor(dtk / 60);
   if (mnt < 60) return `${mnt} ${teks("notif.mntLalu")}`;
-  const jam = Math.round(mnt / 60);
+  const jam = Math.floor(mnt / 60);
   if (jam < 24) return `${jam} ${teks("notif.jamLalu")}`;
   return new Date(iso).toLocaleDateString(lang === "en" ? "en-US" : "id-ID", { day: "numeric", month: "short" });
 }
@@ -29,7 +29,9 @@ export function PanelNotifikasi() {
   const [buka, setBuka] = useState(false);
   const [items, setItems] = useState<Notifikasi[] | null>(null);
   const [gagal, setGagal] = useState(false);
+  const [gagalTandai, setGagalTandai] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const tombolRef = useRef<HTMLButtonElement>(null);
 
   const muat = useCallback(() => {
     fetchNotifikasi()
@@ -55,7 +57,10 @@ export function PanelNotifikasi() {
       if (ref.current && !ref.current.contains(e.target as Node)) setBuka(false);
     };
     const esc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setBuka(false);
+      if (e.key === "Escape") {
+        setBuka(false);
+        tombolRef.current?.focus();
+      }
     };
     window.addEventListener("mousedown", fn);
     window.addEventListener("keydown", esc);
@@ -65,8 +70,18 @@ export function PanelNotifikasi() {
     };
   }, [buka ]);
 
+  // Tandai optimistis + rollback (#231): status dibaca berubah seketika,
+  // gagal API mengembalikan state + pesan, refetch via event meluruskan akhir.
   const tandai = async (id?: string) => {
-    await tandaiDibaca(id);
+    const sebelum = items;
+    setGagalTandai(false);
+    if (sebelum) setItems(sebelum.map((e) => (!id || e.id === id ? { ...e, dibaca: true } : e)));
+    try {
+      await tandaiDibaca(id);
+    } catch {
+      setItems(sebelum);
+      setGagalTandai(true);
+    }
     siarNotifikasi();
   };
 
@@ -76,10 +91,12 @@ export function PanelNotifikasi() {
   return (
     <div ref={ref} className="relative">
       <button
+        ref={tombolRef}
         onClick={() => setBuka((v) => !v)}
         aria-label={teks("nav.notifikasi")}
         aria-expanded={buka}
-        className="relative flex h-9 min-w-9 items-center justify-center rounded-[9px] border border-border bg-muted px-2 text-muted-foreground transition-colors hover:text-foreground"
+        aria-haspopup="dialog"
+        className="relative flex h-11 w-11 items-center justify-center rounded-[9px] border border-border bg-muted text-muted-foreground transition-colors hover:text-foreground"
       >
         <Bell className="h-[17px] w-[17px]" />
         <span className="absolute -right-1 -top-1">
@@ -88,7 +105,7 @@ export function PanelNotifikasi() {
       </button>
 
       {buka && (
-        <div className="fixed inset-x-3 top-[64px] z-50 rounded-2xl border border-border bg-card shadow-[0_12px_32px_rgba(0,0,0,0.45)] sm:absolute sm:inset-x-auto sm:right-0 sm:top-11 sm:w-[360px]">
+        <div role="dialog" aria-label={teks("notif.panelJudul")} className="fixed inset-x-3 top-[64px] z-50 rounded-2xl border border-border bg-card shadow-[0_12px_32px_rgba(0,0,0,0.45)] sm:absolute sm:inset-x-auto sm:right-0 sm:top-11 sm:w-[360px]">
           <div className="flex items-center justify-between px-4 pb-1 pt-3">
             <h2 className="text-[15px] font-semibold tracking-tight">{teks("notif.panelJudul")}</h2>
             {belum > 0 && (
@@ -100,12 +117,19 @@ export function PanelNotifikasi() {
               </button>
             )}
           </div>
+          {gagalTandai && (
+            <p role="alert" className="px-4 pb-1 text-[12px] text-red-500">
+              {teks("notif.gagalTandai")}
+            </p>
+          )}
 
-          {status !== "authenticated" || gagal ? (
+          {status !== "authenticated" ? (
+            <p className="px-4 pb-5 pt-2 text-center text-[13px] text-muted-foreground">{teks("notif.masukDulu")}</p>
+          ) : gagal ? (
             <div className="px-4 pb-4">
               <p className="py-4 text-center text-[13px] text-muted-foreground">{teks("notif.gagal")}</p>
               <button
-                onClick={muat}
+                onClick={() => muat()}
                 className="flex min-h-11 w-full items-center justify-center rounded-[9px] bg-primary/10 px-3 text-[13px] font-medium text-primary hover:bg-primary/20"
               >
                 {teks("notif.cobaLagi")}
@@ -164,7 +188,7 @@ export function PanelNotifikasi() {
             onClick={() => setBuka(false)}
             className="mx-4 mb-3 mt-1 flex min-h-11 items-center justify-center rounded-[9px] bg-primary/10 text-[13px] font-medium text-primary hover:bg-primary/20"
           >
-            {teks("notif.lihatSemua")} →
+            {teks("notif.lihatSemua")}
           </Link>
         </div>
       )}

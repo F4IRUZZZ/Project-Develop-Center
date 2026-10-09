@@ -24,6 +24,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   if (body.aksi === "uji-selesai") {
+    // #231: validasi :id dulu agar kontrak per-ID jujur (404 bila tak ada).
+    const ada = (await db()`SELECT id FROM notif_tujuan WHERE id = ${id} AND user_id = ${ctx.userId}`) as Array<{ id: string }>;
+    if (ada.length === 0) return NextResponse.json({ error: galat(req, "tgHilang") }, { status: 404 });
     const hasil = await siarTelegramRinci(ctx.userId, "Uji jalur Selesai PDC: siar berfungsi. 🤖");
     return NextResponse.json({ ok: hasil.terkirim > 0, ...hasil });
   }

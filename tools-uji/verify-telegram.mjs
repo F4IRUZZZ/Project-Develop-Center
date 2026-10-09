@@ -30,6 +30,7 @@ const aksi = readFileSync(join(root, "app/api/notif-tujuan/[id]/route.ts"), "utf
 cek("aksi test + hapus", aksi.includes('"test"') && aksi.includes("DELETE FROM notif_tujuan"));
 cek("uji jalur selesai (#227)", aksi.includes('"uji-selesai"') && aksi.includes("siarTelegramRinci"));
 cek("uji tanpa bocor token (#227)", aksi.includes("return NextResponse.json({ ok: hasil.terkirim > 0, ...hasil })"));
+cek("uji validasi id 404 (#231)", aksi.includes("uji-selesai") && aksi.includes("tgHilang") && aksi.includes("SELECT id FROM notif_tujuan WHERE id ="));
 const sel = readFileSync(join(root, "lib/selesai.ts"), "utf8");
 cek("selesai await siar rinci (#227)", sel.includes("siarTelegramRinci") && sel.includes("Promise.race") && sel.includes("[selesai] telegram"));
 cek("siar rinci terstruktur (#227)", lib.includes("siarTelegramRinci") && lib.includes("HasilSiar") && lib.includes("gagalDekrip") && lib.includes("gagalKirim"));
