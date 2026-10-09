@@ -79,7 +79,7 @@ const KAMUS = {
   },
   "gate.cta": { id: "Sambungkan Akun GitHub", en: "Connect GitHub Account" },
   "bahasa.label": { id: "Bahasa", en: "Language" },
-  "dash.proyekAktif": { id: "Proyek Aktif", en: "Active Projects" },
+  "dash.proyekAktif": { id: "Repo Aktif", en: "Active Repos" },
   "dash.aiBekerja": { id: "AI Bekerja", en: "AI Working" },
   "dash.tugasSelesai": { id: "Tugas Selesai", en: "Tasks Done" },
   "dash.sedangAktif": { id: "Sedang Aktif", en: "Currently Active" },
