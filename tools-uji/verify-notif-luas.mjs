@@ -46,6 +46,7 @@ cek("pemicu 44px (#231)", panel.includes("h-11 w-11") && panel.includes('aria-ha
 cek("tandai optimistis+rollback (#231)", panel.includes("sebelum") && panel.includes("gagalTandai") && panel.includes("siarNotifikasi"));
 cek("unauth tanpa coba-lagi (#231)", panel.includes("notif.masukDulu"));
 cek("dialog a11y + waktu floor (#231)", panel.includes('role="dialog"') && panel.includes("Math.floor") && panel.includes("tombolRef"));
+cek("dialog labelledby (#237)", panel.includes('aria-labelledby="panel-notif-judul"') && panel.includes('id="panel-notif-judul"'));
 cek("tandaiDibaca cek ok (#231)", readFileSync(join(root, "lib/notifikasi.ts"), "utf8").includes("if (!res.ok) throw"));
 cek("kamus tandai/masuk (#231)", ["notif.masukDulu", "notif.gagalTandai"].every((k) => kamus.includes(`"${k}"`)));
 const halNotif = readFileSync(join(root, "app/notifikasi/page.tsx"), "utf8");

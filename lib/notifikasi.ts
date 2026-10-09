@@ -25,6 +25,7 @@ export async function fetchNotifikasi(): Promise<Notifikasi[]> {
 }
 
 export async function tandaiDibaca(activityId?: string): Promise<void> {
+  // Gagal = throw (bukan diam) agar pemanggil bisa rollback optimistis + tampilkan pesan (#231).
   const res = await fetch("/api/notifications/read", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
