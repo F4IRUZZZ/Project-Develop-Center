@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { buatId, isErr, sesiUser } from "@/lib/server-auth";
 import { galat } from "@/lib/galat-api";
-import { catatSelesai } from "@/lib/selesai";
+import { catatSelesai, catatIdleSelesai } from "@/lib/selesai";
 
 // Daftarkan/segarkan sesi AI (dipanggil plugin OpenCode, auth Bearer key mesin).
 // Upsert by session_id: buka sesi baru atau segarkan yang hidup.
@@ -140,11 +140,21 @@ export async function PATCH(req: NextRequest) {
   // tutup-eksplisit di atas. Stempel last_idle_at (#202) = flip real-time
   // working->aktif di semua indikator. Mode ikut disegarkan bila dibawa
   // plugin (#206). Flag selesai:false menjaga respons.
+  // #241: deteksi transisi working→idle & catat "Selesai giliran" sekali.
+  const prev = (await sql`SELECT last_work_at, last_idle_at, last_idle_notified_at FROM agent_sessions WHERE session_id = ${sessionId} AND user_id = ${ctx.userId}`)[0];
+  const wasBekerja = prev?.last_work_at && (!prev?.last_idle_at || new Date(prev.last_work_at) > new Date(prev.last_idle_at));
+  const sudahNotif = prev?.last_idle_notified_at && new Date(prev.last_idle_notified_at) >= new Date(prev?.last_work_at ?? 0);
+
   const modeBaru = body.mode_eksplisit === true && (body.mode === "plan" || body.mode === "build") ? body.mode : null;
   const denyut = modeBaru
     ? await sql`UPDATE agent_sessions SET status = 'active', ended_at = NULL, last_seen_at = now(), last_idle_at = now(), mode = ${modeBaru} WHERE session_id = ${sessionId} AND user_id = ${ctx.userId} RETURNING session_id`
     : await sql`UPDATE agent_sessions SET status = 'active', ended_at = NULL, last_seen_at = now(), last_idle_at = now() WHERE session_id = ${sessionId} AND user_id = ${ctx.userId} RETURNING session_id`;
   if (denyut.length === 0) return NextResponse.json({ error: galat(req, "sesiHilang") }, { status: 404 });
+
+  // Panggil catatIdleSelesai jika transisi working→idle & belum notif untuk periode ini
+  if (wasBekerja && !sudahNotif) {
+    try { await catatIdleSelesai(ctx.userId, sessionId); } catch { /* best-effort */ }
+  }
   return NextResponse.json({ ok: true, selesai: false });
 }
 

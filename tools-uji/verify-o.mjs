@@ -55,6 +55,22 @@ cek("segmented Light/Dark/System", peng.includes("System") && peng.includes("rad
 const topbar = readFileSync(join(root, "components/shell/Topbar.tsx"), "utf8");
 cek("avatar lg:hidden", topbar.includes("lg:hidden") && topbar.includes("UserMenu"));
 
+// O4 — Idle done notification (#241)
+const selesai = readFileSync(join(root, "lib/selesai.ts"), "utf8");
+cek("catatIdleSelesai eksport", selesai.includes("export async function catatIdleSelesai"));
+cek("catatIdleSelesai last_idle_notified_at", selesai.includes("last_idle_notified_at"));
+cek("catatIdleSelesai type idle_done", selesai.includes("act-idle-"));
+cek("catatIdleSelesai prefix Selesai giliran", selesai.includes("Selesai giliran:"));
+
+const cronRoute = readFileSync(join(root, "app/api/cron/sweep-idle-done/route.ts"), "utf8");
+cek("cron endpoint CRON_SECRET auth", cronRoute.includes("CRON_SECRET"));
+cek("cron endpoint query idle >2m", cronRoute.includes("last_idle_at < now() - interval '2 minutes'"));
+
+const sessionRoute = readFileSync(join(root, "app/api/sessions/route.ts"), "utf8");
+cek("sessions route import catatIdleSelesai", sessionRoute.includes("catatIdleSelesai"));
+cek("sessions route deteksi working->idle", sessionRoute.includes("wasBekerja") && sessionRoute.includes("sudahNotif"));
+cek("sessions route panggil catatIdleSelesai", sessionRoute.includes("catatIdleSelesai(ctx.userId, sessionId)"));
+
 if (gagal > 0) {
   console.log(`\nO-CEK: ${gagal} gagal`);
   process.exit(1);
