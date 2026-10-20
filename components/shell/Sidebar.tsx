@@ -141,8 +141,8 @@ export function Sidebar() {
           alt="Logo PDC"
           width={34}
           height={34}
-          // Varian ubin gelap: hexagon + P putih terbaca di terang maupun gelap.
-          className="h-[34px] w-[34px] shrink-0 rounded-[10px] shadow-[0_4px_12px_rgba(99,102,241,0.35)]"
+          // Monogram P: ubin indigo + P putih, terbaca di tema terang maupun gelap.
+          className="h-[34px] w-[34px] shrink-0 rounded-[8px] shadow-[0_4px_12px_rgba(99,102,241,0.28)]"
         />
         {!ciut && (
           <div className="min-w-0 flex-1">

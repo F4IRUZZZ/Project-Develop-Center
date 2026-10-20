@@ -47,6 +47,7 @@
 ## H. Riwayat Perubahan
 
 | Tanggal    | Perubahan                                                                                       | Uji                                                               |
+| 2026-10-20 | Logo monogram P solid (#239, ubin indigo tanpa gradien/hexagon + ICO asli + ikon PWA maskable)   | O-CEK ALL-OK + suite hijau + tsc + build                          |
 | 2026-10-08 | Batch 4 audit p2 (#216/#217, waiting+antre stop + tulisActivity deterministik + throttle ok + skeleton slot + dedupe fetch + visible + potong + v2026.10.15) | 35+ suite hijau + tsc + build                       |
 | 2026-10-07 | Batch 3 audit (#214/#215, skeleton Stats + komentar plan-aware)                                  | 35+ suite hijau + tsc + build                                     |
 | 2026-10-07 | Batch 2 audit (#212/#213, detail actions + catatFlip satu pintu + bypass + notif live + v2026.10.14) | 35+ suite hijau + tsc + build                                  |
