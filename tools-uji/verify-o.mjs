@@ -14,6 +14,27 @@ for (const f of ["public/logo-pdc.svg", "public/logo-pdc-dark.svg", "app/icon.sv
   cek(f, existsSync(join(root, f)));
 }
 
+// O1b — Monogram P solid (tanpa hexagon/gradien) + ikon bitmap nyata
+const ikon = readFileSync(join(root, "app/icon.svg"), "utf8");
+cek("monogram tanpa gradien/hexagon", !ikon.includes("linearGradient") && !ikon.includes("<polygon"));
+cek("monogram ubin indigo + path evenodd", ikon.includes('fill="#6366F1"') && ikon.includes('fill-rule="evenodd"'));
+
+const ico = readFileSync(join(root, "public/favicon.ico"));
+cek("favicon.ico magic ICO", ico[0] === 0 && ico[1] === 0 && ico[2] === 1 && ico[3] === 0);
+
+for (const [f, ukuran] of [
+  ["public/icon-192.png", 192],
+  ["public/icon-512.png", 512],
+  ["app/apple-icon.png", 180],
+]) {
+  const p = readFileSync(join(root, f));
+  const png = p[1] === 0x50 && p[2] === 0x4e && p[3] === 0x47;
+  cek(`${f} PNG ${ukuran}px`, png && p.readUInt32BE(16) === ukuran && p.readUInt32BE(20) === ukuran);
+}
+
+const manifest = readFileSync(join(root, "app/manifest.ts"), "utf8");
+cek("manifest ikon PWA maskable", manifest.includes("icon-192.png") && manifest.includes("icon-512.png") && manifest.includes('purpose: "maskable"'));
+
 // O2 — Login ala referensi (split brand + pill CTA, dark Nebula)
 const landing = readFileSync(join(root, "components/shell/LoginLanding.tsx"), "utf8");
 cek("landing split brand (kamus)", landing.includes("landing.sambut") && landing.includes("md:grid-cols-2"));
