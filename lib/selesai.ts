@@ -80,6 +80,60 @@ export async function catatSelesai(userId: string, sessionId: string): Promise<b
   return true;
 }
 
+// Catat 1x "Selesai giliran" (working→idle) untuk sesi.
+// Mirip catatSelesai tapi: update last_idle_notified_at, type='idle_done',
+// prefix "Selesai giliran:", task id prefix 'task-idle-'.
+export async function catatIdleSelesai(userId: string, sessionId: string): Promise<boolean> {
+  const sql = db();
+  const rows = (await sql`
+    WITH k AS (
+      UPDATE agent_sessions SET last_idle_notified_at = now()
+      WHERE session_id = ${sessionId} AND user_id = ${userId}
+        AND status = 'active' AND mode = 'build' AND project_id IS NOT NULL
+        AND last_work_at IS NOT NULL
+        AND last_idle_at > last_work_at
+        AND (last_idle_notified_at IS NULL OR last_idle_notified_at < last_work_at)
+      RETURNING session_id, user_id, project_id,
+        COALESCE(NULLIF(TRIM(LEFT(ringkasan_terakhir, 200)), ''), 'AI selesai menjawab') AS judul,
+        TRIM(COALESCE(ringkasan_terakhir, '')) AS ringkas,
+        EXTRACT(EPOCH FROM last_work_at)::bigint AS ep,
+        (SELECT repo_name FROM projects p WHERE p.id = agent_sessions.project_id) AS repo
+    ),
+    t AS (
+      INSERT INTO tasks (id, user_id, project_id, title, status, progress, result_summary, completed_at, updated_at)
+      SELECT 'task-idle-' || k.session_id || '-' || k.ep, k.user_id, k.project_id, LEFT(k.judul, 200), 'completed', 100, NULLIF(LEFT(k.ringkas, 1000), ''), now(), now() FROM k
+      ON CONFLICT (id) DO NOTHING
+      RETURNING id
+    ),
+    f AS (
+      INSERT INTO activity_log (id, user_id, project_id, type, message)
+      SELECT 'act-idle-' || k.session_id || '-' || k.ep, k.user_id, k.project_id, 'info',
+        'Selesai giliran: AI selesai menjawab' || COALESCE(' di ' || (SELECT repo_name FROM projects p WHERE p.id = k.project_id), '') || CASE WHEN k.ringkas <> '' THEN ' — ' || LEFT(k.ringkas, 200) ELSE '' END
+      FROM k
+      ON CONFLICT (id) DO NOTHING
+    )
+    UPDATE agent_sessions s SET done_task_id = COALESCE((SELECT id FROM t LIMIT 1), 'task-idle-' || k.session_id || '-' || k.ep)
+    FROM k WHERE s.session_id = k.session_id AND s.user_id = k.user_id
+    RETURNING k.session_id AS session_id, k.project_id AS project_id, k.judul AS judul, k.ringkas AS ringkas, k.repo AS repo
+  `) as unknown as Done[];
+  if (rows.length === 0) return false;
+  const d = rows[0];
+  const pesanFeed = `Selesai giliran: AI selesai menjawab${d.repo ? ` di ${d.repo}` : ""}${d.ringkas ? ` — ${potong(d.ringkas, 200)}` : ""}`;
+  try {
+    const janji = siarTelegramRinci(userId, pesanFeed);
+    const hasil = await Promise.race([
+      janji.then((h) => ({ ...h, batas: false as const })),
+      new Promise<{ batas: true }>((s) => setTimeout(() => s({ batas: true }), 8000)),
+    ]);
+    janji.catch(() => {});
+    if (hasil.batas) console.log(`[idle-done] telegram timeout sesi=${sessionId}`);
+    else console.log(`[idle-done] telegram sesi=${sessionId} tujuan=${hasil.tujuan} terkirim=${hasil.terkirim} gagalDekrip=${hasil.gagalDekrip} gagalKirim=${hasil.gagalKirim}`);
+  } catch {
+    // Best-effort: notif eksternal tak boleh ganggu alur utama.
+  }
+  return true;
+}
+
 // Sweep oportunistik: sesi active yang sinyal kerjanya basi >3 mnt dan belum
 // dicatat sejak kerja terakhir. Dipanggil GET /api/dashboard (preseden
 // sapuStuck). Kembalikan jumlah sesi yang dicatat.

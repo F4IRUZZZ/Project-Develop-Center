@@ -12,6 +12,7 @@ function cek(nama, ok, detail = "") {
 const notif = readFileSync(join(root, "app/api/notifications/route.ts"), "utf8");
 cek("selesai masuk filter", notif.includes("Selesai:%"));
 cek("pr+error tetap", notif.includes("'pr', 'error'"));
+cek("filter menangkap Selesai giliran:", notif.includes("Selesai:%") && !notif.includes("Selesai: AI selesai"));
 cek("info hanya via Selesai:", notif.includes("a.type = 'info' AND a.message LIKE 'Selesai:%'"));
 cek("LEFT JOIN yatim", notif.includes("LEFT JOIN projects"));
 cek("batas 24 jam", notif.includes("24 hours"));
