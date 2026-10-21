@@ -134,13 +134,14 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
-  // Heartbeat murni (#184): idle TAK PERNAH mencatat done (tiap akhir
-  // giliran fire idle+status ganda + sesi multi-turn = spam per-giliran).
-  // Done dicatat tepat-sekali oleh sapuSelesai() (hening 3 mnt) atau cabang
+  // Heartbeat (#184): idle tidak mencatat task done (tiap akhir giliran
+  // fire idle+status ganda + sesi multi-turn = spam task). Done dicatat
+  // tepat-sekali oleh sapuSelesai() (hening 3 mnt) atau cabang
   // tutup-eksplisit di atas. Stempel last_idle_at (#202) = flip real-time
   // working->aktif di semua indikator. Mode ikut disegarkan bila dibawa
   // plugin (#206). Flag selesai:false menjaga respons.
-  // #241: deteksi transisi working→idle & catat "Selesai giliran" sekali.
+  // #241/#243: transisi working->idle menotifikasi "Selesai" sekali
+  // (feed + Telegram), tanpa membuat task.
   const prev = (await sql`SELECT last_work_at, last_idle_at, last_idle_notified_at FROM agent_sessions WHERE session_id = ${sessionId} AND user_id = ${ctx.userId}`)[0];
   const wasBekerja = prev?.last_work_at && (!prev?.last_idle_at || new Date(prev.last_work_at) > new Date(prev.last_idle_at));
   const sudahNotif = prev?.last_idle_notified_at && new Date(prev.last_idle_notified_at) >= new Date(prev?.last_work_at ?? 0);

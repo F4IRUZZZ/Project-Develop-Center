@@ -40,7 +40,8 @@ cek("notifikasi live 30 dtk + event (#212)", halNotif.includes("mulaiPolling") &
 cek("tandai andalkan event (#216)", halNotif.includes("siarNotifikasi();") && !halNotif.includes("siarNotifikasi();\n    muat();"));
 const ghHook = readFileSync(join(root, "lib/github-hook.ts"), "utf8");
 cek("tulisActivity deterministik (#216)", ghHook.includes("createHash") && ghHook.includes("ON CONFLICT (id) DO NOTHING"));
-cek("potong emoji-safe (#216)", readFileSync(join(root, "lib/potong.ts"), "utf8").includes("[...s]") && readFileSync(join(root, "lib/selesai.ts"), "utf8").includes("potong("));
+const selesaiSrc = readFileSync(join(root, "lib/selesai.ts"), "utf8");
+cek("potong emoji-safe (#216)", readFileSync(join(root, "lib/potong.ts"), "utf8").includes("[...s]") && selesaiSrc.includes("LEFT(TRIM(COALESCE(ringkasan_terakhir") && !selesaiSrc.includes(".slice(0,"));
 
 // G4
 const modal = readFileSync(join(root, "components/command/CommandModal.tsx"), "utf8");

@@ -5,7 +5,7 @@
 // JANGAN tambah export lain / default export (risiko registrasi ganda).
 // JANGAN `import { Plugin } from "@opencode/plugin"`: tak ter-resolve dari
 // file .js polos dan hanya helper type — object return lolos skema yang sama.
-const VERSI_PLUGIN = "2026.10.18";
+const VERSI_PLUGIN = "2026.10.20";
 // Butuh env di mesin: PDC_API_URL (default production; set eksplisit
 // untuk dev lokal), PDC_API_KEY (buat di webapp PDC > Pengaturan),
 // opsional PDC_MODE (plan/build).
@@ -274,6 +274,34 @@ export const PdcPresence = async (input) => {
     denyut().catch(() => {});
   }, DENYUT_MS);
   if (typeof denyutTimer.unref === "function") denyutTimer.unref();
+
+  // Tutup eksplisit saat proses menerima sinyal (bukan exit normal: handler
+  // exit tak bisa menunggu fetch). Best-effort agar sesi tidak macet "active".
+  // Sinyal diangkat ulang setelah listener dilepas: memasang listener mematikan
+  // exit-default Node, jadi tanpa ini Ctrl+C tidak menutup proses.
+  const kirimTutup = async (sinyal) => {
+    try {
+      if (KEY && terakhir) {
+        await fetch(`${API}/api/sessions`, {
+          method: "PATCH",
+          headers: { Authorization: `Bearer ${KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ session_id: terakhir, status: "selesai" }),
+          signal: AbortSignal.timeout(5000),
+        });
+      }
+    } catch {
+      /* abaikan: best-effort saja */
+    } finally {
+      process.removeListener(sinyal, pendengarTutup[sinyal]);
+      process.kill(process.pid, sinyal);
+    }
+  };
+  const pendengarTutup = {
+    SIGTERM: () => void kirimTutup("SIGTERM"),
+    SIGINT: () => void kirimTutup("SIGINT"),
+  };
+  process.on("SIGTERM", pendengarTutup.SIGTERM);
+  process.on("SIGINT", pendengarTutup.SIGINT);
 
   // Ringkasan per-giliran (opsi B): teks balasan asisten, diredaksi (buang
   // blok kode + cap 1000 + ellipsis bila terpotong), dikirim saat
@@ -705,6 +733,21 @@ export const PdcPresence = async (input) => {
           log("warn", `${tipe} tanpa id sesi, dilewati`);
           return;
         }
+        // session.status membawa busy/idle/retry: hanya idle yang menutup
+        // giliran. Tanpa guard ini, "Selesai" terkirim saat AI mulai sibuk.
+        const statusMentah = (() => {
+          try {
+            const st = event?.properties?.status ?? event?.properties?.info?.status;
+            if (typeof st === "string") return st;
+            return st?.type ?? null;
+          } catch {
+            return null;
+          }
+        })();
+        if (tipe === "session.status" && statusMentah && statusMentah !== "idle") {
+          catat("status-lewat", { sessionId: s.id, rincian: { status: statusMentah } });
+          return;
+        }
         const kiniIdle = Date.now();
         if (kiniIdle - (idleTerkirim.get(s.id) ?? 0) < SELA_IDLE_MS) {
           catat("idle-lewat", { sessionId: s.id, rincian: { alasan: "throttle", tipe } });
@@ -716,6 +759,10 @@ export const PdcPresence = async (input) => {
           log("warn", "PDC_API_KEY kosong, lewati lapor (set env User PDC_API_KEY)");
           return;
         }
+        // Ringkasan dikirim DULU: PATCH idle memicu notifikasi server yang
+        // membaca ringkasan_terakhir — urutan lama membuat notif tertinggal
+        // satu giliran / tanpa ringkasan.
+        await siramRingkasan(s.id);
         const metaPatch = dikenal.get(s.id);
         const hasilPatch = await kirim("/api/sessions", "PATCH", {
           session_id: s.id,
@@ -729,7 +776,6 @@ export const PdcPresence = async (input) => {
         log(hasilPatch.ok ? "info" : "warn", `PATCH /api/sessions -> ${hasilPatch.status} (${tipe})`, {
           sessionId: s.id,
         });
-        await siramRingkasan(s.id);
       }
       if (tipe === "message.updated") {
         catatPeran(event);

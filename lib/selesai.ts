@@ -1,13 +1,13 @@
 // Done tepat-sekali (#184, atomik penuh #210): 1 sesi build bekerja = 1x
-// task done + 1x feed "Selesai:" + 1x Telegram, kapan pun pemicunya (sweep
-// hening / tutup eksplisit / double-PATCH balapan). Merge PR juga hasilkan
-// task via jalurnya sendiri. SELURUH tulis dalam
-// SATU statement CTE: klaim (mutex done_at) + task + feed + done_task_id
-// komit bersama — gagal tengah = tak ada yang tertulis, retry aman.
+// feed "Selesai:" + 1x Telegram. Task completed dibuat oleh catatSelesai
+// (tutup eksplisit / sweep hening); idle (akhir giliran) hanya menotifikasi.
+// SELURUH tulis dalam SATU statement CTE: klaim (mutex done_at atau
+// last_idle_notified_at) + task + feed + done_task_id komit bersama — gagal
+// tengah = tak ada yang tertulis, retry aman. Feed/Telegram close dilewati
+// bila idle sudah menotifikasi periode kerja yang sama (tanpa duplikat).
 // ID deterministik per (sesi, detik-kerja) + ON CONFLICT: retry dedupe,
 // kerja baru yang sah = baris baru. Best-effort: gagal = diam.
 import { db } from "@/lib/db";
-import { potong } from "@/lib/potong";
 import { siarTelegramRinci } from "@/lib/telegram";
 
 // Ambang hening: tanpa sinyal kerja selama ini = sesi dianggap selesai.
@@ -17,9 +17,8 @@ export const SWEEP_LIMIT = 50;
 interface Done {
   session_id: string;
   project_id: string;
-  judul: string;
-  ringkas: string;
-  repo: string | null;
+  pesan: string;
+  feed_id: string | null;
 }
 
 // Catat 1x done untuk sesi. Kembalikan true bila mencatat,
@@ -37,7 +36,9 @@ export async function catatSelesai(userId: string, sessionId: string): Promise<b
         COALESCE(NULLIF(TRIM(LEFT(ringkasan_terakhir, 200)), ''), 'Sesi AI selesai bekerja') AS judul,
         TRIM(COALESCE(ringkasan_terakhir, '')) AS ringkas,
         EXTRACT(EPOCH FROM COALESCE(last_work_at, last_edit_at))::bigint AS ep,
-        (SELECT repo_name FROM projects p WHERE p.id = agent_sessions.project_id) AS repo
+        COALESCE(last_work_at, last_edit_at) AS kerja,
+        last_idle_notified_at,
+        'Selesai: AI selesai bekerja' || COALESCE(' di ' || (SELECT repo_name FROM projects p WHERE p.id = agent_sessions.project_id), '') || CASE WHEN TRIM(COALESCE(ringkasan_terakhir, '')) <> '' THEN ' — ' || LEFT(TRIM(COALESCE(ringkasan_terakhir, '')), 200) ELSE '' END AS pesan
     ),
     t AS (
       INSERT INTO tasks (id, user_id, project_id, title, status, progress, result_summary, completed_at, updated_at)
@@ -47,26 +48,27 @@ export async function catatSelesai(userId: string, sessionId: string): Promise<b
     ),
     f AS (
       INSERT INTO activity_log (id, user_id, project_id, type, message)
-      SELECT 'act-selesai-' || k.session_id || '-' || k.ep, k.user_id, k.project_id, 'info',
-        'Selesai: AI selesai bekerja' || COALESCE(' di ' || (SELECT repo_name FROM projects p WHERE p.id = k.project_id), '') || CASE WHEN k.ringkas <> '' THEN ' — ' || LEFT(k.ringkas, 200) ELSE '' END
+      SELECT 'act-selesai-' || k.session_id || '-' || k.ep, k.user_id, k.project_id, 'info', k.pesan
       FROM k
+      WHERE k.last_idle_notified_at IS NULL OR k.last_idle_notified_at < k.kerja
       ON CONFLICT (id) DO NOTHING
+      RETURNING id
     )
     UPDATE agent_sessions s SET done_task_id = COALESCE((SELECT id FROM t LIMIT 1), 'task-done-' || k.session_id || '-' || k.ep)
     FROM k WHERE s.session_id = k.session_id AND s.user_id = k.user_id
-    RETURNING k.session_id AS session_id, k.project_id AS project_id, k.judul AS judul, k.ringkas AS ringkas, k.repo AS repo
+    RETURNING k.session_id AS session_id, k.project_id AS project_id, k.pesan AS pesan,
+      (SELECT id FROM f LIMIT 1) AS feed_id
   `) as unknown as Done[];
   if (rows.length === 0) return false;
   const d = rows[0];
-  // Kontrak /api/notifications: prefix "Selesai:" = masuk filter penting
-  // (picu bunyi + popup + Notification browser di klien).
-  const pesanFeed = `Selesai: AI selesai bekerja${d.repo ? ` di ${d.repo}` : ""}${d.ringkas ? ` — ${potong(d.ringkas, 200)}` : ""}`;
+  // Idle sudah menotifikasi periode kerja ini: task tetap dibuat, feed/Telegram tidak diulang.
+  if (!d.feed_id) return true;
   // #227: AWAIT pengiriman (bukan void) agar tak terpotong freeze serverless
   // setelah respons terkirim — feed tercatat tapi Telegram tak sampai.
   // Timeout lomba 8 dtk menjaga sapu dashboard tetap cepat; hasil dilog
   // (counts saja, tanpa token) agar kegagalan berikutnya terlihat.
   try {
-    const janji = siarTelegramRinci(userId, pesanFeed);
+    const janji = siarTelegramRinci(userId, d.pesan);
     const hasil = await Promise.race([
       janji.then((h) => ({ ...h, batas: false as const })),
       new Promise<{ batas: true }>((s) => setTimeout(() => s({ batas: true }), 8000)),
@@ -80,9 +82,9 @@ export async function catatSelesai(userId: string, sessionId: string): Promise<b
   return true;
 }
 
-// Catat 1x "Selesai giliran" (working→idle) untuk sesi.
-// Mirip catatSelesai tapi: update last_idle_notified_at, type='idle_done',
-// prefix "Selesai giliran:", task id prefix 'task-idle-'.
+// Catat 1x "Selesai" saat AI berhenti bekerja (working -> idle) untuk sesi.
+// Tidak membuat task: task hanya untuk tutup eksplisit / hening 3 menit.
+// Mutex last_idle_notified_at + guard done_at agar close yang menyusul tak dobel.
 export async function catatIdleSelesai(userId: string, sessionId: string): Promise<boolean> {
   const sql = db();
   const rows = (await sql`
@@ -93,34 +95,27 @@ export async function catatIdleSelesai(userId: string, sessionId: string): Promi
         AND last_work_at IS NOT NULL
         AND last_idle_at > last_work_at
         AND (last_idle_notified_at IS NULL OR last_idle_notified_at < last_work_at)
+        AND (done_at IS NULL OR done_at < last_work_at)
       RETURNING session_id, user_id, project_id,
-        COALESCE(NULLIF(TRIM(LEFT(ringkasan_terakhir, 200)), ''), 'AI selesai menjawab') AS judul,
-        TRIM(COALESCE(ringkasan_terakhir, '')) AS ringkas,
         EXTRACT(EPOCH FROM last_work_at)::bigint AS ep,
-        (SELECT repo_name FROM projects p WHERE p.id = agent_sessions.project_id) AS repo
-    ),
-    t AS (
-      INSERT INTO tasks (id, user_id, project_id, title, status, progress, result_summary, completed_at, updated_at)
-      SELECT 'task-idle-' || k.session_id || '-' || k.ep, k.user_id, k.project_id, LEFT(k.judul, 200), 'completed', 100, NULLIF(LEFT(k.ringkas, 1000), ''), now(), now() FROM k
-      ON CONFLICT (id) DO NOTHING
-      RETURNING id
+        'Selesai: AI selesai bekerja' || COALESCE(' di ' || (SELECT repo_name FROM projects p WHERE p.id = agent_sessions.project_id), '') || CASE WHEN TRIM(COALESCE(ringkasan_terakhir, '')) <> '' THEN ' — ' || LEFT(TRIM(COALESCE(ringkasan_terakhir, '')), 200) ELSE '' END AS pesan
     ),
     f AS (
       INSERT INTO activity_log (id, user_id, project_id, type, message)
-      SELECT 'act-idle-' || k.session_id || '-' || k.ep, k.user_id, k.project_id, 'info',
-        'Selesai giliran: AI selesai menjawab' || COALESCE(' di ' || (SELECT repo_name FROM projects p WHERE p.id = k.project_id), '') || CASE WHEN k.ringkas <> '' THEN ' — ' || LEFT(k.ringkas, 200) ELSE '' END
+      SELECT 'act-idle-' || k.session_id || '-' || k.ep, k.user_id, k.project_id, 'info', k.pesan
       FROM k
       ON CONFLICT (id) DO NOTHING
+      RETURNING id
     )
-    UPDATE agent_sessions s SET done_task_id = COALESCE((SELECT id FROM t LIMIT 1), 'task-idle-' || k.session_id || '-' || k.ep)
-    FROM k WHERE s.session_id = k.session_id AND s.user_id = k.user_id
-    RETURNING k.session_id AS session_id, k.project_id AS project_id, k.judul AS judul, k.ringkas AS ringkas, k.repo AS repo
+    SELECT k.session_id AS session_id, k.project_id AS project_id, k.pesan AS pesan,
+      (SELECT id FROM f LIMIT 1) AS feed_id
+    FROM k
   `) as unknown as Done[];
   if (rows.length === 0) return false;
   const d = rows[0];
-  const pesanFeed = `Selesai giliran: AI selesai menjawab${d.repo ? ` di ${d.repo}` : ""}${d.ringkas ? ` — ${potong(d.ringkas, 200)}` : ""}`;
+  if (!d.feed_id) return true;
   try {
-    const janji = siarTelegramRinci(userId, pesanFeed);
+    const janji = siarTelegramRinci(userId, d.pesan);
     const hasil = await Promise.race([
       janji.then((h) => ({ ...h, batas: false as const })),
       new Promise<{ batas: true }>((s) => setTimeout(() => s({ batas: true }), 8000)),

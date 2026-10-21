@@ -227,7 +227,3 @@ CREATE INDEX IF NOT EXISTS idx_notif_tujuan_user
 
 -- Idle done notification (#241): stempel terakhir notifikasi idle→done per periode kerja.
 ALTER TABLE agent_sessions ADD COLUMN IF NOT EXISTS last_idle_notified_at TIMESTAMPTZ;
-
-CREATE INDEX IF NOT EXISTS idx_agent_sessions_idle_notif
-  ON agent_sessions (user_id, mode, status)
-  WHERE last_idle_notified_at IS NOT NULL;
