@@ -55,16 +55,23 @@ cek("segmented Light/Dark/System", peng.includes("System") && peng.includes("rad
 const topbar = readFileSync(join(root, "components/shell/Topbar.tsx"), "utf8");
 cek("avatar lg:hidden", topbar.includes("lg:hidden") && topbar.includes("UserMenu"));
 
-// O4 — Idle done notification (#241)
+// O4 — Notifikasi idle done (#241/#243)
 const selesai = readFileSync(join(root, "lib/selesai.ts"), "utf8");
 cek("catatIdleSelesai eksport", selesai.includes("export async function catatIdleSelesai"));
 cek("catatIdleSelesai last_idle_notified_at", selesai.includes("last_idle_notified_at"));
 cek("catatIdleSelesai type idle_done", selesai.includes("act-idle-"));
-cek("catatIdleSelesai prefix Selesai giliran", selesai.includes("Selesai giliran:"));
+cek("prefix Selesai: (sama dengan close)", selesai.includes("'Selesai: AI selesai bekerja'") && !selesai.includes("Selesai giliran:"));
 
-const cronRoute = readFileSync(join(root, "app/api/cron/sweep-idle-done/route.ts"), "utf8");
-cek("cron endpoint CRON_SECRET auth", cronRoute.includes("CRON_SECRET"));
-cek("cron endpoint query idle >2m", cronRoute.includes("last_idle_at < now() - interval '2 minutes'"));
+const idleFn = selesai.slice(selesai.indexOf("export async function catatIdleSelesai"));
+cek("idle tanpa task", !idleFn.includes("INSERT INTO tasks") && !idleFn.includes("done_task_id"));
+cek("idle hormati done_at", idleFn.includes("done_at IS NULL OR done_at < last_work_at"));
+cek("close lewati feed bila sudah idle", selesai.includes("k.last_idle_notified_at < k.kerja"));
+cek("tanpa cron (endpoint dihapus)", !existsSync(join(root, "app/api/cron/sweep-idle-done/route.ts")));
+
+const plugSrc = readFileSync(join(root, "plugins/pdc-presence.js"), "utf8");
+cek("plugin flush ringkasan sebelum PATCH idle", plugSrc.includes("await siramRingkasan(s.id)") && plugSrc.indexOf("await siramRingkasan(s.id)") < plugSrc.indexOf("const metaPatch = dikenal.get(s.id);"));
+cek("plugin guard status busy/idle", plugSrc.includes('statusMentah !== "idle"'));
+cek("plugin tanpa handler exit async", !plugSrc.includes('process.on("exit"'));
 
 const sessionRoute = readFileSync(join(root, "app/api/sessions/route.ts"), "utf8");
 cek("sessions route import catatIdleSelesai", sessionRoute.includes("catatIdleSelesai"));
