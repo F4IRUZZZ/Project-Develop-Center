@@ -110,7 +110,9 @@ export function ProjectCard({ project, readOnly, onCommand, onStop, onVisibility
           <span className="text-muted-foreground">
             {project.taskPrefix === "Terakhir" ? teks("kartu.prefixTerakhir") : teks("kartu.prefixTugas")}:{" "}
           </span>
-          {project.taskLabel}
+          <span title={project.taskLabel} className="line-clamp-2 break-words block">
+            {project.taskLabel}
+          </span>
         </div>
       </div>
       <div className="mb-[9px] h-1 overflow-hidden rounded bg-muted">

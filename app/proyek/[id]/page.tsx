@@ -372,7 +372,7 @@ export default function DetailProyek({ params }: { params: Promise<{ id: string 
                 </div>
               </div>
               {s.ringkasan_terakhir ? (
-                <p className="mt-1 text-[13px] leading-relaxed">
+                <p className="mt-1 text-[13px] leading-relaxed whitespace-pre-line">
                   {s.ringkasan_terakhir}
                   {s.ringkasan_waktu
                     ? <span className="font-mono text-[10.5px] text-muted-foreground" suppressHydrationWarning> · {Math.max(0, Math.round((Date.now() - new Date(s.ringkasan_waktu).getTime()) / 60000))} {teks("notif.mntLalu")}</span>

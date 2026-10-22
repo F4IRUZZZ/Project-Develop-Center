@@ -4,6 +4,7 @@ import { buatId, isErr, sesiUser } from "@/lib/server-auth";
 import { galat } from "@/lib/galat-api";
 import { siarTelegram } from "@/lib/telegram";
 import type { ActivityEvent } from "@/lib/types";
+import { ringkasSatuBaris } from "@/lib/ringkas";
 
 const BOLEH = new Set(["progress", "commit", "pr", "issue", "error", "info"]);
 
@@ -16,6 +17,24 @@ const NADA: Record<string, ActivityEvent["type"]> = {
   error: "idle",
   info: "idle",
 };
+
+function rapikanPesanSelesai(pesan: string): string {
+  // Format: "Selesai: AI selesai bekerja di repo — <ringkasan>"
+  // Rapikan bagian setelah em-dash / " — " atau " - "
+  const idx = pesan.indexOf(" — ");
+  if (idx >= 0) {
+    const prefix = pesan.slice(0, idx + 3);
+    const tail = pesan.slice(idx + 3);
+    return prefix + ringkasSatuBaris(tail, 200);
+  }
+  const idx2 = pesan.indexOf(" - ");
+  if (idx2 >= 0) {
+    const prefix = pesan.slice(0, idx2 + 3);
+    const tail = pesan.slice(idx2 + 3);
+    return prefix + ringkasSatuBaris(tail, 200);
+  }
+  return pesan;
+}
 
 export async function GET(req: NextRequest) {
   const ctx = await sesiUser(req);
@@ -31,16 +50,20 @@ export async function GET(req: NextRequest) {
   if (mentah) return NextResponse.json(rows);
 
   // Kontrak dengan MCP/P3: info "Selesai:" = success (ikon hijau).
-  const out: ActivityEvent[] = rows.map((r, i) => ({
-    id: String(r.id ?? i),
-    type:
-      String(r.type) === "info" && String(r.message).startsWith("Selesai:")
-        ? "success"
-        : (NADA[String(r.type)] ?? "idle"),
-    message: String(r.message),
-    projectName: String(r.repo_name ?? ""),
-    time: new Date(r.created_at as string).toISOString(),
-  }));
+  const out: ActivityEvent[] = rows.map((r, i) => {
+    const msg = String(r.message);
+    const cleanMsg = msg.startsWith("Selesai:") ? rapikanPesanSelesai(msg) : msg;
+    return {
+      id: String(r.id ?? i),
+      type:
+        String(r.type) === "info" && msg.startsWith("Selesai:")
+          ? "success"
+          : (NADA[String(r.type)] ?? "idle"),
+      message: cleanMsg,
+      projectName: String(r.repo_name ?? ""),
+      time: new Date(r.created_at as string).toISOString(),
+    };
+  });
   return NextResponse.json(out);
 }
 

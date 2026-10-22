@@ -22,43 +22,43 @@ interface Done {
 }
 
 // Catat 1x done untuk sesi. Kembalikan true bila mencatat,
-// false bila kalah/sudah dicatat.
-export async function catatSelesai(userId: string, sessionId: string): Promise<boolean> {
-  const sql = db();
-  const rows = (await sql`
-    WITH k AS (
-      UPDATE agent_sessions SET done_at = now()
-      WHERE session_id = ${sessionId} AND user_id = ${userId}
-        AND status = 'active' AND mode = 'build' AND project_id IS NOT NULL
-        AND COALESCE(last_work_at, last_edit_at) IS NOT NULL
-        AND (done_at IS NULL OR COALESCE(last_work_at, last_edit_at) > done_at)
-      RETURNING session_id, user_id, project_id,
-        COALESCE(NULLIF(TRIM(LEFT(ringkasan_terakhir, 200)), ''), 'Sesi AI selesai bekerja') AS judul,
-        TRIM(COALESCE(ringkasan_terakhir, '')) AS ringkas,
-        EXTRACT(EPOCH FROM COALESCE(last_work_at, last_edit_at))::bigint AS ep,
-        COALESCE(last_work_at, last_edit_at) AS kerja,
-        last_idle_notified_at,
-        'Selesai: AI selesai bekerja' || COALESCE(' di ' || (SELECT repo_name FROM projects p WHERE p.id = agent_sessions.project_id), '') || CASE WHEN TRIM(COALESCE(ringkasan_terakhir, '')) <> '' THEN ' — ' || LEFT(TRIM(COALESCE(ringkasan_terakhir, '')), 200) ELSE '' END AS pesan
-    ),
-    t AS (
-      INSERT INTO tasks (id, user_id, project_id, title, status, progress, result_summary, completed_at, updated_at)
-      SELECT 'task-done-' || k.session_id || '-' || k.ep, k.user_id, k.project_id, LEFT(k.judul, 200), 'completed', 100, NULLIF(LEFT(k.ringkas, 1000), ''), now(), now() FROM k
-      ON CONFLICT (id) DO NOTHING
-      RETURNING id
-    ),
-    f AS (
-      INSERT INTO activity_log (id, user_id, project_id, type, message)
-      SELECT 'act-selesai-' || k.session_id || '-' || k.ep, k.user_id, k.project_id, 'info', k.pesan
-      FROM k
-      WHERE k.last_idle_notified_at IS NULL OR k.last_idle_notified_at < k.kerja
-      ON CONFLICT (id) DO NOTHING
-      RETURNING id
-    )
-    UPDATE agent_sessions s SET done_task_id = COALESCE((SELECT id FROM t LIMIT 1), 'task-done-' || k.session_id || '-' || k.ep)
-    FROM k WHERE s.session_id = k.session_id AND s.user_id = k.user_id
-    RETURNING k.session_id AS session_id, k.project_id AS project_id, k.pesan AS pesan,
-      (SELECT id FROM f LIMIT 1) AS feed_id
-  `) as unknown as Done[];
+  // false bila kalah/sudah dicatat.
+  export async function catatSelesai(userId: string, sessionId: string): Promise<boolean> {
+    const sql = db();
+    const rows = (await sql`
+      WITH k AS (
+        UPDATE agent_sessions SET done_at = now()
+        WHERE session_id = ${sessionId} AND user_id = ${userId}
+          AND status = 'active' AND mode = 'build' AND project_id IS NOT NULL
+          AND COALESCE(last_work_at, last_edit_at) IS NOT NULL
+          AND (done_at IS NULL OR COALESCE(last_work_at, last_edit_at) > done_at)
+        RETURNING session_id, user_id, project_id,
+          COALESCE(NULLIF(TRIM(split_part(ringkasan_terakhir, E'\n', 1)), ''), 'Sesi AI selesai bekerja') AS judul,
+          TRIM(COALESCE(ringkasan_terakhir, '')) AS ringkas,
+          EXTRACT(EPOCH FROM COALESCE(last_work_at, last_edit_at))::bigint AS ep,
+          COALESCE(last_work_at, last_edit_at) AS kerja,
+          last_idle_notified_at,
+          'Selesai: AI selesai bekerja' || COALESCE(' di ' || (SELECT repo_name FROM projects p WHERE p.id = agent_sessions.project_id), '') || CASE WHEN TRIM(COALESCE(ringkasan_terakhir, '')) <> '' THEN ' — ' || LEFT(TRIM(split_part(ringkasan_terakhir, E'\n', 1)), 200) ELSE '' END AS pesan
+      ),
+      t AS (
+        INSERT INTO tasks (id, user_id, project_id, title, status, progress, result_summary, completed_at, updated_at)
+        SELECT 'task-done-' || k.session_id || '-' || k.ep, k.user_id, k.project_id, LEFT(k.judul, 200), 'completed', 100, NULLIF(LEFT(k.ringkas, 1000), ''), now(), now() FROM k
+        ON CONFLICT (id) DO NOTHING
+        RETURNING id
+      ),
+      f AS (
+        INSERT INTO activity_log (id, user_id, project_id, type, message)
+        SELECT 'act-selesai-' || k.session_id || '-' || k.ep, k.user_id, k.project_id, 'info', k.pesan
+        FROM k
+        WHERE k.last_idle_notified_at IS NULL OR k.last_idle_notified_at < k.kerja
+        ON CONFLICT (id) DO NOTHING
+        RETURNING id
+      )
+      UPDATE agent_sessions s SET done_task_id = COALESCE((SELECT id FROM t LIMIT 1), 'task-done-' || k.session_id || '-' || k.ep)
+      FROM k WHERE s.session_id = k.session_id AND s.user_id = k.user_id
+      RETURNING k.session_id AS session_id, k.project_id AS project_id, k.pesan AS pesan,
+        (SELECT id FROM f LIMIT 1) AS feed_id
+    `) as unknown as Done[];
   if (rows.length === 0) return false;
   const d = rows[0];
   // Idle sudah menotifikasi periode kerja ini: task tetap dibuat, feed/Telegram tidak diulang.
@@ -98,7 +98,7 @@ export async function catatIdleSelesai(userId: string, sessionId: string): Promi
         AND (done_at IS NULL OR done_at < last_work_at)
       RETURNING session_id, user_id, project_id,
         EXTRACT(EPOCH FROM last_work_at)::bigint AS ep,
-        'Selesai: AI selesai bekerja' || COALESCE(' di ' || (SELECT repo_name FROM projects p WHERE p.id = agent_sessions.project_id), '') || CASE WHEN TRIM(COALESCE(ringkasan_terakhir, '')) <> '' THEN ' — ' || LEFT(TRIM(COALESCE(ringkasan_terakhir, '')), 200) ELSE '' END AS pesan
+        'Selesai: AI selesai bekerja' || COALESCE(' di ' || (SELECT repo_name FROM projects p WHERE p.id = agent_sessions.project_id), '') || CASE WHEN TRIM(COALESCE(ringkasan_terakhir, '')) <> '' THEN ' — ' || LEFT(TRIM(split_part(ringkasan_terakhir, E'\n', 1)), 200) ELSE '' END AS pesan
     ),
     f AS (
       INSERT INTO activity_log (id, user_id, project_id, type, message)

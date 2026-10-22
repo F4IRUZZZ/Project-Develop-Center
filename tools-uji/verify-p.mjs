@@ -69,14 +69,15 @@ cek("plugin mode defensif", plug.includes("ENV_MODE") && plug.includes("sessionM
 
 cek("skema ringkasan", schema.includes("ringkasan_terakhir") && schema.includes("ringkasan_waktu"));
 cek("activity kind ringkasan + redaksi", actIsi.includes('kind === "ringkasan"') && actIsi.includes("function redaksi"));
-cek("cap ringkasan 1000 + ellipsis", actIsi.includes("BATAS_RINGKASAN = 1000") && plug.includes("BATAS_RINGKASAN = 1000"));
+cek("cap ringkasan server 1000 + ellipsis", actIsi.includes("BATAS_RINGKASAN = 1000"));
+cek("cap ringkasan plugin 4000", plug.includes("BATAS_RINGKASAN = 4000"));
 
 const stRoute = join(root, "app/api/status/route.ts");
 cek("route status ada", existsSync(stRoute));
 const stIsi = existsSync(stRoute) ? readFileSync(stRoute, "utf8") : "";
 cek("status read-only + versi cocok",
   stIsi.includes("export async function GET") && !stIsi.includes("export async function POST") &&
-  stIsi.includes('VERSI_PLUGIN_TERKINI = "2026.10.20"') && plug.includes('VERSI_PLUGIN = "2026.10.20"'));
+  stIsi.includes('VERSI_PLUGIN_TERKINI = "2026.10.21"') && plug.includes('VERSI_PLUGIN = "2026.10.21"'));
 cek("tabel repo_health", schema.includes("CREATE TABLE IF NOT EXISTS repo_health"));
 const stPage = join(root, "app/status/page.tsx");
 cek("halaman Status 4 seksi (kamus)", existsSync(stPage) && readFileSync(stPage, "utf8").includes("status.pluginJudul"));

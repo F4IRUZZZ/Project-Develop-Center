@@ -6,6 +6,7 @@ import { sapuStuck } from "@/lib/stuck-sweep";
 import { sapuSelesai } from "@/lib/selesai";
 import { TANDA_STOP } from "@/lib/tasks";
 import type { AIStatus, Project } from "@/lib/types";
+import { ringkasSatuBaris, ringkasTooltip } from "@/lib/ringkas";
 
 interface TaskRow {
   project_id: string;
@@ -136,13 +137,15 @@ export async function GET(req: NextRequest) {
       t?.status === "working" && Date.now() - new Date(t.updated_at).getTime() > 30 * 60 * 1000;
     const status = (dibatalkan ? "idle" : macet ? "stuck" : (t?.status ?? "idle")) as AIStatus;
     const progress = dibatalkan ? 100 : t ? Number(t.progress) : 100;
+    const rawTaskLabel = t ? t.title : `Branch ${String(p.default_branch ?? "main")}`;
+    const rawSesiRingkasan = ringkasMap.get(id) ?? null;
     return {
       id,
       repoName: String(p.repo_name),
       repoFull: String(p.repo_full),
       status,
       statusLabel: status[0].toUpperCase() + status.slice(1),
-      taskLabel: t ? t.title : `Branch ${String(p.default_branch ?? "main")}`,
+      taskLabel: ringkasSatuBaris(rawTaskLabel, 200),
       taskPrefix: (!t || dibatalkan ? "Terakhir" : "Tugas") as Project["taskPrefix"],
       progress,
       progressTone: (status === "idle" || status === "completed"
@@ -158,7 +161,7 @@ export async function GET(req: NextRequest) {
       sesiAktif: sesiSet.has(id),
       sesiMode: (modeMap.get(id) ?? null) as Project["sesiMode"],
       sesiKerja: (kerjaMap.get(id) ?? (modeMap.get(id) === "plan" ? "siaga" : null)) as Project["sesiKerja"],
-      sesiRingkasan: ringkasMap.get(id) ?? null,
+      sesiRingkasan: rawSesiRingkasan ? ringkasTooltip(rawSesiRingkasan, 280) : null,
       // waiting + command antre = masih bisa dibatalkan (#216): beri
       // command+stop; waiting tanpa antrean = kosong (tak ada yang dikerjakan).
       actions: (status === "waiting"

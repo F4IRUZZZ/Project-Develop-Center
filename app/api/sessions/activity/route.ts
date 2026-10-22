@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { isErr, sesiUser } from "@/lib/server-auth";
 import { galat } from "@/lib/galat-api";
+import { ringkasTeks, keTeks } from "@/lib/ringkas";
 
 // Jejak aktivitas sesi (dipanggil plugin OpenCode, auth Bearer key mesin).
 // METADATA SAJA: path file + angka stat + sha komit. Isi file/pesan DILARANG
@@ -26,17 +27,16 @@ function modeDari(e: Masuk | undefined): string | null {
   return e?.mode === "plan" || e?.mode === "build" ? (e.mode as string) : null;
 }
 
-// Redaksi sisi server (lapis kedua; plugin sudah meredaksi duluan): buang
-// blok kode, rapatkan whitespace, cap 1000 + ellipsis bila terpotong.
-// Regex bukan kedap — kontrak privasi mengandalkan ini + kepercayaan DB
-// sendiri (lihat skema).
+// Redaksi sisi server: normalisasi Markdown → ringkasan manusiawi (baris utama + bullet),
+// cap 1000 code-point. Menerima input hingga 8000 agar kesimpulan tak terpotong.
 const BATAS_RINGKASAN = 1000;
 function redaksi(teks: string): string {
-  const bersih = teks
-    .replace(/```[\s\S]*?```/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  return bersih.length > BATAS_RINGKASAN ? bersih.slice(0, BATAS_RINGKASAN - 1) + "…" : bersih;
+  const r = ringkasTeks(teks, { maksUtama: 160, maksPoin: 3, maksTotal: 900 });
+  const gabung = keTeks(r);
+  if (gabung.length > BATAS_RINGKASAN) {
+    return [...gabung].slice(0, BATAS_RINGKASAN - 1).join("") + "…";
+  }
+  return gabung;
 }
 
 const BATAS_EVENT = 50;
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
   for (const e of body.events.slice(0, BATAS_EVENT)) {
     // Ringkasan per-giliran: latest-only, tak jadi baris event, tak masuk feed.
     if (e?.kind === "ringkasan") {
-      const mentah = typeof e?.teks === "string" ? e.teks.slice(0, 2000) : "";
+      const mentah = typeof e?.teks === "string" ? e.teks.slice(0, 8000) : "";
       const bersih = redaksi(mentah);
       if (bersih) {
         await sql`UPDATE agent_sessions SET ringkasan_terakhir = ${bersih}, ringkasan_waktu = now(), last_seen_at = now() WHERE session_id = ${sessionId}`;
