@@ -5,7 +5,7 @@
 // JANGAN tambah export lain / default export (risiko registrasi ganda).
 // JANGAN `import { Plugin } from "@opencode/plugin"`: tak ter-resolve dari
 // file .js polos dan hanya helper type — object return lolos skema yang sama.
-const VERSI_PLUGIN = "2026.10.20";
+const VERSI_PLUGIN = "2026.10.21";
 // Butuh env di mesin: PDC_API_URL (default production; set eksplisit
 // untuk dev lokal), PDC_API_KEY (buat di webapp PDC > Pengaturan),
 // opsional PDC_MODE (plan/build).
@@ -304,19 +304,22 @@ export const PdcPresence = async (input) => {
   process.on("SIGINT", pendengarTutup.SIGINT);
 
   // Ringkasan per-giliran (opsi B): teks balasan asisten, diredaksi (buang
-  // blok kode + cap 1000 + ellipsis bila terpotong), dikirim saat
-  // idle/status (akhir giliran). Bentuk payload event v1.18: info {id, role},
+  // blok kode + cap 4000 dgn simpan awal+akhir agar kesimpulan tak terpotong),
+  // dikirim saat idle/status (akhir giliran). Bentuk payload event v1.18: info {id, role},
   // part {id, sessionID, messageID, type, text, synthetic, ignored} — field
   // yang tak dikenal diabaikan, bukan error.
   const peranPesan = new Map(); // messageID -> 'assistant' | 'user'
   const teksPerPesan = new Map(); // sessionID -> Map(partID -> text)
-  const BATAS_RINGKASAN = 1000;
+  const BATAS_RINGKASAN = 4000;
   const redaksi = (teks) => {
     const bersih = String(teks)
-      .replace(/```[\s\S]*?```/g, " ")
-      .replace(/\s+/g, " ")
+      .replace(/```[\s\S]*?```/g, "\n")
+      .replace(/[ \t]+/g, " ")
+      .replace(/\n{3,}/g, "\n\n")
       .trim();
-    return bersih.length > BATAS_RINGKASAN ? bersih.slice(0, BATAS_RINGKASAN - 1) + "…" : bersih;
+    if (bersih.length <= BATAS_RINGKASAN) return bersih;
+    const ar = [...bersih];
+    return ar.slice(0, BATAS_RINGKASAN / 2).join("") + "\n…\n" + ar.slice(-BATAS_RINGKASAN / 2).join("");
   };
   const catatPeran = (event) => {
     try {

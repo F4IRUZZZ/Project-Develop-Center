@@ -184,6 +184,8 @@ export async function DELETE(req: NextRequest) {
 // status turunan (bekerja <2 mnt sejak sinyal kerja DAN lebih baru dari
 // idle-terakhir | siaga = buka tapi hening/sudah idle | nonaktif = denyut
 // mati >3 mnt / sudah ditutup).
+import { ringkasTeks, keTeks } from "@/lib/ringkas";
+
 export async function GET(req: NextRequest) {
   const ctx = await sesiUser(req);
   if (isErr(ctx)) return NextResponse.json({ error: ctx.error }, { status: ctx.status });
@@ -249,6 +251,7 @@ export async function GET(req: NextRequest) {
             : "siaga";
     return {
       ...r,
+      ringkasan_terakhir: r.ringkasan_terakhir ? keTeks(ringkasTeks(r.ringkasan_terakhir)) : null,
       aktivitas: {
         kerja,
         hening_mnt: suntingMs === null ? null : Math.floor(suntingMs / 60000),

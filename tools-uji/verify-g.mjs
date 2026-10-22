@@ -41,7 +41,8 @@ cek("tandai andalkan event (#216)", halNotif.includes("siarNotifikasi();") && !h
 const ghHook = readFileSync(join(root, "lib/github-hook.ts"), "utf8");
 cek("tulisActivity deterministik (#216)", ghHook.includes("createHash") && ghHook.includes("ON CONFLICT (id) DO NOTHING"));
 const selesaiSrc = readFileSync(join(root, "lib/selesai.ts"), "utf8");
-cek("potong emoji-safe (#216)", readFileSync(join(root, "lib/potong.ts"), "utf8").includes("[...s]") && selesaiSrc.includes("LEFT(TRIM(COALESCE(ringkasan_terakhir") && !selesaiSrc.includes(".slice(0,"));
+cek("potong emoji-safe (#216)", readFileSync(join(root, "lib/potong.ts"), "utf8").includes("[...s]") && selesaiSrc.includes("LEFT(k.ringkas, 1000)") && !selesaiSrc.includes(".slice(0,"));
+cek("split_part ambil baris pertama", selesaiSrc.includes("split_part(ringkasan_terakhir, E'\\n', 1)"));
 
 // G4
 const modal = readFileSync(join(root, "components/command/CommandModal.tsx"), "utf8");

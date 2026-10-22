@@ -1,6 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { isErr, sesiUser } from "@/lib/server-auth";
+import { ringkasSatuBaris, ringkasTeks, keTeks } from "@/lib/ringkas";
+
+function bersihkanTask(row: Record<string, unknown>): Record<string, unknown> {
+  const out = { ...row };
+  if (out.title) out.title = ringkasSatuBaris(String(out.title), 200);
+  if (out.result_summary) out.result_summary = keTeks(ringkasTeks(String(out.result_summary)));
+  return out;
+}
 
 // Task terbaru per proyek (opsional filter ?project_id= / ?command_id= / ?all=1).
 export async function GET(req: NextRequest) {
@@ -12,11 +20,11 @@ export async function GET(req: NextRequest) {
   const commandId = params.get("command_id");
   if (commandId) {
     const rows = await db()`SELECT * FROM tasks WHERE user_id = ${ctx.userId} AND command_id = ${commandId} ORDER BY created_at DESC LIMIT 1`;
-    return NextResponse.json(rows);
+    return NextResponse.json(rows.map(bersihkanTask));
   }
   if (params.get("all") === "1") {
     const rows = await db()`SELECT t.*, p.repo_name FROM tasks t LEFT JOIN projects p ON p.id = t.project_id WHERE t.user_id = ${ctx.userId} ORDER BY t.created_at DESC LIMIT 100`;
-    return NextResponse.json(rows);
+    return NextResponse.json(rows.map(bersihkanTask));
   }
   const rows = projectId
     ? await db()`SELECT * FROM tasks WHERE user_id = ${ctx.userId} AND project_id = ${projectId} ORDER BY created_at DESC LIMIT 20`
@@ -24,5 +32,5 @@ export async function GET(req: NextRequest) {
         SELECT DISTINCT ON (project_id) * FROM tasks
         WHERE user_id = ${ctx.userId} ORDER BY project_id, created_at DESC
       `;
-  return NextResponse.json(rows);
+  return NextResponse.json(rows.map(bersihkanTask));
 }
